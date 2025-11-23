@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+redis-6381/
+*.log
+.env

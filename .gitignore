@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual envs
+.venv/
+venv/
+
+# Redis dump
+dump.rdb
+
+# VSCode
+.vscode/
