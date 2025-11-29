@@ -1,13 +1,29 @@
-# Python cache
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Virtual envs
+# Virtual environments
 .venv/
 venv/
+env/
 
-# Redis dump
-dump.rdb
+# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
 
-# VSCode
+# OS / IDE
+.DS_Store
 .vscode/
+.idea/
+
+# Worker specific
+worker/dump.rdb
+
+# Node / frontend (if/when you add it)
+node_modules/
+dist/
+build/
