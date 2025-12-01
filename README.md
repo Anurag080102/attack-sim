@@ -1,2 +1,114 @@
-# attack-sim
-A modular security scanning framework that automatically analyzes a target server or application against common web attack patterns. Built with FastAPI, Celery workers, and React dashboard, developed by our Software Security team to simulate and study OWASP Top‑10 vulnerabilities.
+# Attack-Sim
+
+**Application Automatic Attacks Simulation Tool**
+
+A web-based security testing tool with a simple GUI that enables automated simulation of common attack vectors including brute force attacks, dictionary attacks, and OWASP Top 10 vulnerabilities.
+
+## ⚠️ Disclaimer
+
+> **WARNING**: This tool is intended for **authorized security testing only**. Only use against systems you own or have explicit written permission to test. Unauthorized access to computer systems is illegal.
+
+## Features
+
+- **Target Configuration**: Input target URL/IP and configure connection parameters
+- **Attack Selection**: Choose from available attack modules via UI
+- **Brute Force Attack**: Automated credential guessing with configurable parameters
+- **Dictionary Attack**: Password cracking using wordlist files
+- **OWASP Top 10 Scanner**: Automated detection of OWASP Top 10 vulnerabilities
+- **Real-time Results**: Live display of attack progress and findings
+- **Report Generation**: Export findings to JSON/HTML format
+
+## OWASP Top 10 Attack Modules
+
+| ID  | Vulnerability              | Detection Method                             |
+| --- | -------------------------- | -------------------------------------------- |
+| A01 | Broken Access Control      | Authorization bypass attempts, IDOR testing |
+| A02 | Cryptographic Failures     | TLS/SSL analysis, weak cipher detection      |
+| A03 | Injection                  | SQL, XSS, Command injection payloads         |
+| A04 | Insecure Design            | Business logic flaw detection                |
+| A05 | Security Misconfiguration  | Header analysis, default credentials         |
+| A06 | Vulnerable Components      | Version fingerprinting, CVE matching         |
+| A07 | Authentication Failures    | Session analysis, brute force                |
+| A08 | Integrity Failures         | Deserialization, unsigned data detection     |
+| A09 | Logging & Monitoring       | Error disclosure, debug info leakage         |
+| A10 | SSRF                       | Server-side request forgery testing          |
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11 or higher
+- pip (Python package manager)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Anurag080102/attack-sim.git
+cd attack-sim
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Running the Application
+
+```bash
+# Start the Flask development server
+python run.py
+
+# Open your browser to http://localhost:5000
+```
+
+## Project Structure
+
+```
+attack-sim/
+├── app/                    # Flask application
+│   ├── __init__.py        # App factory
+│   ├── config.py          # Configuration classes
+│   ├── routes/            # API routes
+│   ├── static/            # CSS, JS files
+│   └── templates/         # HTML templates
+├── attacks/               # Attack modules
+│   ├── __init__.py       # Attack registry
+│   └── owasp/            # OWASP Top 10 scanners
+├── wordlists/            # Password/username lists
+├── reports/              # Generated reports
+├── tests/                # Unit tests
+├── requirements.txt      # Python dependencies
+└── run.py               # Entry point
+```
+
+## Technology Stack
+
+- **Backend**: Python 3.11+ with Flask
+- **Frontend**: HTML5 + CSS3 + Vanilla JavaScript
+- **HTTP Client**: Requests library
+
+## Development
+
+### Running Tests
+
+```bash
+pytest
+```
+
+### Code Formatting
+
+```bash
+black .
+flake8 .
+```
+
+## License
+
+This project is for educational purposes only.
+
+## Contributing
+
+See the project specification in `.github/instructions/owasp-attacks-implementation.instructions.md` for development guidelines and the implementation plan.
