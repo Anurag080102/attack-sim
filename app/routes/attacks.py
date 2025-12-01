@@ -9,7 +9,7 @@ import uuid
 import threading
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from enum import Enum
 
 from flask import Blueprint, request, jsonify
@@ -17,7 +17,7 @@ from flask import Blueprint, request, jsonify
 # Import attack registries
 from attacks import AttackRegistry
 from attacks.owasp import OWASPRegistry
-from attacks.base import BaseAttack, Finding
+from attacks.base import BaseAttack
 
 
 # Ensure attacks are registered by importing the modules
@@ -410,7 +410,7 @@ def get_attack_results(job_id: str):
     if job is None:
         return jsonify({"error": f"Job '{job_id}' not found"}), 404
     
-    findings = attack_manager.get_job_findings(job_id)
+    findings = attack_manager.get_job_findings(job_id) or []
     
     return jsonify({
         "job_id": job_id,
