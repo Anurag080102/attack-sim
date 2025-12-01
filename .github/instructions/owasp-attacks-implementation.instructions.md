@@ -314,7 +314,7 @@ Refs: #feature/project-setup"
 - [x] **5.3** Create `app/routes/attacks.py` with attack API endpoints
 - [x] **5.4** Implement attack execution in background thread
 - [x] **5.5** Create `app/routes/reports.py` with report endpoints
-- [ ] **5.6** Add attack status tracking with unique IDs
+- [x] **5.6** Add attack status tracking with unique IDs
 - [ ] **5.7** Test all API endpoints with curl/Postman
 
 ### Phase 6: Web GUI - Frontend
