@@ -38,7 +38,7 @@ A web-based security testing tool with a simple GUI that enables automated simul
 ### Prerequisites
 
 - Python 3.11 or higher
-- pip (Python package manager)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
 
 ### Installation
 
@@ -47,19 +47,18 @@ A web-based security testing tool with a simple GUI that enables automated simul
 git clone https://github.com/Anurag080102/attack-sim.git
 cd attack-sim
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install dependencies using uv
+uv sync
 
-# Install dependencies
-pip install -r requirements.txt
+# Or install with development dependencies
+uv sync --all-extras
 ```
 
 ### Running the Application
 
 ```bash
 # Start the Flask development server
-python run.py
+uv run python run.py
 
 # Open your browser to http://localhost:5000
 ```
@@ -95,14 +94,14 @@ attack-sim/
 ### Running Tests
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ### Code Formatting
 
 ```bash
-black .
-flake8 .
+uv run black .
+uv run flake8 .
 ```
 
 ## License
