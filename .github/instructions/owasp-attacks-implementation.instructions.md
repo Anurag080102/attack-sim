@@ -277,11 +277,11 @@ Refs: #feature/project-setup"
 ### Phase 2: Base Attack Framework
 **Branch: `feature/attack-framework`**
 
-- [ ] **2.1** Create `attacks/base.py` with `BaseAttack` abstract class
-- [ ] **2.2** Create `Finding` and `Severity` dataclasses
-- [ ] **2.3** Create `attacks/__init__.py` with attack registry
-- [ ] **2.4** Create `attacks/owasp/base_owasp.py` with `BaseOWASPAttack` class
-- [ ] **2.5** Create `attacks/owasp/__init__.py` with OWASP registry
+- [x] **2.1** Create `attacks/base.py` with `BaseAttack` abstract class
+- [x] **2.2** Create `Finding` and `Severity` dataclasses
+- [x] **2.3** Create `attacks/__init__.py` with attack registry
+- [x] **2.4** Create `attacks/owasp/base_owasp.py` with `BaseOWASPAttack` class
+- [x] **2.5** Create `attacks/owasp/__init__.py` with OWASP registry
 
 ### Phase 3: Core Attacks Implementation
 **Branch: `feature/core-attacks`**
@@ -390,15 +390,11 @@ flake8==6.1.0
 git clone https://github.com/Anurag080102/attack-sim.git
 cd attack-sim
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies using uv
+uv sync
 
 # Run the application
-python run.py
+uv run python run.py
 
 # Open browser to http://localhost:5000
 ```
@@ -410,7 +406,7 @@ python run.py
 | Phase | Status | Branch | Completion Date |
 |-------|--------|--------|-----------------|
 | Phase 1: Project Setup | ✅ Complete | `feature/project-setup` | 2025-12-01 |
-| Phase 2: Attack Framework | ⬜ Not Started | `feature/attack-framework` | - |
+| Phase 2: Attack Framework | ✅ Complete | `feature/attack-framework` | 2025-12-01 |
 | Phase 3: Core Attacks | ⬜ Not Started | `feature/core-attacks` | - |
 | Phase 4: OWASP Attacks | ⬜ Not Started | `feature/owasp-attacks` | - |
 | Phase 5: Web Backend | ⬜ Not Started | `feature/web-backend` | - |
