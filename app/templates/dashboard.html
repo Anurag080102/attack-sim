@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attack-Sim - Security Testing Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 Attack-Sim</h1>
+            <p>Security Testing Tool</p>
+        </header>
+        
+        <main>
+            <section id="attack-list">
+                <h2>Available Attacks</h2>
+                <div id="attacks-container">
+                    <!-- Attacks will be loaded dynamically -->
+                    <p>Loading attacks...</p>
+                </div>
+            </section>
+            
+            <section id="results">
+                <h2>Results</h2>
+                <div id="results-container">
+                    <p>No attack results yet. Select an attack to begin.</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Attack-Sim - For authorized security testing only</p>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

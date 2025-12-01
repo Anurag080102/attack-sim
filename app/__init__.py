@@ -20,11 +20,11 @@ def create_app(config_name: str = "development") -> Flask:
     from app.config import config
     app.config.from_object(config[config_name])
     
-    # Register a simple hello world route for testing
-    @app.route("/")
-    def index():
-        return "Hello World! Attack-Sim is running."
+    # Register blueprints
+    from app.routes import register_blueprints
+    register_blueprints(app)
     
+    # Health check endpoint
     @app.route("/health")
     def health():
         return {"status": "healthy", "app": "attack-sim"}
