@@ -309,7 +309,7 @@ Refs: #feature/project-setup"
 ### Phase 5: Web GUI - Backend
 **Branch: `feature/web-backend`**
 
-- [ ] **5.1** Create `app/routes/__init__.py` with blueprint registration
+- [x] **5.1** Create `app/routes/__init__.py` with blueprint registration
 - [ ] **5.2** Create `app/routes/dashboard.py` with index route
 - [ ] **5.3** Create `app/routes/attacks.py` with attack API endpoints
 - [ ] **5.4** Implement attack execution in background thread
