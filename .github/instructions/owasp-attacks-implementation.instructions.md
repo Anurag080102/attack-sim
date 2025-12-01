@@ -311,7 +311,7 @@ Refs: #feature/project-setup"
 
 - [x] **5.1** Create `app/routes/__init__.py` with blueprint registration
 - [x] **5.2** Create `app/routes/dashboard.py` with index route
-- [ ] **5.3** Create `app/routes/attacks.py` with attack API endpoints
+- [x] **5.3** Create `app/routes/attacks.py` with attack API endpoints
 - [ ] **5.4** Implement attack execution in background thread
 - [ ] **5.5** Create `app/routes/reports.py` with report endpoints
 - [ ] **5.6** Add attack status tracking with unique IDs
