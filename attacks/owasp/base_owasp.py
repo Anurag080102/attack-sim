@@ -46,7 +46,7 @@ class BaseOWASPAttack(BaseAttack):
     - Standard test case execution
     """
     
-    category: OWASPCategory = None
+    category: Optional[OWASPCategory] = None
     
     def __init__(self):
         super().__init__()
