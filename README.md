@@ -1,53 +1,114 @@
-# attack-sim
-A modular security scanning framework that automatically analyzes a target server or application against common web attack patterns. Built with FastAPI, Celery workers, and React dashboard, developed by our Software Security team to simulate and study OWASP Top‑10 vulnerabilities.
+# Attack-Sim
 
-# Welcome to your Expo app 👋
+**Application Automatic Attacks Simulation Tool**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A web-based security testing tool with a simple GUI that enables automated simulation of common attack vectors including brute force attacks, dictionary attacks, and OWASP Top 10 vulnerabilities.
 
-## Get started
+## ⚠️ Disclaimer
 
-1. Install dependencies
+> **WARNING**: This tool is intended for **authorized security testing only**. Only use against systems you own or have explicit written permission to test. Unauthorized access to computer systems is illegal.
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+- **Target Configuration**: Input target URL/IP and configure connection parameters
+- **Attack Selection**: Choose from available attack modules via UI
+- **Brute Force Attack**: Automated credential guessing with configurable parameters
+- **Dictionary Attack**: Password cracking using wordlist files
+- **OWASP Top 10 Scanner**: Automated detection of OWASP Top 10 vulnerabilities
+- **Real-time Results**: Live display of attack progress and findings
+- **Report Generation**: Export findings to JSON/HTML format
 
-   ```bash
-   npx expo start
-   ```
+## OWASP Top 10 Attack Modules
 
-In the output, you'll find options to open the app in a
+| ID  | Vulnerability              | Detection Method                             |
+| --- | -------------------------- | -------------------------------------------- |
+| A01 | Broken Access Control      | Authorization bypass attempts, IDOR testing |
+| A02 | Cryptographic Failures     | TLS/SSL analysis, weak cipher detection      |
+| A03 | Injection                  | SQL, XSS, Command injection payloads         |
+| A04 | Insecure Design            | Business logic flaw detection                |
+| A05 | Security Misconfiguration  | Header analysis, default credentials         |
+| A06 | Vulnerable Components      | Version fingerprinting, CVE matching         |
+| A07 | Authentication Failures    | Session analysis, brute force                |
+| A08 | Integrity Failures         | Deserialization, unsigned data detection     |
+| A09 | Logging & Monitoring       | Error disclosure, debug info leakage         |
+| A10 | SSRF                       | Server-side request forgery testing          |
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Quick Start
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
 
-## Get a fresh project
+- Python 3.11 or higher
+- pip (Python package manager)
 
-When you're ready, run:
+### Installation
 
 ```bash
-npm run reset-project
+# Clone the repository
+git clone https://github.com/Anurag080102/attack-sim.git
+cd attack-sim
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Running the Application
 
-## Learn more
+```bash
+# Start the Flask development server
+python run.py
 
-To learn more about developing your project with Expo, look at the following resources:
+# Open your browser to http://localhost:5000
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Project Structure
 
-## Join the community
+```
+attack-sim/
+├── app/                    # Flask application
+│   ├── __init__.py        # App factory
+│   ├── config.py          # Configuration classes
+│   ├── routes/            # API routes
+│   ├── static/            # CSS, JS files
+│   └── templates/         # HTML templates
+├── attacks/               # Attack modules
+│   ├── __init__.py       # Attack registry
+│   └── owasp/            # OWASP Top 10 scanners
+├── wordlists/            # Password/username lists
+├── reports/              # Generated reports
+├── tests/                # Unit tests
+├── requirements.txt      # Python dependencies
+└── run.py               # Entry point
+```
 
-Join our community of developers creating universal apps.
+## Technology Stack
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Backend**: Python 3.11+ with Flask
+- **Frontend**: HTML5 + CSS3 + Vanilla JavaScript
+- **HTTP Client**: Requests library
+
+## Development
+
+### Running Tests
+
+```bash
+pytest
+```
+
+### Code Formatting
+
+```bash
+black .
+flake8 .
+```
+
+## License
+
+This project is for educational purposes only.
+
+## Contributing
+
+See the project specification in `.github/instructions/owasp-attacks-implementation.instructions.md` for development guidelines and the implementation plan.
