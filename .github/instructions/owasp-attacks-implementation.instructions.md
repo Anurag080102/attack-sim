@@ -290,7 +290,7 @@ Refs: #feature/project-setup"
 - [x] **3.2** Implement `attacks/dictionary.py`
 - [x] **3.3** Create `wordlists/common_passwords.txt` (top 100 passwords)
 - [x] **3.4** Create `wordlists/common_usernames.txt` (common usernames)
-- [ ] **3.5** Test brute force attack manually
+- [x] **3.5** Test brute force attack manually
 
 ### Phase 4: OWASP Attack Modules
 **Branch: `feature/owasp-attacks`**
@@ -407,7 +407,7 @@ uv run python run.py
 |-------|--------|--------|-----------------|
 | Phase 1: Project Setup | ✅ Complete | `feature/project-setup` | 2025-12-01 |
 | Phase 2: Attack Framework | ✅ Complete | `feature/attack-framework` | 2025-12-01 |
-| Phase 3: Core Attacks | ⬜ Not Started | `feature/core-attacks` | - |
+| Phase 3: Core Attacks | ✅ Complete | `feature/core-attacks` | 2025-12-01 |
 | Phase 4: OWASP Attacks | ⬜ Not Started | `feature/owasp-attacks` | - |
 | Phase 5: Web Backend | ⬜ Not Started | `feature/web-backend` | - |
 | Phase 6: Web Frontend | ⬜ Not Started | `feature/web-frontend` | - |
