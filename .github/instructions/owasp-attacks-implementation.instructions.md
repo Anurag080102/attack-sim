@@ -310,7 +310,7 @@ Refs: #feature/project-setup"
 **Branch: `feature/web-backend`**
 
 - [x] **5.1** Create `app/routes/__init__.py` with blueprint registration
-- [ ] **5.2** Create `app/routes/dashboard.py` with index route
+- [x] **5.2** Create `app/routes/dashboard.py` with index route
 - [ ] **5.3** Create `app/routes/attacks.py` with attack API endpoints
 - [ ] **5.4** Implement attack execution in background thread
 - [ ] **5.5** Create `app/routes/reports.py` with report endpoints
