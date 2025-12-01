@@ -8,6 +8,7 @@ and downloading. Reports are stored as JSON files.
 import json
 import os
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
@@ -373,8 +374,7 @@ def download_report(report_id: str):
     if report_format == "html":
         html_content = generate_html_report(report)
         
-        # Create a temporary file for HTML download
-        from io import BytesIO
+        # Create buffer for HTML download
         buffer = BytesIO(html_content.encode("utf-8"))
         
         return send_file(
