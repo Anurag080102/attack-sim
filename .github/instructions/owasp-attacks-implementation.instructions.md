@@ -289,7 +289,7 @@ Refs: #feature/project-setup"
 - [x] **3.1** Implement `attacks/bruteforce.py`
 - [x] **3.2** Implement `attacks/dictionary.py`
 - [x] **3.3** Create `wordlists/common_passwords.txt` (top 100 passwords)
-- [ ] **3.4** Create `wordlists/common_usernames.txt` (common usernames)
+- [x] **3.4** Create `wordlists/common_usernames.txt` (common usernames)
 - [ ] **3.5** Test brute force attack manually
 
 ### Phase 4: OWASP Attack Modules
