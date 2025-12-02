@@ -333,7 +333,7 @@ Refs: #feature/project-setup"
 **Branch: `feature/testing`**
 
 - [x] **7.1** Create `tests/test_attacks.py` with attack unit tests
-- [ ] **7.2** Create `tests/test_routes.py` with route tests
+- [x] **7.2** Create `tests/test_routes.py` with route tests
 - [ ] **7.3** Add input validation to all endpoints
 - [ ] **7.4** Add error handling and user-friendly messages
 - [ ] **7.5** Final UI polish and responsiveness fixes
