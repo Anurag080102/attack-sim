@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}Results - {{ job.attack_name }}{% endblock %}
+
+{% block content %}
+<div class="results-page">
+    <div class="section-header mb-4">
+        <h2 class="section-title">📊 Attack Results</h2>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+    
+    <!-- Job Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>{{ job.attack_name }}</h3>
+            <p>Target: {{ job.target }}</p>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-4">
+                <div>
+                    <strong>Status:</strong>
+                    <span class="status status-{{ job.status }}">
+                        <span class="status-dot"></span>
+                        {{ job.status | title }}
+                    </span>
+                </div>
+                <div>
+                    <strong>Started:</strong>
+                    <span id="started-at">{{ job.started_at or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>Completed:</strong>
+                    <span id="completed-at">{{ job.completed_at or 'In progress...' }}</span>
+                </div>
+                <div>
+                    <strong>Job ID:</strong>
+                    <code>{{ job.id[:8] }}...</code>
+                </div>
+            </div>
+            
+            {% if job.status == 'running' %}
+            <div class="progress-container mt-4">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: {{ job.progress }}%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progress-status">Running...</span>
+                    <span id="progress-percent">{{ job.progress | round(1) }}%</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% if job.status in ['completed', 'failed', 'cancelled'] %}
+        <div class="card-footer">
+            <button type="button" class="btn btn-outline" id="export-json">
+                📄 Export JSON
+            </button>
+            <button type="button" class="btn btn-outline" id="export-html">
+                🌐 Export HTML
+            </button>
+            <button type="button" class="btn btn-primary" id="save-report">
+                💾 Save Report
+            </button>
+        </div>
+        {% else %}
+        <div class="card-footer">
+            <button type="button" class="btn btn-danger" id="cancel-attack">
+                ⏹ Cancel Attack
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Summary Stats -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Summary</h3>
+        </div>
+        <div class="card-body">
+            <div class="summary-stats" id="summary-stats">
+                <div class="stat-item critical">
+                    <div class="stat-count" id="stat-critical">0</div>
+                    <div class="stat-label">Critical</div>
+                </div>
+                <div class="stat-item high">
+                    <div class="stat-count" id="stat-high">0</div>
+                    <div class="stat-label">High</div>
+                </div>
+                <div class="stat-item medium">
+                    <div class="stat-count" id="stat-medium">0</div>
+                    <div class="stat-label">Medium</div>
+                </div>
+                <div class="stat-item low">
+                    <div class="stat-count" id="stat-low">0</div>
+                    <div class="stat-label">Low</div>
+                </div>
+                <div class="stat-item info">
+                    <div class="stat-count" id="stat-info">0</div>
+                    <div class="stat-label">Info</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Findings List -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Findings <span id="findings-count">(0)</span></h3>
+        </div>
+        <div class="card-body">
+            <div class="findings-list" id="findings-list">
+                {% if job.status == 'running' %}
+                <div class="empty-state">
+                    <div class="spinner"></div>
+                    <p class="mt-3">Scanning in progress...</p>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <h3 class="empty-state-title">No Findings</h3>
+                    <p class="empty-state-description">No vulnerabilities were detected during this scan.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const jobId = '{{ job.id }}';
+const jobStatus = '{{ job.status }}';
+let pollInterval = null;
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    if (jobStatus === 'running' || jobStatus === 'pending') {
+        startPolling();
+    } else {
+        loadResults();
+    }
+    
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    document.getElementById('cancel-attack')?.addEventListener('click', cancelAttack);
+    document.getElementById('export-json')?.addEventListener('click', () => exportReport('json'));
+    document.getElementById('export-html')?.addEventListener('click', () => exportReport('html'));
+    document.getElementById('save-report')?.addEventListener('click', saveReport);
+}
+
+function startPolling() {
+    loadResults();
+    pollInterval = setInterval(async () => {
+        const response = await fetch(`/api/attacks/status/${jobId}`);
+        const data = await response.json();
+        
+        updateProgress(data);
+        loadResults();
+        
+        if (data.status !== 'running' && data.status !== 'pending') {
+            stopPolling();
+            location.reload();
+        }
+    }, 1000);
+}
+
+function stopPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+    }
+}
+
+function updateProgress(data) {
+    const fill = document.getElementById('progress-fill');
+    const percent = document.getElementById('progress-percent');
+    const status = document.getElementById('progress-status');
+    
+    if (fill) fill.style.width = data.progress + '%';
+    if (percent) percent.textContent = data.progress.toFixed(1) + '%';
+    if (status) status.textContent = data.status === 'running' ? 'Scanning...' : data.status;
+}
+
+async function loadResults() {
+    try {
+        const response = await fetch(`/api/attacks/results/${jobId}`);
+        const data = await response.json();
+        
+        updateStats(data.findings);
+        renderFindings(data.findings);
+        document.getElementById('findings-count').textContent = `(${data.findings.length})`;
+    } catch (error) {
+        console.error('Failed to load results:', error);
+    }
+}
+
+function updateStats(findings) {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+    findings.forEach(f => counts[f.severity] = (counts[f.severity] || 0) + 1);
+    
+    Object.keys(counts).forEach(severity => {
+        const el = document.getElementById(`stat-${severity}`);
+        if (el) el.textContent = counts[severity];
+    });
+}
+
+function renderFindings(findings) {
+    const container = document.getElementById('findings-list');
+    
+    if (findings.length === 0) {
+        if (jobStatus !== 'running') {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <h3 class="empty-state-title">No Vulnerabilities Found</h3>
+                    <p class="empty-state-description">Great! No security issues were detected during this scan.</p>
+                </div>`;
+        }
+        return;
+    }
+    
+    container.innerHTML = findings.map((finding, index) => `
+        <div class="finding-item" onclick="this.classList.toggle('expanded')">
+            <div class="finding-header">
+                <span class="finding-number">#${index + 1}</span>
+                <span class="finding-title">${escapeHtml(finding.title)}</span>
+                <span class="badge badge-${finding.severity}">${finding.severity.toUpperCase()}</span>
+                <span class="finding-chevron">▼</span>
+            </div>
+            <div class="finding-body">
+                <div class="finding-field">
+                    <div class="finding-field-label">Description</div>
+                    <div class="finding-field-value">${escapeHtml(finding.description)}</div>
+                </div>
+                <div class="finding-field">
+                    <div class="finding-field-label">Evidence</div>
+                    <div class="finding-field-value"><code>${escapeHtml(finding.evidence)}</code></div>
+                </div>
+                <div class="finding-field">
+                    <div class="finding-field-label">Remediation</div>
+                    <div class="finding-field-value">${escapeHtml(finding.remediation)}</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+async function cancelAttack() {
+    if (!confirm('Are you sure you want to cancel this attack?')) return;
+    
+    try {
+        await fetch(`/api/attacks/cancel/${jobId}`, { method: 'POST' });
+        stopPolling();
+        location.reload();
+    } catch (error) {
+        alert('Failed to cancel attack: ' + error.message);
+    }
+}
+
+async function saveReport() {
+    try {
+        const response = await fetch('/api/reports/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_id: jobId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Report saved successfully! ID: ' + data.report_id);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Failed to save report: ' + error.message);
+    }
+}
+
+async function exportReport(format) {
+    // First save report to get an ID
+    try {
+        const saveResponse = await fetch('/api/reports/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_id: jobId })
+        });
+        
+        const saveData = await saveResponse.json();
+        
+        if (saveResponse.ok) {
+            // Download the report
+            window.location.href = `/api/reports/${saveData.report_id}/download?format=${format}`;
+        } else {
+            alert('Error generating report: ' + saveData.error);
+        }
+    } catch (error) {
+        alert('Failed to export report: ' + error.message);
+    }
+}
+</script>
+{% endblock %}
