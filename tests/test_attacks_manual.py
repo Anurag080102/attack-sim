@@ -97,9 +97,7 @@ def test_dictionary_wordlist_loading():
     print("=" * 60)
 
     attack = DictionaryAttack()
-    attack.configure(
-        username="admin", password_wordlist="wordlists/common_passwords.txt"
-    )
+    attack.configure(username="admin", password_wordlist="wordlists/common_passwords.txt")
 
     # Load wordlist
     try:
@@ -108,7 +106,7 @@ def test_dictionary_wordlist_loading():
         print(f"✓ Sample passwords: {passwords[:5]}...")
     except FileNotFoundError as e:
         print(f"✗ Failed to load wordlist: {e}")
-        return False
+        assert False, f"Failed to load password wordlist: {e}"
 
     # Load usernames
     try:
@@ -117,10 +115,9 @@ def test_dictionary_wordlist_loading():
         print(f"✓ Sample usernames: {usernames[:5]}...")
     except FileNotFoundError as e:
         print(f"✗ Failed to load wordlist: {e}")
-        return False
+        assert False, f"Failed to load username wordlist: {e}"
 
     print()
-    return True
 
 
 def test_attack_list():
