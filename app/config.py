@@ -8,6 +8,7 @@ This module provides configuration classes for different environments:
 
 Configuration values can be overridden via environment variables.
 """
+
 import os
 from pathlib import Path
 
@@ -15,9 +16,9 @@ from pathlib import Path
 class Config:
     """
     Base configuration class.
-    
+
     Contains common settings shared across all environments.
-    
+
     Attributes:
         BASE_DIR: Root directory of the application
         SECRET_KEY: Flask secret key for session management
@@ -29,23 +30,23 @@ class Config:
         DEFAULT_THREADS: Default number of worker threads
         MAX_THREADS: Maximum allowed worker threads
     """
-    
+
     # Base directory
     BASE_DIR = Path(__file__).resolve().parent.parent
-    
+
     # Flask settings
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
-    
+
     # Application settings
     APP_NAME = "Attack-Sim"
     APP_VERSION = "0.1.0"
-    
+
     # Reports directory
     REPORTS_DIR = BASE_DIR / "reports"
-    
+
     # Wordlists directory
     WORDLISTS_DIR = BASE_DIR / "wordlists"
-    
+
     # Attack settings
     DEFAULT_TIMEOUT = 10  # seconds
     DEFAULT_THREADS = 4
@@ -55,11 +56,11 @@ class Config:
 class DevelopmentConfig(Config):
     """
     Development configuration.
-    
+
     Enables debug mode for development with automatic reloading
     and detailed error messages.
     """
-    
+
     DEBUG = True
     TESTING = False
 
@@ -67,11 +68,11 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     """
     Testing configuration.
-    
+
     Used for running unit tests with a fixed secret key
     and testing-specific settings.
     """
-    
+
     DEBUG = False
     TESTING = True
     SECRET_KEY = "testing-secret-key"
@@ -80,20 +81,20 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     """
     Production configuration.
-    
+
     Requires SECRET_KEY to be set via environment variable.
     Debug mode is disabled for security.
-    
+
     Raises:
         ValueError: If SECRET_KEY environment variable is not set
     """
-    
+
     DEBUG = False
     TESTING = False
-    
+
     # Override SECRET_KEY in production via environment variable
     SECRET_KEY = os.environ.get("SECRET_KEY")
-    
+
     def __init__(self):
         """Initialize production config with validation."""
         if not self.SECRET_KEY:

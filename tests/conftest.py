@@ -18,13 +18,13 @@ def app():
     """Create and configure a test application instance."""
     app = create_app("testing")
     app.config["TESTING"] = True
-    
+
     # Use temporary directory for reports
     temp_dir = tempfile.mkdtemp()
     app.config["REPORTS_DIR"] = Path(temp_dir)
-    
+
     yield app
-    
+
     # Clean up temp directory after tests (ignore errors on Windows)
     try:
         shutil.rmtree(temp_dir, ignore_errors=True)
@@ -48,14 +48,14 @@ def runner(app):
 def temp_reports_dir(app):
     """
     Create a temporary reports directory.
-    
+
     Returns the path to the temporary directory.
     """
     temp_dir = Path(tempfile.mkdtemp())
     app.config["REPORTS_DIR"] = temp_dir
-    
+
     yield temp_dir
-    
+
     # Cleanup
     try:
         shutil.rmtree(temp_dir, ignore_errors=True)
