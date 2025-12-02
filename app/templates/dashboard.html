@@ -1,40 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attack-Sim - Security Testing Tool</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🔒 Attack-Sim</h1>
-            <p>Security Testing Tool</p>
-        </header>
-        
-        <main>
-            <section id="attack-list">
-                <h2>Available Attacks</h2>
-                <div id="attacks-container">
-                    <!-- Attacks will be loaded dynamically -->
-                    <p>Loading attacks...</p>
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Attack Configuration Panel -->
+    <section class="attack-config-panel hidden" id="attack-config">
+        <div class="attack-config-header">
+            <h2 id="config-attack-name">Configure Attack</h2>
+            <p id="config-attack-description">Set up your attack parameters</p>
+        </div>
+        <div class="attack-config-body">
+            <form id="attack-form">
+                <input type="hidden" id="attack-id" name="attack_id">
+                
+                <div class="form-group">
+                    <label class="form-label" for="target-url">Target URL</label>
+                    <input type="url" id="target-url" name="target" class="form-input" 
+                           placeholder="https://example.com" required>
+                    <p class="form-hint">Enter the target URL to test</p>
                 </div>
-            </section>
+                
+                <!-- Dynamic config fields will be inserted here -->
+                <div id="config-fields"></div>
+            </form>
+        </div>
+        <div class="attack-config-footer">
+            <button type="button" class="btn btn-outline" id="cancel-config">Cancel</button>
+            <div>
+                <button type="button" class="btn btn-primary" id="run-attack">
+                    <span>▶</span> Run Attack
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Running Attack Panel -->
+    <section class="attack-config-panel hidden" id="running-panel">
+        <div class="attack-config-header">
+            <h2 id="running-attack-name">Running Attack</h2>
+            <p id="running-attack-target">Target: -</p>
+        </div>
+        <div class="attack-config-body">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progress-status">Initializing...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+            </div>
             
-            <section id="results">
-                <h2>Results</h2>
-                <div id="results-container">
-                    <p>No attack results yet. Select an attack to begin.</p>
+            <div class="summary-stats mt-4" id="live-stats">
+                <div class="stat-item critical">
+                    <div class="stat-count" id="stat-critical">0</div>
+                    <div class="stat-label">Critical</div>
                 </div>
-            </section>
-        </main>
+                <div class="stat-item high">
+                    <div class="stat-count" id="stat-high">0</div>
+                    <div class="stat-label">High</div>
+                </div>
+                <div class="stat-item medium">
+                    <div class="stat-count" id="stat-medium">0</div>
+                    <div class="stat-label">Medium</div>
+                </div>
+                <div class="stat-item low">
+                    <div class="stat-count" id="stat-low">0</div>
+                    <div class="stat-label">Low</div>
+                </div>
+                <div class="stat-item info">
+                    <div class="stat-count" id="stat-info">0</div>
+                    <div class="stat-label">Info</div>
+                </div>
+            </div>
+        </div>
+        <div class="attack-config-footer">
+            <span id="running-time" class="text-muted">Elapsed: 0s</span>
+            <button type="button" class="btn btn-danger" id="cancel-attack">
+                <span>⏹</span> Cancel
+            </button>
+        </div>
+    </section>
+
+    <!-- Results Panel -->
+    <section class="results-panel hidden" id="results-panel">
+        <div class="results-header">
+            <h2>Attack Results</h2>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline" id="export-json">
+                    📄 Export JSON
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" id="export-html">
+                    🌐 Export HTML
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" id="new-attack">
+                    ➕ New Attack
+                </button>
+            </div>
+        </div>
+        <div class="results-body">
+            <div class="summary-stats mb-4" id="final-stats"></div>
+            <div class="findings-list" id="findings-list"></div>
+        </div>
+    </section>
+
+    <!-- Available Attacks Section -->
+    <section class="section" id="attacks-section">
+        <div class="section-header">
+            <h2 class="section-title">🎯 Available Attacks</h2>
+        </div>
         
-        <footer>
-            <p>&copy; 2025 Attack-Sim - For authorized security testing only</p>
-        </footer>
-    </div>
-    
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-</body>
-</html>
+        <!-- Core Attacks -->
+        <h3 class="mb-3">Core Attacks</h3>
+        <div class="grid grid-4 mb-4" id="core-attacks">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+        
+        <!-- OWASP Attacks -->
+        <h3 class="mb-3">OWASP Top 10</h3>
+        <div class="grid grid-4" id="owasp-attacks">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Jobs Section -->
+    <section class="section" id="jobs-section">
+        <div class="section-header">
+            <h2 class="section-title">📋 Recent Scans</h2>
+            <button type="button" class="btn btn-sm btn-outline" id="refresh-jobs">
+                🔄 Refresh
+            </button>
+        </div>
+        <div class="table-container">
+            <table class="table" id="jobs-table">
+                <thead>
+                    <tr>
+                        <th>Attack</th>
+                        <th>Target</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                        <th>Findings</th>
+                        <th>Started</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="jobs-tbody">
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
