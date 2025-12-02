@@ -94,7 +94,27 @@ attack-sim/
 ### Running Tests
 
 ```bash
+# Run all tests
 uv run pytest
+
+# Run with verbose output
+uv run pytest -v
+
+# Run specific test file
+uv run pytest tests/test_attacks.py
+
+# Run with coverage
+uv run pytest --cov=app --cov=attacks
+```
+
+### Test Structure
+
+```
+tests/
+├── test_attacks.py      # Unit tests for attack modules (52 tests)
+├── test_routes.py       # Unit tests for API routes (51 tests)
+├── test_api_endpoints.py # Manual endpoint testing
+└── test_attacks_manual.py # Manual attack testing
 ```
 
 ### Code Formatting
@@ -103,6 +123,36 @@ uv run pytest
 uv run black .
 uv run flake8 .
 ```
+
+## API Documentation
+
+### Attack Endpoints
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/attacks` | List all available attacks |
+| GET | `/api/attacks/<id>` | Get attack details |
+| POST | `/api/attacks/run` | Start an attack execution |
+| GET | `/api/attacks/jobs` | List attack jobs |
+| GET | `/api/attacks/<job_id>/status` | Get job status |
+| GET | `/api/attacks/<job_id>/results` | Get job results |
+| POST | `/api/attacks/<job_id>/cancel` | Cancel a running job |
+
+### Report Endpoints
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/reports` | List all reports |
+| GET | `/api/reports/<id>` | Get report details |
+| POST | `/api/reports/generate` | Generate a new report |
+| GET | `/api/reports/<id>/download` | Download report |
+| DELETE | `/api/reports/<id>` | Delete a report |
+
+### Health Endpoint
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/health` | Health check endpoint |
 
 ## License
 

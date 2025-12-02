@@ -1,12 +1,34 @@
 """
 Attack-Sim Configuration Classes
+
+This module provides configuration classes for different environments:
+- DevelopmentConfig: For local development with debug enabled
+- TestingConfig: For running unit tests
+- ProductionConfig: For production deployment
+
+Configuration values can be overridden via environment variables.
 """
 import os
 from pathlib import Path
 
 
 class Config:
-    """Base configuration class."""
+    """
+    Base configuration class.
+    
+    Contains common settings shared across all environments.
+    
+    Attributes:
+        BASE_DIR: Root directory of the application
+        SECRET_KEY: Flask secret key for session management
+        APP_NAME: Application name
+        APP_VERSION: Current version string
+        REPORTS_DIR: Directory for storing generated reports
+        WORDLISTS_DIR: Directory containing wordlist files
+        DEFAULT_TIMEOUT: Default HTTP request timeout in seconds
+        DEFAULT_THREADS: Default number of worker threads
+        MAX_THREADS: Maximum allowed worker threads
+    """
     
     # Base directory
     BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,14 +53,24 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    """Development configuration."""
+    """
+    Development configuration.
+    
+    Enables debug mode for development with automatic reloading
+    and detailed error messages.
+    """
     
     DEBUG = True
     TESTING = False
 
 
 class TestingConfig(Config):
-    """Testing configuration."""
+    """
+    Testing configuration.
+    
+    Used for running unit tests with a fixed secret key
+    and testing-specific settings.
+    """
     
     DEBUG = False
     TESTING = True
@@ -46,7 +78,15 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
-    """Production configuration."""
+    """
+    Production configuration.
+    
+    Requires SECRET_KEY to be set via environment variable.
+    Debug mode is disabled for security.
+    
+    Raises:
+        ValueError: If SECRET_KEY environment variable is not set
+    """
     
     DEBUG = False
     TESTING = False
@@ -55,6 +95,7 @@ class ProductionConfig(Config):
     SECRET_KEY = os.environ.get("SECRET_KEY")
     
     def __init__(self):
+        """Initialize production config with validation."""
         if not self.SECRET_KEY:
             raise ValueError("SECRET_KEY environment variable must be set in production")
 
