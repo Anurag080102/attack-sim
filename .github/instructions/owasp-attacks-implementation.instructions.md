@@ -320,14 +320,14 @@ Refs: #feature/project-setup"
 ### Phase 6: Web GUI - Frontend
 **Branch: `feature/web-frontend`**
 
-- [ ] **6.1** Create `app/templates/base.html` with common layout
-- [ ] **6.2** Create `app/static/css/style.css` with styling
-- [ ] **6.3** Create `app/templates/dashboard.html` with attack cards
-- [ ] **6.4** Create `app/templates/attack_config.html` for parameters
-- [ ] **6.5** Create `app/templates/results.html` for findings display
-- [ ] **6.6** Create `app/static/js/app.js` with AJAX functionality
-- [ ] **6.7** Implement real-time progress updates via polling
-- [ ] **6.8** Add export buttons for JSON/HTML reports
+- [x] **6.1** Create `app/templates/base.html` with common layout
+- [x] **6.2** Create `app/static/css/style.css` with styling
+- [x] **6.3** Create `app/templates/dashboard.html` with attack cards
+- [x] **6.4** Create `app/templates/attack_config.html` for parameters
+- [x] **6.5** Create `app/templates/results.html` for findings display
+- [x] **6.6** Create `app/static/js/app.js` with AJAX functionality
+- [x] **6.7** Implement real-time progress updates via polling
+- [x] **6.8** Add export buttons for JSON/HTML reports
 
 ### Phase 7: Testing & Polish
 **Branch: `feature/testing`**
@@ -410,10 +410,10 @@ uv run python run.py
 | Phase 3: Core Attacks | ✅ Complete | `feature/core-attacks` | 2025-12-01 |
 | Phase 4: OWASP Attacks | ✅ Complete | `feature/owasp-attacks` | 2025-01-15 |
 | Phase 5: Web Backend | ✅ Complete | `feature/web-backend` | 2025-12-02 |
-| Phase 6: Web Frontend | ⬜ Not Started | `feature/web-frontend` | - |
+| Phase 6: Web Frontend | ✅ Complete | `feature/web-frontend` | 2025-12-02 |
 | Phase 7: Testing | ⬜ Not Started | `feature/testing` | - |
 | Phase 8: Documentation | ⬜ Not Started | `feature/documentation` | - |
 
 ---
 
-*Last Updated: 2025-12-01*
+*Last Updated: 2025-12-02*

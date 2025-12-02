@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Configure {{ attack.name }}{% endblock %}
+
+{% block content %}
+<div class="attack-config-page">
+    <div class="section-header mb-4">
+        <h2 class="section-title">⚙️ {{ attack.name }}</h2>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+    
+    <div class="grid grid-2">
+        <!-- Configuration Form -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Attack Configuration</h3>
+                <p>{{ attack.description }}</p>
+            </div>
+            <div class="card-body">
+                <form id="attack-form">
+                    <input type="hidden" name="attack_id" value="{{ attack.id }}">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="target">Target URL *</label>
+                        <input type="url" id="target" name="target" class="form-input" 
+                               placeholder="https://example.com" required>
+                        <p class="form-hint">The URL of the target system to test</p>
+                    </div>
+                    
+                    {% if attack.parameters %}
+                    <h4 class="mb-3 mt-4">Attack Parameters</h4>
+                    
+                    {% for param_id, param in attack.parameters.items() %}
+                    <div class="form-group">
+                        <label class="form-label" for="param-{{ param_id }}">
+                            {{ param.name }}
+                            {% if param.required %} *{% endif %}
+                        </label>
+                        
+                        {% if param.type == 'select' %}
+                        <select id="param-{{ param_id }}" name="config.{{ param_id }}" class="form-select"
+                                {% if param.required %}required{% endif %}>
+                            {% for option in param.options %}
+                            <option value="{{ option }}" {% if option == param.default %}selected{% endif %}>
+                                {{ option }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        
+                        {% elif param.type == 'number' %}
+                        <input type="number" id="param-{{ param_id }}" name="config.{{ param_id }}" 
+                               class="form-input" value="{{ param.default }}"
+                               {% if param.min is defined %}min="{{ param.min }}"{% endif %}
+                               {% if param.max is defined %}max="{{ param.max }}"{% endif %}
+                               {% if param.required %}required{% endif %}>
+                        
+                        {% elif param.type == 'boolean' %}
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="param-{{ param_id }}" name="config.{{ param_id }}"
+                                   {% if param.default %}checked{% endif %}>
+                            <span>{{ param.description }}</span>
+                        </label>
+                        
+                        {% elif param.type == 'textarea' %}
+                        <textarea id="param-{{ param_id }}" name="config.{{ param_id }}" 
+                                  class="form-textarea" rows="4"
+                                  {% if param.required %}required{% endif %}>{{ param.default or '' }}</textarea>
+                        
+                        {% else %}
+                        <input type="text" id="param-{{ param_id }}" name="config.{{ param_id }}" 
+                               class="form-input" value="{{ param.default or '' }}"
+                               placeholder="{{ param.placeholder or '' }}"
+                               {% if param.required %}required{% endif %}>
+                        {% endif %}
+                        
+                        {% if param.description and param.type != 'boolean' %}
+                        <p class="form-hint">{{ param.description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </form>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline">Cancel</a>
+                <button type="submit" form="attack-form" class="btn btn-primary">
+                    ▶ Run Attack
+                </button>
+            </div>
+        </div>
+        
+        <!-- Attack Info -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Attack Details</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="attack-category {{ attack.category }}">{{ attack.category }}</span>
+                    <span class="attack-id">{{ attack.id }}</span>
+                </div>
+                
+                <p class="mb-4">{{ attack.description }}</p>
+                
+                {% if attack.info %}
+                <h4 class="mb-2">What this attack tests:</h4>
+                <ul class="mb-4">
+                    {% for item in attack.info.tests %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ Warning:</strong> Only run this attack against systems you own or have 
+                    explicit permission to test. Unauthorized security testing is illegal.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('attack-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        attack_id: formData.get('attack_id'),
+        target: formData.get('target'),
+        config: {}
+    };
+    
+    // Extract config parameters
+    for (const [key, value] of formData.entries()) {
+        if (key.startsWith('config.')) {
+            const configKey = key.replace('config.', '');
+            data.config[configKey] = value;
+        }
+    }
+    
+    try {
+        const response = await fetch('/api/attacks/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Redirect to results page
+            window.location.href = `/results/${result.job.id}`;
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Failed to start attack: ' + error.message);
+    }
+});
+</script>
+{% endblock %}

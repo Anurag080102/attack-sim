@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Attack-Sim{% endblock %} - Security Testing Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-logo">
+                <span class="logo-icon">🔒</span>
+                <span class="logo-text">Attack-Sim</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard.index') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+                <li><a href="{{ url_for('dashboard.reports_page') }}" class="nav-link {% if active_page == 'reports' %}active{% endif %}">Reports</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>⚠️ For authorized security testing only</p>
+            <p>&copy; 2025 Attack-Sim</p>
+        </div>
+    </footer>
+
+    <!-- Modal Container -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="modal-container" class="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <button id="modal-close" class="modal-close">&times;</button>
+            </div>
+            <div id="modal-content" class="modal-content">
+                <!-- Modal content inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

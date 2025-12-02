@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="section-header mb-4">
+        <h2 class="section-title">📊 Saved Reports</h2>
+        <button type="button" class="btn btn-sm btn-outline" id="refresh-reports">
+            🔄 Refresh
+        </button>
+    </div>
+    
+    <div class="reports-grid" id="reports-container">
+        <div class="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadReports();
+    
+    document.getElementById('refresh-reports').addEventListener('click', loadReports);
+});
+
+async function loadReports() {
+    const container = document.getElementById('reports-container');
+    
+    try {
+        const response = await fetch('/api/reports');
+        const data = await response.json();
+        
+        if (data.reports.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-state-icon">📋</div>
+                    <h3 class="empty-state-title">No Reports Yet</h3>
+                    <p class="empty-state-description">
+                        Complete an attack scan and save the report to see it here.
+                    </p>
+                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary">
+                        Go to Dashboard
+                    </a>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = data.reports.map(report => `
+            <div class="report-card">
+                <h3 class="report-title">${escapeHtml(report.title)}</h3>
+                <div class="report-meta">
+                    <span>📅 ${formatDate(report.created_at)}</span>
+                    <span>🔍 ${report.findings_count} findings</span>
+                </div>
+                <div class="report-actions">
+                    <button class="btn btn-sm btn-outline" onclick="downloadReport('${report.id}', 'json')">
+                        📄 JSON
+                    </button>
+                    <button class="btn btn-sm btn-outline" onclick="downloadReport('${report.id}', 'html')">
+                        🌐 HTML
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteReport('${report.id}')">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">❌</div>
+                <h3 class="empty-state-title">Error Loading Reports</h3>
+                <p class="empty-state-description">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function downloadReport(reportId, format) {
+    window.location.href = `/api/reports/${reportId}/download?format=${format}`;
+}
+
+async function deleteReport(reportId) {
+    if (!confirm('Are you sure you want to delete this report?')) return;
+    
+    try {
+        const response = await fetch(`/api/reports/${reportId}`, { method: 'DELETE' });
+        
+        if (response.ok) {
+            loadReports();
+        } else {
+            const data = await response.json();
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Failed to delete report: ' + error.message);
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatDate(isoString) {
+    return new Date(isoString).toLocaleString();
+}
+</script>
+{% endblock %}
