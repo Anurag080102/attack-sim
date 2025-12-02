@@ -16,12 +16,14 @@ from flask import Blueprint, request, jsonify, send_file, current_app
 
 from app.routes.attacks import attack_manager
 from app.validation import (
-    ValidationError,
     validate_required,
     validate_string,
     validate_report_id,
     sanitize_html
 )
+
+# Import error handling
+from app.errors import ValidationError, NotFoundError, ReportError
 
 
 reports_bp = Blueprint("reports", __name__)

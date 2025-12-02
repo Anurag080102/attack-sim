@@ -21,13 +21,15 @@ from attacks.base import BaseAttack
 
 # Import validation utilities
 from app.validation import (
-    ValidationError, 
     validate_required, 
     validate_url, 
     validate_string,
     validate_integer,
     validate_attack_config
 )
+
+# Import error handling
+from app.errors import ValidationError, AttackError, NotFoundError
 
 
 # Ensure attacks are registered by importing the modules

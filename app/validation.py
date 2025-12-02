@@ -8,14 +8,8 @@ import re
 from typing import Dict, Any, List, Tuple, Optional
 from urllib.parse import urlparse
 
-
-class ValidationError(Exception):
-    """Exception raised when validation fails."""
-    
-    def __init__(self, message: str, field: str = None):
-        self.message = message
-        self.field = field
-        super().__init__(self.message)
+# Import centralized error handling
+from app.errors import ValidationError
 
 
 def validate_required(data: Dict[str, Any], required_fields: List[str]) -> None:
