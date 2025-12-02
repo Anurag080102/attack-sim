@@ -19,6 +19,18 @@ from attacks import AttackRegistry
 from attacks.owasp import OWASPRegistry
 from attacks.base import BaseAttack
 
+# Import validation utilities
+from app.validation import (
+    validate_required, 
+    validate_url, 
+    validate_string,
+    validate_integer,
+    validate_attack_config
+)
+
+# Import error handling
+from app.errors import ValidationError, AttackError, NotFoundError
+
 
 # Ensure attacks are registered by importing the modules
 import attacks.bruteforce
@@ -349,21 +361,47 @@ def run_attack():
     if not data:
         return jsonify({"error": "Request body is required"}), 400
     
+    # Validate required fields
+    try:
+        validate_required(data, ["attack_id", "target"])
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+    
     attack_id = data.get("attack_id")
     target = data.get("target")
     config = data.get("config", {})
     
-    if not attack_id:
-        return jsonify({"error": "attack_id is required"}), 400
+    # Validate attack_id format
+    try:
+        attack_id = validate_string(attack_id, "attack_id", min_length=1, max_length=50)
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
     
-    if not target:
-        return jsonify({"error": "target is required"}), 400
+    # Validate and normalize target URL
+    try:
+        target = validate_url(target, "target")
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+    
+    # Get attack to validate config
+    attack = AttackRegistry.create(attack_id)
+    if attack is None:
+        attack = OWASPRegistry.create(attack_id)
+    
+    if attack is None:
+        return jsonify({"error": f"Attack '{attack_id}' not found"}), 404
+    
+    # Validate configuration against attack's options
+    try:
+        config = validate_attack_config(config, attack.get_config_options())
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
     
     # Create the job
     job = attack_manager.create_job(attack_id, target, config)
     
     if job is None:
-        return jsonify({"error": f"Attack '{attack_id}' not found"}), 404
+        return jsonify({"error": f"Failed to create attack job"}), 500
     
     # Start the job in background
     if not attack_manager.start_job(job.id):
@@ -444,12 +482,21 @@ def list_jobs():
     List all attack jobs.
     
     Query parameters:
-        limit: Maximum number of jobs to return (default: 50)
+        limit: Maximum number of jobs to return (default: 50, max: 500)
         
     Returns:
         JSON with list of jobs
     """
-    limit = request.args.get("limit", 50, type=int)
+    try:
+        limit = validate_integer(
+            request.args.get("limit", 50), 
+            "limit", 
+            min_value=1, 
+            max_value=500
+        )
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+    
     jobs = attack_manager.list_jobs(limit)
     
     return jsonify({

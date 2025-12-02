@@ -15,6 +15,15 @@ from typing import Dict, Any, List, Optional
 from flask import Blueprint, request, jsonify, send_file, current_app
 
 from app.routes.attacks import attack_manager
+from app.validation import (
+    validate_required,
+    validate_string,
+    validate_report_id,
+    sanitize_html
+)
+
+# Import error handling
+from app.errors import ValidationError, NotFoundError, ReportError
 
 
 reports_bp = Blueprint("reports", __name__)
@@ -365,7 +374,11 @@ def download_report(report_id: str):
     Returns:
         File download
     """
+    # Validate format parameter
     report_format = request.args.get("format", "json").lower()
+    if report_format not in ["json", "html"]:
+        return jsonify({"error": "format must be 'json' or 'html'"}), 400
+    
     report = load_report(report_id)
     
     if report is None:
@@ -415,9 +428,27 @@ def generate_report():
     if not data:
         return jsonify({"error": "Request body is required"}), 400
     
+    # Validate required fields
+    try:
+        validate_required(data, ["job_id"])
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+    
     job_id = data.get("job_id")
-    if not job_id:
-        return jsonify({"error": "job_id is required"}), 400
+    
+    # Validate job_id format (UUID)
+    try:
+        job_id = validate_string(job_id, "job_id", min_length=1, max_length=100)
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+    
+    # Validate title if provided
+    title = data.get("title")
+    if title:
+        try:
+            title = validate_string(title, "title", min_length=1, max_length=200)
+        except ValidationError as e:
+            return jsonify({"error": e.message}), 400
     
     # Get job from attack manager
     job = attack_manager.get_job(job_id)
@@ -429,7 +460,8 @@ def generate_report():
     
     # Generate report data
     report_id = generate_report_id()
-    title = data.get("title", f"{job.attack_name} Report - {job.target}")
+    if not title:
+        title = f"{job.attack_name} Report - {job.target}"
     
     report_data = {
         "id": report_id,
