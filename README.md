@@ -6,7 +6,95 @@ A web-based security testing tool with a simple GUI that enables automated simul
 
 ## ⚠️ Disclaimer
 
-> **WARNING**: This tool is intended for **authorized security testing only**. Only use against systems you own or have explicit written permission to test. Unauthorized access to computer systems is illegal.
+> **WARNING**: This tool is intended for **authorized security testing only**.
+> 
+> - Only use against systems you **own** or have **explicit written permission** to test
+> - Unauthorized access to computer systems is **illegal** and may result in criminal prosecution
+> - The authors assume **no liability** for misuse of this tool
+> - Always obtain proper authorization before conducting security assessments
+
+---
+
+## 🎯 Legal Testing Resources
+
+Use these **intentionally vulnerable applications** and platforms to safely test Attack-Sim:
+
+### General-Purpose Vulnerable Applications
+
+| Resource | URL | Description |
+|----------|-----|-------------|
+| **OWASP WebGoat** | https://owasp.org/www-project-webgoat/ | Official OWASP training app, covers all Top 10 |
+| **DVWA** | https://github.com/digininja/DVWA | Damn Vulnerable Web Application |
+| **OWASP Juice Shop** | https://owasp.org/www-project-juice-shop/ | Modern vulnerable app with 100+ challenges |
+| **HackTheBox** | https://www.hackthebox.com | Legal CTF platform with vulnerable machines |
+| **TryHackMe** | https://tryhackme.com | Guided hacking labs and rooms |
+| **PortSwigger Web Security Academy** | https://portswigger.net/web-security | Free labs for all OWASP categories |
+| **VulnHub** | https://www.vulnhub.com | Downloadable vulnerable VMs |
+| **CryptoHack** | https://cryptohack.org | Cryptography-focused challenges |
+
+### Per-Attack Testing Targets
+
+| Attack Module | Recommended Test Target |
+|---------------|------------------------|
+| **A01: Broken Access Control** | [PortSwigger Access Control Labs](https://portswigger.net/web-security/access-control) |
+| **A02: Cryptographic Failures** | [CryptoHack](https://cryptohack.org), OWASP Juice Shop |
+| **A03: Injection** | [PortSwigger SQL Injection Labs](https://portswigger.net/web-security/sql-injection) |
+| **A04: Insecure Design** | OWASP Juice Shop, WebGoat |
+| **A05: Security Misconfiguration** | [VulnHub VMs](https://www.vulnhub.com), DVWA |
+| **A06: Vulnerable Components** | OWASP Juice Shop, WebGoat |
+| **A07: Authentication Failures** | [PortSwigger Authentication Labs](https://portswigger.net/web-security/authentication) |
+| **A08: Integrity Failures** | OWASP Juice Shop (JWT challenges) |
+| **A09: Logging/Monitoring Failures** | Local test environments, DVWA |
+| **A10: SSRF** | [PortSwigger SSRF Labs](https://portswigger.net/web-security/ssrf) |
+
+### 🐳 Self-Hosted Options (Docker)
+
+Run vulnerable applications locally for safe testing:
+
+```bash
+# DVWA
+docker run --rm -it -p 80:80 vulnerables/web-dvwa
+
+# OWASP Juice Shop
+docker run --rm -p 3000:3000 bkimminich/juice-shop
+
+# WebGoat
+docker run -p 8080:8080 -p 9090:9090 webgoat/webgoat
+```
+
+> **Tip**: For beginners, start with [PortSwigger Web Security Academy](https://portswigger.net/web-security) - it offers free, isolated labs covering all OWASP Top 10 categories with no setup required.
+
+---
+
+## Table of Contents
+
+- [Attack-Sim](#attack-sim)
+  - [⚠️ Disclaimer](#️-disclaimer)
+  - [🎯 Legal Testing Resources](#-legal-testing-resources)
+    - [General-Purpose Vulnerable Applications](#general-purpose-vulnerable-applications)
+    - [Per-Attack Testing Targets](#per-attack-testing-targets)
+    - [🐳 Self-Hosted Options (Docker)](#-self-hosted-options-docker)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [OWASP Top 10 Attack Modules](#owasp-top-10-attack-modules)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Running the Application](#running-the-application)
+  - [Project Structure](#project-structure)
+  - [Technology Stack](#technology-stack)
+  - [Development](#development)
+    - [Running Tests](#running-tests)
+    - [Test Structure](#test-structure)
+    - [Code Formatting](#code-formatting)
+  - [API Documentation](#api-documentation)
+    - [Attack Endpoints](#attack-endpoints)
+    - [Report Endpoints](#report-endpoints)
+    - [Health Endpoint](#health-endpoint)
+  - [License](#license)
+  - [Contributing](#contributing)
+
+---
 
 ## Features
 
