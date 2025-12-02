@@ -12,6 +12,7 @@ This module implements detection of insecure design patterns including:
 import re
 import time
 from typing import Generator, Dict, Any, List
+
 # urljoin removed - not currently used
 
 from attacks.base import Finding, Severity
@@ -127,28 +128,30 @@ class InsecureDesignAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "test_rate_limiting": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for missing rate limiting"
-            },
-            "test_captcha": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for missing CAPTCHA on sensitive forms"
-            },
-            "test_predictable": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for predictable resource locations"
-            },
-            "rate_limit_requests": {
-                "type": "integer",
-                "default": 20,
-                "description": "Number of requests to send when testing rate limiting"
+        options.update(
+            {
+                "test_rate_limiting": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for missing rate limiting",
+                },
+                "test_captcha": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for missing CAPTCHA on sensitive forms",
+                },
+                "test_predictable": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for predictable resource locations",
+                },
+                "rate_limit_requests": {
+                    "type": "integer",
+                    "default": 20,
+                    "description": "Number of requests to send when testing rate limiting",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -159,29 +162,29 @@ class InsecureDesignAttack(BaseOWASPAttack):
                 description="Test if rate limiting is implemented",
                 category=OWASPCategory.A04_INSECURE_DESIGN,
                 payloads=[],
-                detection_patterns=["rate limit", "too many requests", "429"]
+                detection_patterns=["rate limit", "too many requests", "429"],
             ),
             OWASPTestCase(
                 name="Missing CAPTCHA",
                 description="Check for CAPTCHA on sensitive forms",
                 category=OWASPCategory.A04_INSECURE_DESIGN,
                 payloads=[],
-                detection_patterns=["captcha", "recaptcha", "hcaptcha"]
+                detection_patterns=["captcha", "recaptcha", "hcaptcha"],
             ),
             OWASPTestCase(
                 name="Predictable Resources",
                 description="Test for predictable/sequential resource identifiers",
                 category=OWASPCategory.A04_INSECURE_DESIGN,
                 payloads=self.PREDICTABLE_PATTERNS,
-                detection_patterns=[]
+                detection_patterns=[],
             ),
             OWASPTestCase(
                 name="Sensitive Files Exposure",
                 description="Check for exposed sensitive files",
                 category=OWASPCategory.A04_INSECURE_DESIGN,
                 payloads=self.SENSITIVE_FILES,
-                detection_patterns=[]
-            )
+                detection_patterns=[],
+            ),
         ]
 
     def _test_rate_limiting(self, target: str) -> Generator[Finding, None, None]:
@@ -224,10 +227,11 @@ class InsecureDesignAttack(BaseOWASPAttack):
                 if self.is_cancelled():
                     return
 
-                response = self._make_request(test_url, method="POST", data={
-                    "username": f"test{i}@test.com",
-                    "password": "testpassword123"
-                })
+                response = self._make_request(
+                    test_url,
+                    method="POST",
+                    data={"username": f"test{i}@test.com", "password": "testpassword123"},
+                )
 
                 if response:
                     responses.append(response.status_code)
@@ -241,7 +245,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
                         "x-ratelimit-limit",
                         "x-ratelimit-remaining",
                         "retry-after",
-                        "x-rate-limit-limit"
+                        "x-rate-limit-limit",
                     ]
 
                     for header in rate_limit_headers:
@@ -260,17 +264,17 @@ class InsecureDesignAttack(BaseOWASPAttack):
                     title="Missing Rate Limiting",
                     severity=Severity.MEDIUM,
                     description=f"No rate limiting detected on endpoint '{endpoint}'. "
-                               "This could allow brute force attacks.",
+                    "This could allow brute force attacks.",
                     evidence=f"Sent {num_requests} requests without being rate limited. "
-                            f"Response codes: {list(set(responses))}",
+                    f"Response codes: {list(set(responses))}",
                     remediation="Implement rate limiting on authentication endpoints. "
-                               "Use exponential backoff and account lockout policies. "
-                               "Consider using a WAF with rate limiting capabilities.",
+                    "Use exponential backoff and account lockout policies. "
+                    "Consider using a WAF with rate limiting capabilities.",
                     metadata={
                         "endpoint": endpoint,
                         "requests_sent": num_requests,
-                        "response_codes": list(set(responses))
-                    }
+                        "response_codes": list(set(responses)),
+                    },
                 )
 
         self.set_progress(25)
@@ -290,8 +294,15 @@ class InsecureDesignAttack(BaseOWASPAttack):
         forms = self._extract_forms(response.text)
 
         # Also check common pages for forms
-        pages_to_check = ["/login", "/register", "/signup", "/contact",
-                         "/forgot-password", "/reset-password", "/feedback"]
+        pages_to_check = [
+            "/login",
+            "/register",
+            "/signup",
+            "/contact",
+            "/forgot-password",
+            "/reset-password",
+            "/feedback",
+        ]
 
         for page in pages_to_check:
             if self.is_cancelled():
@@ -309,13 +320,13 @@ class InsecureDesignAttack(BaseOWASPAttack):
             time.sleep(self._delay_between_requests)
 
         captcha_patterns = [
-            r'captcha',
-            r'recaptcha',
-            r'hcaptcha',
-            r'g-recaptcha',
-            r'h-captcha',
-            r'cf-turnstile',
-            r'data-sitekey',
+            r"captcha",
+            r"recaptcha",
+            r"hcaptcha",
+            r"g-recaptcha",
+            r"h-captcha",
+            r"cf-turnstile",
+            r"data-sitekey",
         ]
 
         for form in forms:
@@ -357,16 +368,16 @@ class InsecureDesignAttack(BaseOWASPAttack):
                     title=f"Missing CAPTCHA on {form_type.title()} Form",
                     severity=Severity.LOW,
                     description=f"Sensitive form ({form_type}) does not have CAPTCHA protection. "
-                               "This could allow automated attacks.",
+                    "This could allow automated attacks.",
                     evidence=f"Page: {form_page}, Form action: {form_action}, "
-                            f"No CAPTCHA patterns found",
+                    f"No CAPTCHA patterns found",
                     remediation="Implement CAPTCHA (reCAPTCHA, hCaptcha, or similar) on "
-                               "sensitive forms to prevent automated submissions.",
+                    "sensitive forms to prevent automated submissions.",
                     metadata={
                         "page": form_page,
                         "form_action": form_action,
-                        "form_type": form_type
-                    }
+                        "form_type": form_type,
+                    },
                 )
 
         self.set_progress(50)
@@ -394,10 +405,11 @@ class InsecureDesignAttack(BaseOWASPAttack):
             time.sleep(self._delay_between_requests)
 
         if len(sequential_accessible) >= 2:
-            # Check if we're seeing sequential access (e.g., /user/1 and /user/2)
+            # Check if we're seeing sequential access (e.g., /user/1 and
+            # /user/2)
             paths_by_prefix = {}
             for path in sequential_accessible:
-                prefix = '/'.join(path.split('/')[:-1])
+                prefix = "/".join(path.split("/")[:-1])
                 if prefix not in paths_by_prefix:
                     paths_by_prefix[prefix] = []
                 paths_by_prefix[prefix].append(path)
@@ -408,14 +420,11 @@ class InsecureDesignAttack(BaseOWASPAttack):
                         title="Predictable Resource Identifiers",
                         severity=Severity.MEDIUM,
                         description=f"Resources under '{prefix}' use sequential/predictable IDs. "
-                                   "This may allow enumeration of resources.",
+                        "This may allow enumeration of resources.",
                         evidence=f"Accessible paths: {paths}",
                         remediation="Use UUIDs or other non-sequential identifiers for resources. "
-                                   "Implement proper authorization checks for resource access.",
-                        metadata={
-                            "prefix": prefix,
-                            "accessible_paths": paths
-                        }
+                        "Implement proper authorization checks for resource access.",
+                        metadata={"prefix": prefix, "accessible_paths": paths},
                     )
 
         self.set_progress(75)
@@ -449,17 +458,17 @@ class InsecureDesignAttack(BaseOWASPAttack):
                     is_actual_file = "[core]" in response.text or "[remote" in response.text
                 elif file_path.endswith(".env"):
                     is_actual_file = "=" in response.text and (
-                        "KEY" in response.text.upper() or
-                        "SECRET" in response.text.upper() or
-                        "PASSWORD" in response.text.upper()
+                        "KEY" in response.text.upper()
+                        or "SECRET" in response.text.upper()
+                        or "PASSWORD" in response.text.upper()
                     )
                 elif file_path.endswith((".json", ".yml", ".yaml")):
                     is_actual_file = "{" in response.text or ":" in response.text
                 elif file_path.endswith((".sql", ".bak")):
                     is_actual_file = (
-                        "CREATE" in response.text.upper() or
-                        "INSERT" in response.text.upper() or
-                        "SELECT" in response.text.upper()
+                        "CREATE" in response.text.upper()
+                        or "INSERT" in response.text.upper()
+                        or "SELECT" in response.text.upper()
                     )
                 elif file_path.endswith(".php"):
                     is_actual_file = "<?php" in response.text or "phpinfo" in response.text.lower()
@@ -468,26 +477,38 @@ class InsecureDesignAttack(BaseOWASPAttack):
                     is_actual_file = content_length > 100
 
                 if is_actual_file:
-                    severity = Severity.HIGH if any(
-                        x in file_path for x in [".env", ".git", "config", "secret",
-                                                  "password", ".sql", "backup"]
-                    ) else Severity.MEDIUM
+                    severity = (
+                        Severity.HIGH
+                        if any(
+                            x in file_path
+                            for x in [
+                                ".env",
+                                ".git",
+                                "config",
+                                "secret",
+                                "password",
+                                ".sql",
+                                "backup",
+                            ]
+                        )
+                        else Severity.MEDIUM
+                    )
 
                     yield Finding(
                         title=f"Sensitive File Exposed: {file_path}",
                         severity=severity,
                         description=f"Sensitive file '{file_path}' is publicly accessible. "
-                                   "This may expose configuration, credentials, or source code.",
+                        "This may expose configuration, credentials, or source code.",
                         evidence=f"URL: {test_url}, Size: {content_length} bytes, "
-                                f"Content-Type: {content_type}",
+                        f"Content-Type: {content_type}",
                         remediation="Remove sensitive files from web root. "
-                                   "Configure web server to deny access to sensitive files. "
-                                   "Use .htaccess or nginx configuration to block access.",
+                        "Configure web server to deny access to sensitive files. "
+                        "Use .htaccess or nginx configuration to block access.",
                         metadata={
                             "file": file_path,
                             "size": content_length,
-                            "content_type": content_type
-                        }
+                            "content_type": content_type,
+                        },
                     )
 
             self.set_progress(75 + ((idx + 1) / total_files) * 25)
@@ -512,7 +533,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
             description="Starting scan for insecure design patterns",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -539,5 +560,5 @@ class InsecureDesignAttack(BaseOWASPAttack):
             description="Completed scan for insecure design patterns",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

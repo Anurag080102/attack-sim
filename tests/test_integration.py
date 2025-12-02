@@ -5,12 +5,7 @@ This module provides end-to-end integration tests that verify
 the complete functionality of the application.
 """
 
-import pytest
 import time
-import json
-from pathlib import Path
-import tempfile
-import shutil
 
 
 class TestIntegration:
@@ -46,11 +41,8 @@ class TestIntegration:
         # 4. Start an attack (202 Accepted for async operations)
         response = client.post(
             "/api/attacks/run",
-            json={
-                "attack_id": "bruteforce",
-                "target": "http://example.com"
-            },
-            content_type="application/json"
+            json={"attack_id": "bruteforce", "target": "http://example.com"},
+            content_type="application/json",
         )
         assert response.status_code in [200, 201, 202]
         job_id = self._get_job_id(response.json)
@@ -69,9 +61,7 @@ class TestIntegration:
 
         # 7. Generate a report
         response = client.post(
-            "/api/reports/generate",
-            json={"job_id": job_id},
-            content_type="application/json"
+            "/api/reports/generate", json={"job_id": job_id}, content_type="application/json"
         )
         assert response.status_code in [200, 201]
         assert "report_id" in response.json
@@ -108,11 +98,8 @@ class TestIntegration:
             # Run an OWASP attack
             response = client.post(
                 "/api/attacks/run",
-                json={
-                    "attack_id": attack_id,
-                    "target": "http://localhost:9999"
-                },
-                content_type="application/json"
+                json={"attack_id": attack_id, "target": "http://localhost:9999"},
+                content_type="application/json",
             )
             assert response.status_code in [200, 201, 202]
             job_id = self._get_job_id(response.json)
@@ -123,11 +110,8 @@ class TestIntegration:
         # Start an attack
         response = client.post(
             "/api/attacks/run",
-            json={
-                "attack_id": "dictionary",
-                "target": "http://example.com"
-            },
-            content_type="application/json"
+            json={"attack_id": "dictionary", "target": "http://example.com"},
+            content_type="application/json",
         )
         assert response.status_code in [200, 201, 202]
         job_id = self._get_job_id(response.json)
@@ -155,7 +139,7 @@ class TestIntegration:
         response = client.post(
             "/api/attacks/run",
             json={"attack_id": "bruteforce"},  # Missing target
-            content_type="application/json"
+            content_type="application/json",
         )
         assert response.status_code == 400
 
@@ -190,9 +174,9 @@ class TestDataIntegrity:
             json={
                 "attack_id": "bruteforce",
                 "target": "http://example.com",
-                "config": {"charset": "digits"}
+                "config": {"charset": "digits"},
             },
-            content_type="application/json"
+            content_type="application/json",
         )
         assert response.status_code in [200, 201, 202]
         job_id = self._get_job_id(response.json)
@@ -209,11 +193,8 @@ class TestDataIntegrity:
         # Run an attack
         response = client.post(
             "/api/attacks/run",
-            json={
-                "attack_id": "bruteforce",
-                "target": "http://test.example.com"
-            },
-            content_type="application/json"
+            json={"attack_id": "bruteforce", "target": "http://test.example.com"},
+            content_type="application/json",
         )
         assert response.status_code in [200, 201, 202]
         job_id = self._get_job_id(response.json)
@@ -226,7 +207,7 @@ class TestDataIntegrity:
         response = client.post(
             "/api/reports/generate",
             json={"job_id": job_id, "title": "Test Report"},
-            content_type="application/json"
+            content_type="application/json",
         )
         assert response.status_code in [200, 201]
         report_id = response.json["report_id"]
@@ -247,11 +228,8 @@ class TestDataIntegrity:
         for attack_id in ["bruteforce", "dictionary"]:
             response = client.post(
                 "/api/attacks/run",
-                json={
-                    "attack_id": attack_id,
-                    "target": "http://example.com"
-                },
-                content_type="application/json"
+                json={"attack_id": attack_id, "target": "http://example.com"},
+                content_type="application/json",
             )
             if response.status_code in [200, 201, 202]:
                 job_id = self._get_job_id(response.json)
@@ -276,9 +254,9 @@ class TestSecurityValidation:
             "/api/attacks/run",
             json={
                 "attack_id": "bruteforce",
-                "target": "http://example.com<script>alert('xss')</script>"
+                "target": "http://example.com<script>alert('xss')</script>",
             },
-            content_type="application/json"
+            content_type="application/json",
         )
         # Should either sanitize or reject
         assert response.status_code in [200, 201, 400]
@@ -288,9 +266,9 @@ class TestSecurityValidation:
             "/api/attacks/run",
             json={
                 "attack_id": "bruteforce'; DROP TABLE attacks;--",
-                "target": "http://example.com"
+                "target": "http://example.com",
             },
-            content_type="application/json"
+            content_type="application/json",
         )
         # Should reject invalid attack_id
         assert response.status_code in [400, 404]
@@ -308,8 +286,7 @@ class TestSecurityValidation:
         """Test that content type is properly enforced."""
         # POST without JSON content type
         response = client.post(
-            "/api/attacks/run",
-            data="attack_id=bruteforce&target=http://example.com"
+            "/api/attacks/run", data="attack_id=bruteforce&target=http://example.com"
         )
         assert response.status_code in [400, 415]
 
@@ -373,21 +350,24 @@ class TestAttackModules:
             # Try to start each attack
             response = client.post(
                 "/api/attacks/run",
-                json={
-                    "attack_id": attack_id,
-                    "target": "http://localhost:9999"
-                },
-                content_type="application/json"
+                json={"attack_id": attack_id, "target": "http://localhost:9999"},
+                content_type="application/json",
             )
 
-            # Should either succeed (200, 201, 202) or fail gracefully (400, 500)
-            assert response.status_code in [200, 201, 202, 400, 500], \
-                f"Attack {attack_id} returned unexpected status {response.status_code}"
+            # Should either succeed (200, 201, 202) or fail gracefully (400,
+            # 500)
+            assert response.status_code in [
+                200,
+                201,
+                202,
+                400,
+                500,
+            ], f"Attack {attack_id} returned unexpected status {
+                response.status_code}"
 
             if response.status_code in [200, 201, 202]:
                 job_id = self._get_job_id(response.json)
-                assert job_id is not None, \
-                    f"Attack {attack_id} missing job_id in response"
+                assert job_id is not None, f"Attack {attack_id} missing job_id in response"
 
     def test_attack_config_options_are_valid(self, client):
         """Test that attack configuration options are properly defined."""
@@ -408,5 +388,6 @@ class TestAttackModules:
 
                 for key, option in config_options.items():
                     # Each option should have at least a type
-                    assert "type" in option or "default" in option or "description" in option, \
-                        f"Attack {attack_id} option {key} missing required fields"
+                    assert (
+                        "type" in option or "default" in option or "description" in option
+                    ), f"Attack {attack_id} option {key} missing required fields"

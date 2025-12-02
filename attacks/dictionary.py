@@ -83,72 +83,72 @@ class DictionaryAttack(BaseAttack):
             "username": {
                 "type": "string",
                 "default": "admin",
-                "description": "Target username (ignored if username_wordlist is set)"
+                "description": "Target username (ignored if username_wordlist is set)",
             },
             "password_wordlist": {
                 "type": "file",
                 "default": "wordlists/common_passwords.txt",
                 "description": "Path to password wordlist file",
-                "required": True
+                "required": True,
             },
             "username_wordlist": {
                 "type": "file",
                 "default": None,
-                "description": "Path to username wordlist file (for user enumeration)"
+                "description": "Path to username wordlist file (for user enumeration)",
             },
             "login_url": {
                 "type": "string",
                 "default": None,
-                "description": "Full login URL (defaults to target/login)"
+                "description": "Full login URL (defaults to target/login)",
             },
             "username_field": {
                 "type": "string",
                 "default": "username",
-                "description": "Form field name for username"
+                "description": "Form field name for username",
             },
             "password_field": {
                 "type": "string",
                 "default": "password",
-                "description": "Form field name for password"
+                "description": "Form field name for password",
             },
             "success_indicator": {
                 "type": "string",
                 "default": None,
-                "description": "Text indicating successful login"
+                "description": "Text indicating successful login",
             },
             "failure_indicator": {
                 "type": "string",
                 "default": "invalid",
-                "description": "Text indicating failed login"
+                "description": "Text indicating failed login",
             },
             "max_threads": {
                 "type": "integer",
                 "default": self.DEFAULT_MAX_THREADS,
                 "description": "Maximum concurrent threads",
                 "min": 1,
-                "max": 20
+                "max": 20,
             },
             "timeout": {
                 "type": "integer",
                 "default": self.DEFAULT_TIMEOUT,
-                "description": "Request timeout in seconds"
+                "description": "Request timeout in seconds",
             },
             "delay": {
                 "type": "float",
                 "default": self.DEFAULT_DELAY,
-                "description": "Delay between requests in seconds"
+                "description": "Delay between requests in seconds",
             },
             "http_method": {
                 "type": "select",
                 "default": "POST",
                 "options": ["POST", "GET"],
-                "description": "HTTP method to use"
+                "description": "HTTP method to use",
             },
             "stop_on_success": {
                 "type": "boolean",
                 "default": True,
-                "description": "Stop when first valid credential is found"
-            }
+                "description": "Stop when first valid credential is found",
+            },
         }
 
     def _resolve_wordlist_path(self, wordlist_path: str) -> Path:
@@ -174,10 +174,10 @@ class DictionaryAttack(BaseAttack):
         path = self._resolve_wordlist_path(wordlist_path)
 
         words = []
-        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 word = line.strip()
-                if word and not word.startswith('#'):
+                if word and not word.startswith("#"):
                     words.append(word)
 
         return words
@@ -244,16 +244,17 @@ class DictionaryAttack(BaseAttack):
         timeout = self._config.get("timeout", self.DEFAULT_TIMEOUT)
         http_method = self._config.get("http_method", "POST")
 
-        data = {
-            username_field: username,
-            password_field: password
-        }
+        data = {username_field: username, password_field: password}
 
         try:
             if http_method == "POST":
-                response = self._session.post(login_url, data=data, timeout=timeout, allow_redirects=True)
+                response = self._session.post(
+                    login_url, data=data, timeout=timeout, allow_redirects=True
+                )
             else:
-                response = self._session.get(login_url, params=data, timeout=timeout, allow_redirects=True)
+                response = self._session.get(
+                    login_url, params=data, timeout=timeout, allow_redirects=True
+                )
 
             # Check for success/failure indicators
             success_indicator = self._config.get("success_indicator")
@@ -266,14 +267,16 @@ class DictionaryAttack(BaseAttack):
             elif failure_indicator:
                 is_success = failure_indicator.lower() not in response.text.lower()
             else:
-                is_success = response.status_code in [200, 302] and "logout" in response.text.lower()
+                is_success = (
+                    response.status_code in [200, 302] and "logout" in response.text.lower()
+                )
 
             return {
                 "success": is_success,
                 "username": username,
                 "password": password,
                 "response_code": response.status_code,
-                "error": None
+                "error": None,
             }
 
         except RequestException as e:
@@ -282,7 +285,7 @@ class DictionaryAttack(BaseAttack):
                 "username": username,
                 "password": password,
                 "response_code": None,
-                "error": str(e)
+                "error": str(e),
             }
 
     def run(self, target: str) -> Generator[Finding, None, None]:
@@ -315,7 +318,7 @@ class DictionaryAttack(BaseAttack):
                 severity=Severity.INFO,
                 description=f"Could not load wordlists: {e}",
                 evidence=f"Password wordlist: {password_wordlist}",
-                remediation="Verify wordlist files exist and are readable"
+                remediation="Verify wordlist files exist and are readable",
             )
             self._is_running = False
             return
@@ -332,8 +335,8 @@ class DictionaryAttack(BaseAttack):
             metadata={
                 "password_wordlist": password_wordlist,
                 "username_wordlist": username_wordlist,
-                "total_attempts": self._total_attempts
-            }
+                "total_attempts": self._total_attempts,
+            },
         )
 
         found_credentials: List[Dict[str, str]] = []
@@ -375,7 +378,10 @@ class DictionaryAttack(BaseAttack):
                                 errors_count += 1
 
                             if result["success"]:
-                                cred = {"username": result["username"], "password": result["password"]}
+                                cred = {
+                                    "username": result["username"],
+                                    "password": result["password"],
+                                }
                                 found_credentials.append(cred)
 
                                 yield Finding(
@@ -387,8 +393,8 @@ class DictionaryAttack(BaseAttack):
                                     metadata={
                                         "username": result["username"],
                                         "password": result["password"],
-                                        "attempts": self._current_attempt
-                                    }
+                                        "attempts": self._current_attempt,
+                                    },
                                 )
 
                                 if stop_on_success:
@@ -400,7 +406,9 @@ class DictionaryAttack(BaseAttack):
                             if not self._is_cancelled:
                                 try:
                                     username, password = next(cred_gen)
-                                    new_future = executor.submit(self._try_login, target, username, password)
+                                    new_future = executor.submit(
+                                        self._try_login, target, username, password
+                                    )
                                     futures[new_future] = (username, password)
                                 except StopIteration:
                                     pass
@@ -433,8 +441,8 @@ class DictionaryAttack(BaseAttack):
                             metadata={
                                 "username": result["username"],
                                 "password": result["password"],
-                                "attempts": self._current_attempt
-                            }
+                                "attempts": self._current_attempt,
+                            },
                         )
 
                         if stop_on_success:
@@ -462,8 +470,8 @@ class DictionaryAttack(BaseAttack):
                 metadata={
                     "attempts": self._current_attempt,
                     "errors": errors_count,
-                    "cancelled": self._is_cancelled
-                }
+                    "cancelled": self._is_cancelled,
+                },
             )
         else:
             yield Finding(
@@ -474,8 +482,8 @@ class DictionaryAttack(BaseAttack):
                 remediation="Review all discovered credentials and enforce password policy",
                 metadata={
                     "credentials_found": len(found_credentials),
-                    "attempts": self._current_attempt
-                }
+                    "attempts": self._current_attempt,
+                },
             )
 
         if errors_count > 0:
@@ -483,7 +491,7 @@ class DictionaryAttack(BaseAttack):
                 title="Connection Errors During Attack",
                 severity=Severity.LOW,
                 description=f"Encountered {errors_count} connection errors during the attack",
-                evidence=f"Error rate: {(errors_count/max(self._current_attempt, 1))*100:.1f}%",
+                evidence=f"Error rate: {(errors_count / max(self._current_attempt, 1)) * 100:.1f}%",
                 remediation="Check target availability and network connectivity",
-                metadata={"error_count": errors_count}
+                metadata={"error_count": errors_count},
             )

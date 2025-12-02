@@ -15,10 +15,7 @@ from typing import Dict, Any, List, Optional
 from flask import Blueprint, request, jsonify, send_file, current_app
 
 from app.routes.attacks import attack_manager
-from app.validation import (
-    validate_required,
-    validate_string
-)
+from app.validation import validate_required, validate_string
 
 # Import error handling
 from app.errors import ValidationError
@@ -111,15 +108,17 @@ def list_report_files() -> List[Dict[str, Any]]:
             title = "Untitled Report"
             findings_count = 0
 
-        reports.append({
-            "id": report_id,
-            "title": title,
-            "filename": file_path.name,
-            "size_bytes": stat.st_size,
-            "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
-            "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-            "findings_count": findings_count
-        })
+        reports.append(
+            {
+                "id": report_id,
+                "title": title,
+                "filename": file_path.name,
+                "size_bytes": stat.st_size,
+                "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                "findings_count": findings_count,
+            }
+        )
 
     # Sort by creation time (newest first)
     reports.sort(key=lambda r: r["created_at"], reverse=True)
@@ -190,7 +189,12 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
             margin-bottom: 20px;
         }}
         header h1 {{ margin-bottom: 10px; }}
-        .meta {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }}
+        .meta {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }}
         .meta-item {{ background: rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; }}
         .meta-label {{ font-size: 0.85em; opacity: 0.8; }}
         .summary {{
@@ -324,6 +328,7 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
 
 # API Endpoints
 
+
 @reports_bp.route("/reports", methods=["GET"])
 def list_reports():
     """
@@ -333,10 +338,7 @@ def list_reports():
         JSON list of report metadata
     """
     reports = list_report_files()
-    return jsonify({
-        "reports": reports,
-        "total": len(reports)
-    })
+    return jsonify({"reports": reports, "total": len(reports)})
 
 
 @reports_bp.route("/reports/<report_id>", methods=["GET"])
@@ -392,7 +394,7 @@ def download_report(report_id: str):
             buffer,
             mimetype="text/html",
             as_attachment=True,
-            download_name=f"report_{report_id}.html"
+            download_name=f"report_{report_id}.html",
         )
     else:
         # JSON download
@@ -403,7 +405,7 @@ def download_report(report_id: str):
             file_path,
             mimetype="application/json",
             as_attachment=True,
-            download_name=f"report_{report_id}.json"
+            download_name=f"report_{report_id}.json",
         )
 
 
@@ -474,28 +476,31 @@ def generate_report():
         "started_at": job.started_at.isoformat() if job.started_at else None,
         "completed_at": job.completed_at.isoformat() if job.completed_at else None,
         "findings": findings,
-        "summary": {
-            "total_findings": len(findings),
-            "by_severity": {}
-        }
+        "summary": {"total_findings": len(findings), "by_severity": {}},
     }
 
     # Count by severity
     for finding in findings:
         severity = finding.get("severity", "info")
-        report_data["summary"]["by_severity"][severity] = \
+        report_data["summary"]["by_severity"][severity] = (
             report_data["summary"]["by_severity"].get(severity, 0) + 1
+        )
 
     # Save report
     file_path = save_report(report_data, report_id)
 
-    return jsonify({
-        "message": "Report generated successfully",
-        "report_id": report_id,
-        "file_path": str(file_path),
-        "title": title,
-        "findings_count": len(findings)
-    }), 201
+    return (
+        jsonify(
+            {
+                "message": "Report generated successfully",
+                "report_id": report_id,
+                "file_path": str(file_path),
+                "title": title,
+                "findings_count": len(findings),
+            }
+        ),
+        201,
+    )
 
 
 @reports_bp.route("/reports/<report_id>", methods=["DELETE"])

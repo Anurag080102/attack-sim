@@ -24,7 +24,7 @@ class AppError(Exception):
         message: str,
         status_code: int = 500,
         error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize application error.
@@ -48,19 +48,13 @@ class AppError(Exception):
         result = []
         for i, char in enumerate(name):
             if char.isupper() and i > 0:
-                result.append('_')
+                result.append("_")
             result.append(char.upper())
-        return ''.join(result)
+        return "".join(result)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert error to dictionary for JSON response."""
-        response = {
-            "success": False,
-            "error": {
-                "code": self.error_code,
-                "message": self.message
-            }
-        }
+        response = {"success": False, "error": {"code": self.error_code, "message": self.message}}
         if self.details:
             response["error"]["details"] = self.details
         return response
@@ -70,19 +64,13 @@ class ValidationError(AppError):
     """Raised when input validation fails."""
 
     def __init__(
-        self,
-        message: str,
-        field: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        self, message: str, field: Optional[str] = None, details: Optional[Dict[str, Any]] = None
     ):
         details = details or {}
         if field:
             details["field"] = field
         super().__init__(
-            message=message,
-            status_code=400,
-            error_code="VALIDATION_ERROR",
-            details=details
+            message=message, status_code=400, error_code="VALIDATION_ERROR", details=details
         )
 
 
@@ -90,10 +78,7 @@ class NotFoundError(AppError):
     """Raised when a requested resource is not found."""
 
     def __init__(
-        self,
-        resource_type: str,
-        resource_id: Optional[str] = None,
-        message: Optional[str] = None
+        self, resource_type: str, resource_id: Optional[str] = None, message: Optional[str] = None
     ):
         if message is None:
             if resource_id:
@@ -104,7 +89,7 @@ class NotFoundError(AppError):
             message=message,
             status_code=404,
             error_code="NOT_FOUND",
-            details={"resource_type": resource_type, "resource_id": resource_id}
+            details={"resource_type": resource_type, "resource_id": resource_id},
         )
 
 
@@ -112,15 +97,10 @@ class AuthenticationError(AppError):
     """Raised when authentication fails."""
 
     def __init__(
-        self,
-        message: str = "Authentication required",
-        details: Optional[Dict[str, Any]] = None
+        self, message: str = "Authentication required", details: Optional[Dict[str, Any]] = None
     ):
         super().__init__(
-            message=message,
-            status_code=401,
-            error_code="AUTHENTICATION_REQUIRED",
-            details=details
+            message=message, status_code=401, error_code="AUTHENTICATION_REQUIRED", details=details
         )
 
 
@@ -128,15 +108,10 @@ class AuthorizationError(AppError):
     """Raised when user lacks permission for an action."""
 
     def __init__(
-        self,
-        message: str = "Permission denied",
-        details: Optional[Dict[str, Any]] = None
+        self, message: str = "Permission denied", details: Optional[Dict[str, Any]] = None
     ):
         super().__init__(
-            message=message,
-            status_code=403,
-            error_code="PERMISSION_DENIED",
-            details=details
+            message=message, status_code=403, error_code="PERMISSION_DENIED", details=details
         )
 
 
@@ -147,17 +122,12 @@ class ConflictError(AppError):
         self,
         message: str,
         resource_type: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if resource_type:
             details["resource_type"] = resource_type
-        super().__init__(
-            message=message,
-            status_code=409,
-            error_code="CONFLICT",
-            details=details
-        )
+        super().__init__(message=message, status_code=409, error_code="CONFLICT", details=details)
 
 
 class RateLimitError(AppError):
@@ -167,16 +137,13 @@ class RateLimitError(AppError):
         self,
         message: str = "Rate limit exceeded",
         retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if retry_after:
             details["retry_after"] = retry_after
         super().__init__(
-            message=message,
-            status_code=429,
-            error_code="RATE_LIMIT_EXCEEDED",
-            details=details
+            message=message, status_code=429, error_code="RATE_LIMIT_EXCEEDED", details=details
         )
 
 
@@ -187,16 +154,13 @@ class ServiceUnavailableError(AppError):
         self,
         message: str = "Service temporarily unavailable",
         retry_after: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if retry_after:
             details["retry_after"] = retry_after
         super().__init__(
-            message=message,
-            status_code=503,
-            error_code="SERVICE_UNAVAILABLE",
-            details=details
+            message=message, status_code=503, error_code="SERVICE_UNAVAILABLE", details=details
         )
 
 
@@ -208,7 +172,7 @@ class AttackError(AppError):
         message: str,
         attack_id: Optional[str] = None,
         job_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if attack_id:
@@ -216,10 +180,7 @@ class AttackError(AppError):
         if job_id:
             details["job_id"] = job_id
         super().__init__(
-            message=message,
-            status_code=500,
-            error_code="ATTACK_ERROR",
-            details=details
+            message=message, status_code=500, error_code="ATTACK_ERROR", details=details
         )
 
 
@@ -230,16 +191,13 @@ class ReportError(AppError):
         self,
         message: str,
         report_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if report_id:
             details["report_id"] = report_id
         super().__init__(
-            message=message,
-            status_code=500,
-            error_code="REPORT_ERROR",
-            details=details
+            message=message, status_code=500, error_code="REPORT_ERROR", details=details
         )
 
 
@@ -250,16 +208,13 @@ class ConfigurationError(AppError):
         self,
         message: str,
         config_key: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         details = details or {}
         if config_key:
             details["config_key"] = config_key
         super().__init__(
-            message=message,
-            status_code=500,
-            error_code="CONFIGURATION_ERROR",
-            details=details
+            message=message, status_code=500, error_code="CONFIGURATION_ERROR", details=details
         )
 
 
@@ -276,7 +231,7 @@ def register_error_handlers(app: Flask) -> None:
         """Handle custom application errors."""
         logger.error(
             f"Application error: {error.error_code} - {error.message}",
-            extra={"details": error.details}
+            extra={"details": error.details},
         )
         return jsonify(error.to_dict()), error.status_code
 
@@ -285,14 +240,11 @@ def register_error_handlers(app: Flask) -> None:
         """Handle Werkzeug HTTP exceptions."""
         response = {
             "success": False,
-            "error": {
-                "code": error.name.upper().replace(" ", "_"),
-                "message": error.description
-            }
+            "error": {"code": error.name.upper().replace(" ", "_"), "message": error.description},
         }
         logger.warning(
             f"HTTP error: {error.code} - {error.name}",
-            extra={"path": request.path, "method": request.method}
+            extra={"path": request.path, "method": request.method},
         )
         return jsonify(response), error.code
 
@@ -303,8 +255,8 @@ def register_error_handlers(app: Flask) -> None:
             "success": False,
             "error": {
                 "code": "NOT_FOUND",
-                "message": f"The requested URL '{request.path}' was not found"
-            }
+                "message": f"The requested URL '{request.path}' was not found",
+            },
         }
         return jsonify(response), 404
 
@@ -315,8 +267,10 @@ def register_error_handlers(app: Flask) -> None:
             "success": False,
             "error": {
                 "code": "METHOD_NOT_ALLOWED",
-                "message": f"Method '{request.method}' is not allowed for URL '{request.path}'"
-            }
+                "message": f"Method '{
+                    request.method}' is not allowed for URL '{
+                    request.path}'",
+            },
         }
         return jsonify(response), 405
 
@@ -327,8 +281,8 @@ def register_error_handlers(app: Flask) -> None:
             "success": False,
             "error": {
                 "code": "UNSUPPORTED_MEDIA_TYPE",
-                "message": "Request must have Content-Type: application/json"
-            }
+                "message": "Request must have Content-Type: application/json",
+            },
         }
         return jsonify(response), 415
 
@@ -340,8 +294,8 @@ def register_error_handlers(app: Flask) -> None:
             "success": False,
             "error": {
                 "code": "INTERNAL_SERVER_ERROR",
-                "message": "An internal server error occurred"
-            }
+                "message": "An internal server error occurred",
+            },
         }
         # In debug mode, include the error message
         if app.debug:
@@ -354,10 +308,7 @@ def register_error_handlers(app: Flask) -> None:
         logger.exception(f"Unexpected error: {error}")
         response = {
             "success": False,
-            "error": {
-                "code": "UNEXPECTED_ERROR",
-                "message": "An unexpected error occurred"
-            }
+            "error": {"code": "UNEXPECTED_ERROR", "message": "An unexpected error occurred"},
         }
         # In debug mode, include the error details
         if app.debug:
@@ -372,6 +323,7 @@ def safe_execute(func):
 
     Catches exceptions and converts them to appropriate AppError instances.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -390,8 +342,9 @@ def safe_execute(func):
             raise AppError(
                 message=f"Operation failed: {e}",
                 status_code=500,
-                details={"function": func.__name__}
+                details={"function": func.__name__},
             )
+
     return wrapper
 
 
@@ -409,5 +362,5 @@ __all__ = [
     "ReportError",
     "ConfigurationError",
     "register_error_handlers",
-    "safe_execute"
+    "safe_execute",
 ]

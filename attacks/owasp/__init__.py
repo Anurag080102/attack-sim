@@ -35,9 +35,11 @@ class OWASPRegistry:
             class BrokenAccessControlAttack(BaseOWASPAttack):
                 ...
         """
+
         def decorator(attack_class: Type[BaseOWASPAttack]):
             cls._attacks[attack_id] = attack_class
             return attack_class
+
         return decorator
 
     @classmethod
@@ -130,12 +132,14 @@ class OWASPRegistry:
         categories = []
         for category in OWASPCategory:
             attacks = cls.get_by_category(category)
-            categories.append({
-                "id": category.name,
-                "name": category.value,
-                "attack_count": len(attacks),
-                "attacks": [a["id"] for a in attacks]
-            })
+            categories.append(
+                {
+                    "id": category.name,
+                    "name": category.value,
+                    "attack_count": len(attacks),
+                    "attacks": [a["id"] for a in attacks],
+                }
+            )
         return categories
 
     @classmethod
@@ -145,9 +149,4 @@ class OWASPRegistry:
 
 
 # Export commonly used classes
-__all__ = [
-    "OWASPRegistry",
-    "BaseOWASPAttack",
-    "OWASPCategory",
-    "OWASPTestCase"
-]
+__all__ = ["OWASPRegistry", "BaseOWASPAttack", "OWASPCategory", "OWASPTestCase"]

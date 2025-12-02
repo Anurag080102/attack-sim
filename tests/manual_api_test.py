@@ -6,7 +6,6 @@ Tests all API endpoints to verify Phase 5 implementation.
 """
 import requests
 import time
-import json
 
 BASE_URL = "http://127.0.0.1:5000"
 
@@ -73,12 +72,18 @@ def main():
     test_endpoint("POST", "/api/attacks/run", data={}, expected_status=400)
     test_endpoint("POST", "/api/attacks/run", data={"attack_id": "bruteforce"}, expected_status=400)
 
-    # Test running an attack (will fail since no real target, but tests the flow)
-    job_result = test_endpoint("POST", "/api/attacks/run", data={
-        "attack_id": "a05",  # Security misconfiguration - doesn't require valid target
-        "target": "http://example.com",
-        "config": {}
-    }, expected_status=202)
+    # Test running an attack (will fail since no real target, but tests the
+    # flow)
+    job_result = test_endpoint(
+        "POST",
+        "/api/attacks/run",
+        data={
+            "attack_id": "a05",  # Security misconfiguration - doesn't require valid target
+            "target": "http://example.com",
+            "config": {},
+        },
+        expected_status=202,
+    )
 
     if job_result:
         job_id = job_result.get("job", {}).get("id")
@@ -106,10 +111,12 @@ def main():
         job_id = job_result.get("job", {}).get("id")
         if job_id:
             time.sleep(2)  # Wait for job to complete
-            report_result = test_endpoint("POST", "/api/reports/generate", data={
-                "job_id": job_id,
-                "title": "Test Report"
-            }, expected_status=201)
+            report_result = test_endpoint(
+                "POST",
+                "/api/reports/generate",
+                data={"job_id": job_id, "title": "Test Report"},
+                expected_status=201,
+            )
 
             if report_result:
                 report_id = report_result.get("report_id")

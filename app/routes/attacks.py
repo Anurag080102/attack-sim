@@ -25,7 +25,7 @@ from app.validation import (
     validate_url,
     validate_string,
     validate_integer,
-    validate_attack_config
+    validate_attack_config,
 )
 
 # Import error handling
@@ -52,6 +52,7 @@ attacks_bp = Blueprint("attacks", __name__)
 
 class AttackStatus(Enum):
     """Status of an attack execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -62,6 +63,7 @@ class AttackStatus(Enum):
 @dataclass
 class AttackJob:
     """Represents an attack job execution."""
+
     id: str
     attack_id: str
     attack_name: str
@@ -87,7 +89,7 @@ class AttackJob:
             "findings_count": len(self.findings),
             "error": self.error,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
 
 
@@ -105,10 +107,7 @@ class AttackManager:
         self._lock = threading.Lock()
 
     def create_job(
-        self,
-        attack_id: str,
-        target: str,
-        config: Dict[str, Any]
+        self, attack_id: str, target: str, config: Dict[str, Any]
     ) -> Optional[AttackJob]:
         """
         Create a new attack job.
@@ -131,11 +130,7 @@ class AttackManager:
 
         job_id = str(uuid.uuid4())
         job = AttackJob(
-            id=job_id,
-            attack_id=attack_id,
-            attack_name=attack.name,
-            target=target,
-            config=config
+            id=job_id, attack_id=attack_id, attack_name=attack.name, target=target, config=config
         )
 
         with self._lock:
@@ -165,11 +160,7 @@ class AttackManager:
             job.status = AttackStatus.RUNNING
             job.started_at = datetime.now()
 
-        thread = threading.Thread(
-            target=self._run_attack,
-            args=(job_id,),
-            daemon=True
-        )
+        thread = threading.Thread(target=self._run_attack, args=(job_id,), daemon=True)
 
         with self._lock:
             self._threads[job_id] = thread
@@ -259,10 +250,7 @@ class AttackManager:
             jobs = list(self._jobs.values())
 
         # Sort by started_at (most recent first), None values at end
-        jobs.sort(
-            key=lambda j: j.started_at or datetime.min,
-            reverse=True
-        )
+        jobs.sort(key=lambda j: j.started_at or datetime.min, reverse=True)
 
         return jobs[:limit]
 
@@ -294,6 +282,7 @@ attack_manager = AttackManager()
 
 # API Endpoints
 
+
 @attacks_bp.route("/attacks", methods=["GET"])
 def list_attacks():
     """
@@ -314,10 +303,7 @@ def list_attacks():
         attack_info["category"] = "owasp"
         attack_list.append(attack_info)
 
-    return jsonify({
-        "attacks": attack_list,
-        "total": len(attack_list)
-    })
+    return jsonify({"attacks": attack_list, "total": len(attack_list)})
 
 
 @attacks_bp.route("/attacks/<attack_id>", methods=["GET"])
@@ -407,10 +393,7 @@ def run_attack():
     if not attack_manager.start_job(job.id):
         return jsonify({"error": "Failed to start attack"}), 500
 
-    return jsonify({
-        "message": "Attack started",
-        "job": job.to_dict()
-    }), 202
+    return jsonify({"message": "Attack started", "job": job.to_dict()}), 202
 
 
 @attacks_bp.route("/attacks/status/<job_id>", methods=["GET"])
@@ -450,13 +433,15 @@ def get_attack_results(job_id: str):
 
     findings = attack_manager.get_job_findings(job_id) or []
 
-    return jsonify({
-        "job_id": job_id,
-        "status": job.status.value,
-        "progress": job.progress,
-        "findings": findings,
-        "findings_count": len(findings)
-    })
+    return jsonify(
+        {
+            "job_id": job_id,
+            "status": job.status.value,
+            "progress": job.progress,
+            "findings": findings,
+            "findings_count": len(findings),
+        }
+    )
 
 
 @attacks_bp.route("/attacks/cancel/<job_id>", methods=["POST"])
@@ -488,21 +473,13 @@ def list_jobs():
         JSON with list of jobs
     """
     try:
-        limit = validate_integer(
-            request.args.get("limit", 50),
-            "limit",
-            min_value=1,
-            max_value=500
-        )
+        limit = validate_integer(request.args.get("limit", 50), "limit", min_value=1, max_value=500)
     except ValidationError as e:
         return jsonify({"error": e.message}), 400
 
     jobs = attack_manager.list_jobs(limit)
 
-    return jsonify({
-        "jobs": [job.to_dict() for job in jobs],
-        "total": len(jobs)
-    })
+    return jsonify({"jobs": [job.to_dict() for job in jobs], "total": len(jobs)})
 
 
 @attacks_bp.route("/attacks/owasp/categories", methods=["GET"])
@@ -514,7 +491,4 @@ def list_owasp_categories():
         JSON with OWASP categories and their attacks
     """
     categories = OWASPRegistry.get_all_categories()
-    return jsonify({
-        "categories": categories,
-        "total": len(categories)
-    })
+    return jsonify({"categories": categories, "total": len(categories)})

@@ -33,38 +33,64 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
     # JavaScript library patterns with version extraction
     JS_LIBRARIES: List[Tuple[str, str, str]] = [
         # (library_name, version_pattern, known_vulnerable_versions)
-        ("jQuery", r'jquery[.-]?v?(\d+\.\d+(?:\.\d+)?)', "1.x,2.x<2.2.0"),
-        ("jQuery UI", r'jquery-ui[.-]?v?(\d+\.\d+(?:\.\d+)?)', "1.x<1.13.0"),
-        ("Bootstrap", r'bootstrap[.-]?v?(\d+\.\d+(?:\.\d+)?)', "2.x,3.x<3.4.0"),
-        ("Angular", r'angular[.-]?v?(\d+\.\d+(?:\.\d+)?)', "1.x"),
-        ("React", r'react[.-]?v?(\d+\.\d+(?:\.\d+)?)', ""),
-        ("Vue.js", r'vue[.-]?v?(\d+\.\d+(?:\.\d+)?)', "2.x<2.6.14"),
-        ("Lodash", r'lodash[.-]?v?(\d+\.\d+(?:\.\d+)?)', "4.x<4.17.21"),
-        ("Moment.js", r'moment[.-]?v?(\d+\.\d+(?:\.\d+)?)', "all"),  # Deprecated
-        ("Underscore", r'underscore[.-]?v?(\d+\.\d+(?:\.\d+)?)', "1.x<1.13.1"),
+        ("jQuery", r"jquery[.-]?v?(\d+\.\d+(?:\.\d+)?)", "1.x,2.x<2.2.0"),
+        ("jQuery UI", r"jquery-ui[.-]?v?(\d+\.\d+(?:\.\d+)?)", "1.x<1.13.0"),
+        ("Bootstrap", r"bootstrap[.-]?v?(\d+\.\d+(?:\.\d+)?)", "2.x,3.x<3.4.0"),
+        ("Angular", r"angular[.-]?v?(\d+\.\d+(?:\.\d+)?)", "1.x"),
+        ("React", r"react[.-]?v?(\d+\.\d+(?:\.\d+)?)", ""),
+        ("Vue.js", r"vue[.-]?v?(\d+\.\d+(?:\.\d+)?)", "2.x<2.6.14"),
+        ("Lodash", r"lodash[.-]?v?(\d+\.\d+(?:\.\d+)?)", "4.x<4.17.21"),
+        ("Moment.js", r"moment[.-]?v?(\d+\.\d+(?:\.\d+)?)", "all"),
+        # Deprecated
+        ("Underscore", r"underscore[.-]?v?(\d+\.\d+(?:\.\d+)?)", "1.x<1.13.1"),
     ]
 
     # Server software patterns
     SERVER_PATTERNS: List[Tuple[str, str, str]] = [
-        ("Apache", r'Apache/(\d+\.\d+(?:\.\d+)?)', "2.2.x,2.4.x<2.4.54"),
-        ("Nginx", r'nginx/(\d+\.\d+(?:\.\d+)?)', "1.x<1.22.1"),
-        ("IIS", r'IIS/(\d+\.\d+)', "7.x,8.x"),
-        ("PHP", r'PHP/(\d+\.\d+(?:\.\d+)?)', "5.x,7.x<7.4.33,8.0.x<8.0.27"),
-        ("ASP.NET", r'ASP\.NET Version:(\d+\.\d+(?:\.\d+)?)', ""),
-        ("Tomcat", r'Tomcat/(\d+\.\d+(?:\.\d+)?)', "8.x<8.5.84,9.x<9.0.70"),
-        ("Express", r'Express/?(\d+\.\d+(?:\.\d+)?)?', "3.x"),
+        ("Apache", r"Apache/(\d+\.\d+(?:\.\d+)?)", "2.2.x,2.4.x<2.4.54"),
+        ("Nginx", r"nginx/(\d+\.\d+(?:\.\d+)?)", "1.x<1.22.1"),
+        ("IIS", r"IIS/(\d+\.\d+)", "7.x,8.x"),
+        ("PHP", r"PHP/(\d+\.\d+(?:\.\d+)?)", "5.x,7.x<7.4.33,8.0.x<8.0.27"),
+        ("ASP.NET", r"ASP\.NET Version:(\d+\.\d+(?:\.\d+)?)", ""),
+        ("Tomcat", r"Tomcat/(\d+\.\d+(?:\.\d+)?)", "8.x<8.5.84,9.x<9.0.70"),
+        ("Express", r"Express/?(\d+\.\d+(?:\.\d+)?)?", "3.x"),
     ]
 
     # CMS and framework detection patterns
     CMS_PATTERNS: List[Tuple[str, str, str, str]] = [
         # (name, detection_pattern, version_pattern, vulnerable_versions)
-        ("WordPress", r'wp-content|wp-includes', r'<meta name="generator" content="WordPress (\d+\.\d+(?:\.\d+)?)"', "4.x<4.9.8,5.x<5.8.3"),
-        ("Drupal", r'Drupal|drupal\.js', r'Drupal (\d+\.\d+)', "7.x<7.91,8.x,9.x<9.4.3"),
-        ("Joomla", r'Joomla!|/media/jui/', r'<meta name="generator" content="Joomla! (\d+\.\d+)"', "3.x<3.10.11"),
-        ("Magento", r'Mage\.Cookies|/skin/frontend/', r'Magento/(\d+\.\d+(?:\.\d+)?)', "1.x,2.3.x<2.3.7-p4"),
-        ("Django", r'csrfmiddlewaretoken|django', r'Django/(\d+\.\d+(?:\.\d+)?)', "2.x<2.2.28,3.x<3.2.15"),
-        ("Laravel", r'laravel_session', r'Laravel v(\d+\.\d+(?:\.\d+)?)', "8.x<8.83.27"),
-        ("Ruby on Rails", r'csrf-token|rails', r'Rails (\d+\.\d+(?:\.\d+)?)', "5.x<5.2.8.1,6.x<6.1.7"),
+        (
+            "WordPress",
+            r"wp-content|wp-includes",
+            r'<meta name="generator" content="WordPress (\d+\.\d+(?:\.\d+)?)"',
+            "4.x<4.9.8,5.x<5.8.3",
+        ),
+        ("Drupal", r"Drupal|drupal\.js", r"Drupal (\d+\.\d+)", "7.x<7.91,8.x,9.x<9.4.3"),
+        (
+            "Joomla",
+            r"Joomla!|/media/jui/",
+            r'<meta name="generator" content="Joomla! (\d+\.\d+)"',
+            "3.x<3.10.11",
+        ),
+        (
+            "Magento",
+            r"Mage\.Cookies|/skin/frontend/",
+            r"Magento/(\d+\.\d+(?:\.\d+)?)",
+            "1.x,2.3.x<2.3.7-p4",
+        ),
+        (
+            "Django",
+            r"csrfmiddlewaretoken|django",
+            r"Django/(\d+\.\d+(?:\.\d+)?)",
+            "2.x<2.2.28,3.x<3.2.15",
+        ),
+        ("Laravel", r"laravel_session", r"Laravel v(\d+\.\d+(?:\.\d+)?)", "8.x<8.83.27"),
+        (
+            "Ruby on Rails",
+            r"csrf-token|rails",
+            r"Rails (\d+\.\d+(?:\.\d+)?)",
+            "5.x<5.2.8.1,6.x<6.1.7",
+        ),
     ]
 
     # Known vulnerable versions database (simplified)
@@ -114,28 +140,30 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "detect_js_libs": {
-                "type": "boolean",
-                "default": True,
-                "description": "Detect JavaScript libraries"
-            },
-            "detect_server": {
-                "type": "boolean",
-                "default": True,
-                "description": "Detect server software versions"
-            },
-            "detect_cms": {
-                "type": "boolean",
-                "default": True,
-                "description": "Detect CMS and framework versions"
-            },
-            "check_cves": {
-                "type": "boolean",
-                "default": True,
-                "description": "Check detected versions against known CVEs"
+        options.update(
+            {
+                "detect_js_libs": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Detect JavaScript libraries",
+                },
+                "detect_server": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Detect server software versions",
+                },
+                "detect_cms": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Detect CMS and framework versions",
+                },
+                "check_cves": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Check detected versions against known CVEs",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -146,22 +174,22 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                 description="Identify JavaScript libraries and their versions",
                 category=OWASPCategory.A06_VULNERABLE_COMPONENTS,
                 payloads=[],
-                detection_patterns=[lib[0] for lib in self.JS_LIBRARIES]
+                detection_patterns=[lib[0] for lib in self.JS_LIBRARIES],
             ),
             OWASPTestCase(
                 name="Server Fingerprinting",
                 description="Identify server software and versions",
                 category=OWASPCategory.A06_VULNERABLE_COMPONENTS,
                 payloads=[],
-                detection_patterns=[srv[0] for srv in self.SERVER_PATTERNS]
+                detection_patterns=[srv[0] for srv in self.SERVER_PATTERNS],
             ),
             OWASPTestCase(
                 name="CMS Detection",
                 description="Identify CMS and framework versions",
                 category=OWASPCategory.A06_VULNERABLE_COMPONENTS,
                 payloads=[],
-                detection_patterns=[cms[0] for cms in self.CMS_PATTERNS]
-            )
+                detection_patterns=[cms[0] for cms in self.CMS_PATTERNS],
+            ),
         ]
 
     def _version_in_range(self, version: str, range_str: str) -> bool:
@@ -179,14 +207,14 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             return False
 
         try:
-            version_parts = [int(x) for x in re.findall(r'\d+', version)][:3]
+            version_parts = [int(x) for x in re.findall(r"\d+", version)][:3]
             while len(version_parts) < 3:
                 version_parts.append(0)
 
             if "-" in range_str:
                 min_ver, max_ver = range_str.split("-")
-                min_parts = [int(x) for x in re.findall(r'\d+', min_ver)][:3]
-                max_parts = [int(x) for x in re.findall(r'\d+', max_ver)][:3]
+                min_parts = [int(x) for x in re.findall(r"\d+", min_ver)][:3]
+                max_parts = [int(x) for x in re.findall(r"\d+", max_ver)][:3]
 
                 while len(min_parts) < 3:
                     min_parts.append(0)
@@ -224,11 +252,9 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             if match:
                 version = match.group(1) if match.groups() else "unknown"
 
-                self._detected_components.append({
-                    "name": name,
-                    "version": version,
-                    "source": "header"
-                })
+                self._detected_components.append(
+                    {"name": name, "version": version, "source": "header"}
+                )
 
                 # Check if version is outdated/vulnerable
                 is_vulnerable = False
@@ -243,19 +269,21 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
                 severity = Severity.HIGH if is_vulnerable else Severity.LOW
 
+                vuln_msg = "This version may be outdated or vulnerable."
+                info_msg = "Version information disclosed."
+                status_msg = vuln_msg if is_vulnerable else info_msg
                 yield Finding(
                     title=f"Server Software Detected: {name}",
                     severity=severity,
-                    description=f"Detected {name} version {version}. "
-                               f"{'This version may be outdated or vulnerable.' if is_vulnerable else 'Version information disclosed.'}",
+                    description=f"Detected {name} version {version}. {status_msg}",
                     evidence=f"Header: {server_header or x_powered_by}",
                     remediation="Keep server software up to date. "
-                               "Consider hiding version information in production.",
+                    "Consider hiding version information in production.",
                     metadata={
                         "software": name,
                         "version": version,
-                        "header": server_header or x_powered_by
-                    }
+                        "header": server_header or x_powered_by,
+                    },
                 )
 
         self.set_progress(25)
@@ -300,11 +328,9 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             if match:
                 version = match.group(1) if match.groups() else "unknown"
 
-                self._detected_components.append({
-                    "name": lib_name,
-                    "version": version,
-                    "source": "javascript"
-                })
+                self._detected_components.append(
+                    {"name": lib_name, "version": version, "source": "javascript"}
+                )
 
                 # Check for known vulnerabilities
                 vulns_found = []
@@ -321,13 +347,13 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                             description=f"{lib_name} version {version} has known vulnerabilities",
                             evidence=f"CVE: {cve}, Description: {description}",
                             remediation=f"Update {lib_name} to the latest version. "
-                                       f"Check for security advisories.",
+                            f"Check for security advisories.",
                             metadata={
                                 "library": lib_name,
                                 "version": version,
                                 "cve": cve,
-                                "description": description
-                            }
+                                "description": description,
+                            },
                         )
                 else:
                     # Check if using deprecated library
@@ -340,11 +366,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                             description=f"{lib_name} is deprecated and no longer maintained",
                             evidence=f"Library: {lib_name}, Version: {version}",
                             remediation=f"Replace {lib_name} with a maintained alternative",
-                            metadata={
-                                "library": lib_name,
-                                "version": version,
-                                "deprecated": True
-                            }
+                            metadata={"library": lib_name, "version": version, "deprecated": True},
                         )
                     else:
                         yield Finding(
@@ -353,10 +375,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                             description=f"Detected {lib_name} version {version}",
                             evidence=f"Library: {lib_name}, Version: {version}",
                             remediation="Ensure library is kept up to date",
-                            metadata={
-                                "library": lib_name,
-                                "version": version
-                            }
+                            metadata={"library": lib_name, "version": version},
                         )
 
         self.set_progress(50)
@@ -387,11 +406,9 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                 if version_match:
                     version = version_match.group(1)
 
-                self._detected_components.append({
-                    "name": cms_name,
-                    "version": version,
-                    "source": "cms_detection"
-                })
+                self._detected_components.append(
+                    {"name": cms_name, "version": version, "source": "cms_detection"}
+                )
 
                 # Check if potentially vulnerable
                 is_vulnerable = False
@@ -406,16 +423,17 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                 yield Finding(
                     title=f"CMS/Framework Detected: {cms_name}",
                     severity=severity,
-                    description=f"Detected {cms_name}" + (f" version {version}" if version != "unknown" else "") +
-                               (". This version may have known vulnerabilities." if is_vulnerable else ""),
+                    description=f"Detected {cms_name}"
+                    + (f" version {version}" if version != "unknown" else "")
+                    + (". This version may have known vulnerabilities." if is_vulnerable else ""),
                     evidence="Detection pattern matched in page source",
                     remediation=f"Keep {cms_name} and all plugins/modules up to date. "
-                               "Subscribe to security advisories.",
+                    "Subscribe to security advisories.",
                     metadata={
                         "cms": cms_name,
                         "version": version,
-                        "potentially_vulnerable": is_vulnerable
-                    }
+                        "potentially_vulnerable": is_vulnerable,
+                    },
                 )
 
         # WordPress-specific checks
@@ -431,7 +449,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     description="WordPress readme.html file is accessible, exposing version information",
                     evidence=f"URL: {readme_url}",
                     remediation="Remove or restrict access to readme.html",
-                    metadata={"url": readme_url}
+                    metadata={"url": readme_url},
                 )
 
         self.set_progress(75)
@@ -444,7 +462,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
         # Summary of all detected components
         if self._detected_components:
             components_summary = ", ".join(
-                f"{c['name']} {c['version']}" for c in self._detected_components
+                f"{c['name']}  {c['version']} " for c in self._detected_components
             )
 
             yield Finding(
@@ -455,8 +473,8 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                 remediation="Review all detected components and ensure they are up to date",
                 metadata={
                     "components": self._detected_components,
-                    "count": len(self._detected_components)
-                }
+                    "count": len(self._detected_components),
+                },
             )
 
         self.set_progress(100)
@@ -481,7 +499,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             description="Starting scan for vulnerable and outdated components",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -508,5 +526,5 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             description="Completed scan for vulnerable and outdated components",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

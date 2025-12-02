@@ -37,7 +37,7 @@ class InjectionAttack(BaseOWASPAttack):
         "' OR '1'='1",
         "' OR '1'='1' --",
         "' OR '1'='1' /*",
-        "\" OR \"1\"=\"1",
+        '" OR "1"="1',
         "1' OR '1'='1",
         "1 OR 1=1",
         "1' OR '1'='1' --",
@@ -190,28 +190,30 @@ class InjectionAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "test_sql": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for SQL injection"
-            },
-            "test_xss": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for Cross-Site Scripting"
-            },
-            "test_cmd": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for command injection"
-            },
-            "custom_payloads": {
-                "type": "array",
-                "default": [],
-                "description": "Additional custom payloads to test"
+        options.update(
+            {
+                "test_sql": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for SQL injection",
+                },
+                "test_xss": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for Cross-Site Scripting",
+                },
+                "test_cmd": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for command injection",
+                },
+                "custom_payloads": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Additional custom payloads to test",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -222,22 +224,22 @@ class InjectionAttack(BaseOWASPAttack):
                 description="Test for SQL injection vulnerabilities",
                 category=OWASPCategory.A03_INJECTION,
                 payloads=self.SQL_PAYLOADS,
-                detection_patterns=self.SQL_ERROR_PATTERNS
+                detection_patterns=self.SQL_ERROR_PATTERNS,
             ),
             OWASPTestCase(
                 name="Cross-Site Scripting (XSS)",
                 description="Test for XSS vulnerabilities",
                 category=OWASPCategory.A03_INJECTION,
                 payloads=self.XSS_PAYLOADS,
-                detection_patterns=["<script>", "onerror=", "onload="]
+                detection_patterns=["<script>", "onerror=", "onload="],
             ),
             OWASPTestCase(
                 name="Command Injection",
                 description="Test for OS command injection",
                 category=OWASPCategory.A03_INJECTION,
                 payloads=self.CMD_PAYLOADS,
-                detection_patterns=self.CMD_SUCCESS_PATTERNS
-            )
+                detection_patterns=self.CMD_SUCCESS_PATTERNS,
+            ),
         ]
 
     def _discover_inputs(self, target: str) -> Dict[str, Any]:
@@ -253,8 +255,20 @@ class InjectionAttack(BaseOWASPAttack):
         inputs = {
             "forms": [],
             "url_params": [],
-            "common_params": ["id", "user", "name", "search", "query", "page",
-                            "file", "path", "url", "redirect", "cmd", "exec"]
+            "common_params": [
+                "id",
+                "user",
+                "name",
+                "search",
+                "query",
+                "page",
+                "file",
+                "path",
+                "url",
+                "redirect",
+                "cmd",
+                "exec",
+            ],
         }
 
         if not response:
@@ -288,7 +302,8 @@ class InjectionAttack(BaseOWASPAttack):
         params_to_test = inputs.get("url_params", []) + inputs.get("common_params", [])
         params_to_test = list(set(params_to_test))
 
-        total_tests = len(params_to_test) * len(payloads[:5])  # Limit payloads for speed
+        # Limit payloads for speed
+        total_tests = len(params_to_test) * len(payloads[:5])
         current_test = 0
 
         for param in params_to_test:
@@ -309,15 +324,15 @@ class InjectionAttack(BaseOWASPAttack):
                                 severity=Severity.CRITICAL,
                                 description=f"SQL injection vulnerability found in parameter '{param}'",
                                 evidence=f"URL: {test_url[:100]}..., "
-                                        f"Error pattern matched: {pattern[:50]}",
+                                f"Error pattern matched: {pattern[:50]}",
                                 remediation="Use parameterized queries or prepared statements. "
-                                           "Never concatenate user input directly into SQL queries. "
-                                           "Implement input validation and use ORM frameworks.",
+                                "Never concatenate user input directly into SQL queries. "
+                                "Implement input validation and use ORM frameworks.",
                                 metadata={
                                     "parameter": param,
                                     "payload": payload,
-                                    "pattern": pattern
-                                }
+                                    "pattern": pattern,
+                                },
                             )
                             break
 
@@ -354,15 +369,15 @@ class InjectionAttack(BaseOWASPAttack):
                                     severity=Severity.CRITICAL,
                                     description=f"SQL injection found in form field '{input_name}'",
                                     evidence=f"Form: {form_url}, Field: {input_name}, "
-                                            f"Method: {method}",
+                                    f"Method: {method}",
                                     remediation="Use parameterized queries. Validate and sanitize "
-                                               "all form inputs before using in database queries.",
+                                    "all form inputs before using in database queries.",
                                     metadata={
                                         "form_url": form_url,
                                         "field": input_name,
                                         "method": method,
-                                        "payload": payload
-                                    }
+                                        "payload": payload,
+                                    },
                                 )
                                 break
 
@@ -402,16 +417,16 @@ class InjectionAttack(BaseOWASPAttack):
                                 title="Reflected XSS Vulnerability",
                                 severity=Severity.HIGH,
                                 description=f"Cross-Site Scripting vulnerability in parameter '{param}'. "
-                                           "User input is reflected without proper encoding.",
+                                "User input is reflected without proper encoding.",
                                 evidence=f"URL: {test_url[:100]}..., Payload reflected in response",
                                 remediation="Encode all user input before rendering in HTML. "
-                                           "Use Content-Security-Policy headers. "
-                                           "Implement input validation and output encoding.",
+                                "Use Content-Security-Policy headers. "
+                                "Implement input validation and output encoding.",
                                 metadata={
                                     "parameter": param,
                                     "payload": payload,
-                                    "type": "reflected"
-                                }
+                                    "type": "reflected",
+                                },
                             )
                             break
 
@@ -449,12 +464,12 @@ class InjectionAttack(BaseOWASPAttack):
                                 description=f"XSS vulnerability in form field '{input_name}'",
                                 evidence=f"Form: {form_url}, Field: {input_name}",
                                 remediation="Properly encode all user input. Use a templating "
-                                           "engine with automatic escaping.",
+                                "engine with automatic escaping.",
                                 metadata={
                                     "form_url": form_url,
                                     "field": input_name,
-                                    "payload": payload
-                                }
+                                    "payload": payload,
+                                },
                             )
                             break
 
@@ -468,10 +483,32 @@ class InjectionAttack(BaseOWASPAttack):
         base_url = self._normalize_url(target)
 
         # Command injection is typically in specific parameters
-        cmd_params = ["cmd", "exec", "command", "ping", "query", "jump",
-                     "code", "reg", "do", "func", "arg", "option", "load",
-                     "process", "step", "read", "function", "req", "feature",
-                     "exe", "module", "payload", "run", "print"]
+        cmd_params = [
+            "cmd",
+            "exec",
+            "command",
+            "ping",
+            "query",
+            "jump",
+            "code",
+            "reg",
+            "do",
+            "func",
+            "arg",
+            "option",
+            "load",
+            "process",
+            "step",
+            "read",
+            "function",
+            "req",
+            "feature",
+            "exe",
+            "module",
+            "payload",
+            "run",
+            "print",
+        ]
 
         params_to_test = list(set(cmd_params + inputs.get("url_params", [])))
         payloads = self.CMD_PAYLOADS
@@ -496,15 +533,15 @@ class InjectionAttack(BaseOWASPAttack):
                                 severity=Severity.CRITICAL,
                                 description=f"OS command injection in parameter '{param}'",
                                 evidence=f"URL: {test_url[:100]}..., "
-                                        f"Command output pattern found: {pattern[:30]}",
+                                f"Command output pattern found: {pattern[:30]}",
                                 remediation="Never pass user input directly to system commands. "
-                                           "Use allowlists for permitted operations. "
-                                           "Implement proper input validation and sandboxing.",
+                                "Use allowlists for permitted operations. "
+                                "Implement proper input validation and sandboxing.",
                                 metadata={
                                     "parameter": param,
                                     "payload": payload,
-                                    "pattern": pattern
-                                }
+                                    "pattern": pattern,
+                                },
                             )
                             break
 
@@ -531,7 +568,7 @@ class InjectionAttack(BaseOWASPAttack):
             description="Starting scan for injection vulnerabilities (SQL, XSS, Command)",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -542,11 +579,11 @@ class InjectionAttack(BaseOWASPAttack):
                 title="Input Discovery Complete",
                 severity=Severity.INFO,
                 description=f"Found {len(inputs.get('forms', []))} forms and "
-                           f"{len(inputs.get('url_params', []))} URL parameters",
+                f"{len(inputs.get('url_params', []))} URL parameters",
                 evidence=f"Forms: {len(inputs.get('forms', []))}, "
-                        f"Params: {inputs.get('url_params', [])}",
+                f"Params: {inputs.get('url_params', [])}",
                 remediation="N/A - Informational",
-                metadata={"inputs": inputs}
+                metadata={"inputs": inputs},
             )
 
             # Test 1: SQL Injection (0-33%)
@@ -569,5 +606,5 @@ class InjectionAttack(BaseOWASPAttack):
             description="Completed scan for injection vulnerabilities",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

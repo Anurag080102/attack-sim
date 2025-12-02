@@ -94,28 +94,30 @@ class AuthFailuresAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "test_password_policy": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for weak password policies"
-            },
-            "test_enumeration": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for username enumeration"
-            },
-            "test_session": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test session management security"
-            },
-            "test_lockout": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for account lockout mechanism"
+        options.update(
+            {
+                "test_password_policy": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for weak password policies",
+                },
+                "test_enumeration": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for username enumeration",
+                },
+                "test_session": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test session management security",
+                },
+                "test_lockout": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for account lockout mechanism",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -126,29 +128,29 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 description="Test for weak password policy enforcement",
                 category=OWASPCategory.A07_AUTH_FAILURES,
                 payloads=self.WEAK_PASSWORDS,
-                detection_patterns=["password", "weak", "strength"]
+                detection_patterns=["password", "weak", "strength"],
             ),
             OWASPTestCase(
                 name="Username Enumeration",
                 description="Test for username enumeration via error messages",
                 category=OWASPCategory.A07_AUTH_FAILURES,
                 payloads=self.TEST_USERNAMES,
-                detection_patterns=["not found", "doesn't exist", "invalid user"]
+                detection_patterns=["not found", "doesn't exist", "invalid user"],
             ),
             OWASPTestCase(
                 name="Session Management",
                 description="Test session token security",
                 category=OWASPCategory.A07_AUTH_FAILURES,
                 payloads=[],
-                detection_patterns=["session", "cookie", "token"]
+                detection_patterns=["session", "cookie", "token"],
             ),
             OWASPTestCase(
                 name="Account Lockout",
                 description="Test for missing account lockout policy",
                 category=OWASPCategory.A07_AUTH_FAILURES,
                 payloads=[],
-                detection_patterns=["locked", "too many attempts", "try again"]
-            )
+                detection_patterns=["locked", "too many attempts", "try again"],
+            ),
         ]
 
     def _find_auth_endpoints(self, target: str) -> Dict[str, Optional[str]]:
@@ -165,8 +167,20 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
         # Common paths for each endpoint type
         login_paths = ["/login", "/signin", "/auth/login", "/user/login", "/account/login"]
-        register_paths = ["/register", "/signup", "/auth/register", "/user/register", "/create-account"]
-        forgot_paths = ["/forgot-password", "/password/forgot", "/auth/forgot", "/reset", "/recover"]
+        register_paths = [
+            "/register",
+            "/signup",
+            "/auth/register",
+            "/user/register",
+            "/create-account",
+        ]
+        forgot_paths = [
+            "/forgot-password",
+            "/password/forgot",
+            "/auth/forgot",
+            "/reset",
+            "/recover",
+        ]
 
         for path in login_paths:
             url = self._build_url(base_url, path)
@@ -194,7 +208,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
         return endpoints
 
-    def _test_username_enumeration(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
+    def _test_username_enumeration(
+        self, target: str, endpoints: Dict
+    ) -> Generator[Finding, None, None]:
         """Test for username enumeration via different error messages."""
         if not self._config.get("test_enumeration", True):
             return
@@ -224,10 +240,12 @@ class AuthFailuresAttack(BaseOWASPAttack):
             return
 
         form_inputs = login_form.get("inputs", [])
-        username_field = next((i for i in form_inputs
-                               if i.lower() in ["username", "user", "email", "login"]), None)
-        password_field = next((i for i in form_inputs
-                               if i.lower() in ["password", "pass", "pwd"]), None)
+        username_field = next(
+            (i for i in form_inputs if i.lower() in ["username", "user", "email", "login"]), None
+        )
+        password_field = next(
+            (i for i in form_inputs if i.lower() in ["password", "pass", "pwd"]), None
+        )
 
         if not username_field or not password_field:
             return
@@ -255,7 +273,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 responses[username] = {
                     "status": response.status_code,
                     "length": len(response.text),
-                    "text": response.text[:500]
+                    "text": response.text[:500],
                 }
 
             time.sleep(self._delay_between_requests)
@@ -284,14 +302,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
                             title="Username Enumeration Possible",
                             severity=Severity.MEDIUM,
                             description="The application reveals whether a username exists through "
-                                       "distinct error messages.",
+                            "distinct error messages.",
                             evidence=f"Pattern found: {description}",
                             remediation="Use generic error messages like 'Invalid username or password' "
-                                       "for all login failures.",
-                            metadata={
-                                "pattern": pattern,
-                                "description": description
-                            }
+                            "for all login failures.",
+                            metadata={"pattern": pattern, "description": description},
                         )
                         break
 
@@ -300,11 +315,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     title="Username Enumeration via Response Length",
                     severity=Severity.MEDIUM,
                     description="Login responses have different lengths for valid vs invalid usernames, "
-                               "potentially allowing username enumeration.",
+                    "potentially allowing username enumeration.",
                     evidence=f"Response length difference: {length_diff} bytes",
                     remediation="Ensure login failure responses are identical regardless of "
-                               "whether the username exists.",
-                    metadata={"length_difference": length_diff}
+                    "whether the username exists.",
+                    metadata={"length_difference": length_diff},
                 )
 
         self.set_progress(25)
@@ -340,10 +355,12 @@ class AuthFailuresAttack(BaseOWASPAttack):
             return
 
         form_inputs = reg_form.get("inputs", [])
-        email_field = next((i for i in form_inputs
-                           if i.lower() in ["email", "username", "user"]), None)
-        password_field = next((i for i in form_inputs
-                              if i.lower() in ["password", "pass", "pwd"]), None)
+        email_field = next(
+            (i for i in form_inputs if i.lower() in ["email", "username", "user"]), None
+        )
+        password_field = next(
+            (i for i in form_inputs if i.lower() in ["password", "pass", "pwd"]), None
+        )
 
         if not email_field or not password_field:
             return
@@ -359,13 +376,17 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 return
 
             # Generate unique test email
-            test_email = f"test_{hashlib.md5(weak_pwd.encode()).hexdigest()[:8]}@test.invalid"
+            test_email = f"test_{
+                hashlib.md5(
+                    weak_pwd.encode()).hexdigest()[
+                    :8]}@test.invalid"
 
             data = {email_field: test_email, password_field: weak_pwd}
 
             # Add confirm password if present
-            confirm_field = next((i for i in form_inputs
-                                 if "confirm" in i.lower() or "repeat" in i.lower()), None)
+            confirm_field = next(
+                (i for i in form_inputs if "confirm" in i.lower() or "repeat" in i.lower()), None
+            )
             if confirm_field:
                 data[confirm_field] = weak_pwd
 
@@ -376,14 +397,17 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
                 # Check if password was accepted (no password error message)
                 password_rejected_patterns = [
-                    "password.*weak", "password.*short", "password.*simple",
-                    "password.*must", "password.*require", "stronger.*password",
-                    "password.*length", "password.*character"
+                    "password.*weak",
+                    "password.*short",
+                    "password.*simple",
+                    "password.*must",
+                    "password.*require",
+                    "stronger.*password",
+                    "password.*length",
+                    "password.*character",
                 ]
 
-                was_rejected = any(
-                    re.search(p, content_lower) for p in password_rejected_patterns
-                )
+                was_rejected = any(re.search(p, content_lower) for p in password_rejected_patterns)
 
                 if not was_rejected:
                     # Check for success indicators
@@ -400,10 +424,10 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 description="The application accepts weak passwords during registration",
                 evidence=f"Weak passwords accepted: {weak_passwords_accepted}",
                 remediation="Implement strong password requirements: minimum 8 characters, "
-                           "mix of uppercase, lowercase, numbers, and special characters. "
-                           "Consider using password strength meters and checking against "
-                           "breached password databases.",
-                metadata={"weak_passwords": weak_passwords_accepted}
+                "mix of uppercase, lowercase, numbers, and special characters. "
+                "Consider using password strength meters and checking against "
+                "breached password databases.",
+                metadata={"weak_passwords": weak_passwords_accepted},
             )
 
         self.set_progress(50)
@@ -425,8 +449,15 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
         if cookies or set_cookie_header:
             # Check for session cookies
-            session_cookie_names = ["session", "sessionid", "sess", "sid",
-                                   "phpsessid", "jsessionid", "asp.net_sessionid"]
+            session_cookie_names = [
+                "session",
+                "sessionid",
+                "sess",
+                "sid",
+                "phpsessid",
+                "jsessionid",
+                "asp.net_sessionid",
+            ]
 
             for cookie in cookies:
                 cookie_name_lower = cookie.name.lower()
@@ -443,11 +474,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
                             title="Session Cookie Missing HttpOnly Flag",
                             severity=Severity.MEDIUM,
                             description=f"Cookie '{cookie.name}' is missing the HttpOnly flag, "
-                                       "making it accessible via JavaScript",
+                            "making it accessible via JavaScript",
                             evidence=f"Cookie: {cookie.name}",
                             remediation="Set the HttpOnly flag on all session cookies to prevent "
-                                       "JavaScript access.",
-                            metadata={"cookie_name": cookie.name}
+                            "JavaScript access.",
+                            metadata={"cookie_name": cookie.name},
                         )
 
                     if "secure" not in cookie_str:
@@ -459,8 +490,8 @@ class AuthFailuresAttack(BaseOWASPAttack):
                                 description=f"Cookie '{cookie.name}' is missing the Secure flag on HTTPS site",
                                 evidence=f"Cookie: {cookie.name}",
                                 remediation="Set the Secure flag on all session cookies to ensure "
-                                           "they're only sent over HTTPS.",
-                                metadata={"cookie_name": cookie.name}
+                                "they're only sent over HTTPS.",
+                                metadata={"cookie_name": cookie.name},
                             )
 
                     if "samesite" not in cookie_str:
@@ -470,8 +501,8 @@ class AuthFailuresAttack(BaseOWASPAttack):
                             description=f"Cookie '{cookie.name}' is missing the SameSite attribute",
                             evidence=f"Cookie: {cookie.name}",
                             remediation="Set SameSite=Strict or SameSite=Lax on session cookies "
-                                       "to protect against CSRF attacks.",
-                            metadata={"cookie_name": cookie.name}
+                            "to protect against CSRF attacks.",
+                            metadata={"cookie_name": cookie.name},
                         )
 
                     # Check session token entropy
@@ -480,14 +511,14 @@ class AuthFailuresAttack(BaseOWASPAttack):
                             title="Short Session Token",
                             severity=Severity.HIGH,
                             description=f"Session token '{cookie.name}' appears to have low entropy "
-                                       f"(length: {len(cookie_value)})",
+                            f"(length: {len(cookie_value)})",
                             evidence=f"Token length: {len(cookie_value)} characters",
                             remediation="Use cryptographically secure random session tokens "
-                                       "with at least 128 bits of entropy.",
+                            "with at least 128 bits of entropy.",
                             metadata={
                                 "cookie_name": cookie.name,
-                                "token_length": len(cookie_value)
-                            }
+                                "token_length": len(cookie_value),
+                            },
                         )
 
         self.set_progress(75)
@@ -520,10 +551,12 @@ class AuthFailuresAttack(BaseOWASPAttack):
             return
 
         form_inputs = login_form.get("inputs", [])
-        username_field = next((i for i in form_inputs
-                               if i.lower() in ["username", "user", "email", "login"]), None)
-        password_field = next((i for i in form_inputs
-                               if i.lower() in ["password", "pass", "pwd"]), None)
+        username_field = next(
+            (i for i in form_inputs if i.lower() in ["username", "user", "email", "login"]), None
+        )
+        password_field = next(
+            (i for i in form_inputs if i.lower() in ["password", "pass", "pwd"]), None
+        )
 
         if not username_field or not password_field:
             return
@@ -541,10 +574,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             if self.is_cancelled():
                 return
 
-            data = {
-                username_field: test_username,
-                password_field: f"wrongpassword{i}"
-            }
+            data = {username_field: test_username, password_field: f"wrongpassword{i}"}
 
             response = self._make_request(form_url, method="POST", data=data)
             attempts += 1
@@ -553,8 +583,15 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 content_lower = response.text.lower()
 
                 lockout_patterns = [
-                    "locked", "too many", "try again later", "temporarily",
-                    "blocked", "exceeded", "wait", "minute", "captcha"
+                    "locked",
+                    "too many",
+                    "try again later",
+                    "temporarily",
+                    "blocked",
+                    "exceeded",
+                    "wait",
+                    "minute",
+                    "captcha",
                 ]
 
                 if any(p in content_lower for p in lockout_patterns):
@@ -572,11 +609,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 title="No Account Lockout Detected",
                 severity=Severity.HIGH,
                 description=f"No account lockout after {attempts} failed login attempts. "
-                           "This makes the application vulnerable to brute force attacks.",
+                "This makes the application vulnerable to brute force attacks.",
                 evidence=f"Attempted {attempts} failed logins without lockout",
                 remediation="Implement account lockout after 3-5 failed attempts. "
-                           "Consider using progressive delays, CAPTCHA, or temporary account locks.",
-                metadata={"attempts": attempts}
+                "Consider using progressive delays, CAPTCHA, or temporary account locks.",
+                metadata={"attempts": attempts},
             )
         else:
             yield Finding(
@@ -585,7 +622,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 description=f"Account lockout detected after {attempts} attempts",
                 evidence=f"Lockout triggered after {attempts} failed attempts",
                 remediation="N/A - Security control is in place",
-                metadata={"attempts_to_lockout": attempts}
+                metadata={"attempts_to_lockout": attempts},
             )
 
         self.set_progress(100)
@@ -609,7 +646,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             description="Starting scan for authentication vulnerabilities",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -622,7 +659,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 description="Discovered authentication endpoints",
                 evidence=f"Endpoints: {endpoints}",
                 remediation="N/A - Informational",
-                metadata={"endpoints": endpoints}
+                metadata={"endpoints": endpoints},
             )
 
             # Test 1: Username Enumeration (0-25%)
@@ -648,5 +685,5 @@ class AuthFailuresAttack(BaseOWASPAttack):
             description="Completed scan for authentication vulnerabilities",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

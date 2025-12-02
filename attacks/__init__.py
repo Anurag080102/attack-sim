@@ -34,9 +34,11 @@ class AttackRegistry:
             class BruteForceAttack(BaseAttack):
                 ...
         """
+
         def decorator(attack_class: Type[BaseAttack]):
             cls._attacks[attack_id] = attack_class
             return attack_class
+
         return decorator
 
     @classmethod
@@ -83,12 +85,14 @@ class AttackRegistry:
         attacks = []
         for attack_id, attack_class in cls._attacks.items():
             instance = attack_class()
-            attacks.append({
-                "id": attack_id,
-                "name": instance.name,
-                "description": instance.description,
-                "config_options": instance.get_config_options()
-            })
+            attacks.append(
+                {
+                    "id": attack_id,
+                    "name": instance.name,
+                    "description": instance.description,
+                    "config_options": instance.get_config_options(),
+                }
+            )
         return attacks
 
     @classmethod
@@ -108,9 +112,4 @@ class AttackRegistry:
 
 
 # Export commonly used classes
-__all__ = [
-    "AttackRegistry",
-    "BaseAttack",
-    "Finding",
-    "Severity"
-]
+__all__ = ["AttackRegistry", "BaseAttack", "Finding", "Severity"]

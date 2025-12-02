@@ -11,6 +11,7 @@ from datetime import datetime
 
 class Severity(Enum):
     """Severity levels for security findings."""
+
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -21,6 +22,7 @@ class Severity(Enum):
 @dataclass
 class Finding:
     """Represents a security finding discovered during an attack."""
+
     title: str
     severity: Severity
     description: str
@@ -38,7 +40,7 @@ class Finding:
             "evidence": self.evidence,
             "remediation": self.remediation,
             "timestamp": self.timestamp.isoformat(),
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -68,7 +70,6 @@ class BaseAttack(ABC):
         Args:
             **kwargs: Attack-specific configuration options
         """
-        pass
 
     @abstractmethod
     def run(self, target: str) -> Generator[Finding, None, None]:
@@ -81,7 +82,6 @@ class BaseAttack(ABC):
         Yields:
             Finding: Security findings discovered during the attack
         """
-        pass
 
     def get_progress(self) -> float:
         """
@@ -142,7 +142,7 @@ class BaseAttack(ABC):
         return {
             "name": self.name,
             "description": self.description,
-            "config_options": self.get_config_options()
+            "config_options": self.get_config_options(),
         }
 
     def get_config_options(self) -> Dict[str, Any]:

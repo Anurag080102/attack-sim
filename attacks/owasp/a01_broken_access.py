@@ -11,6 +11,7 @@ This module implements detection of broken access control vulnerabilities includ
 import re
 import time
 from typing import Generator, Dict, Any, List
+
 # noqa: F401 - kept for future use in access control testing
 from urllib.parse import urljoin, urlparse, parse_qs, urlencode  # noqa: F401
 
@@ -92,17 +93,17 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
     # IDOR test patterns
     IDOR_PATTERNS = [
-        (r'/user/(\d+)', 'user_id'),
-        (r'/profile/(\d+)', 'profile_id'),
-        (r'/account/(\d+)', 'account_id'),
-        (r'/order/(\d+)', 'order_id'),
-        (r'/invoice/(\d+)', 'invoice_id'),
-        (r'/document/(\d+)', 'document_id'),
-        (r'/file/(\d+)', 'file_id'),
-        (r'/download/(\d+)', 'download_id'),
-        (r'\?id=(\d+)', 'id'),
-        (r'\?user_id=(\d+)', 'user_id'),
-        (r'\?uid=(\d+)', 'uid'),
+        (r"/user/(\d+)", "user_id"),
+        (r"/profile/(\d+)", "profile_id"),
+        (r"/account/(\d+)", "account_id"),
+        (r"/order/(\d+)", "order_id"),
+        (r"/invoice/(\d+)", "invoice_id"),
+        (r"/document/(\d+)", "document_id"),
+        (r"/file/(\d+)", "file_id"),
+        (r"/download/(\d+)", "download_id"),
+        (r"\?id=(\d+)", "id"),
+        (r"\?user_id=(\d+)", "user_id"),
+        (r"\?uid=(\d+)", "uid"),
     ]
 
     def __init__(self):
@@ -128,28 +129,30 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "additional_paths": {
-                "type": "array",
-                "default": [],
-                "description": "Additional paths to test for access control"
-            },
-            "test_idor": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for IDOR vulnerabilities"
-            },
-            "test_path_traversal": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for path traversal vulnerabilities"
-            },
-            "idor_range": {
-                "type": "integer",
-                "default": 10,
-                "description": "Number of sequential IDs to test for IDOR"
+        options.update(
+            {
+                "additional_paths": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Additional paths to test for access control",
+                },
+                "test_idor": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for IDOR vulnerabilities",
+                },
+                "test_path_traversal": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for path traversal vulnerabilities",
+                },
+                "idor_range": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Number of sequential IDs to test for IDOR",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -160,22 +163,22 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                 description="Test access to administrative and protected paths",
                 category=OWASPCategory.A01_BROKEN_ACCESS_CONTROL,
                 payloads=self.PROTECTED_PATHS,
-                detection_patterns=["admin", "dashboard", "configuration", "password"]
+                detection_patterns=["admin", "dashboard", "configuration", "password"],
             ),
             OWASPTestCase(
                 name="Path Traversal",
                 description="Test for path traversal vulnerabilities",
                 category=OWASPCategory.A01_BROKEN_ACCESS_CONTROL,
                 payloads=self.PATH_TRAVERSAL_PAYLOADS,
-                detection_patterns=["root:", "[boot loader]", "[extensions]"]
+                detection_patterns=["root:", "[boot loader]", "[extensions]"],
             ),
             OWASPTestCase(
                 name="IDOR Detection",
                 description="Test for Insecure Direct Object References",
                 category=OWASPCategory.A01_BROKEN_ACCESS_CONTROL,
                 payloads=[],  # Dynamic based on target
-                detection_patterns=[]
-            )
+                detection_patterns=[],
+            ),
         ]
 
     def _test_protected_paths(self, target: str) -> Generator[Finding, None, None]:
@@ -194,8 +197,17 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             if response and response.status_code == 200:
                 # Check for signs of actual admin/protected content
                 content_lower = response.text.lower()
-                indicators = ["admin", "dashboard", "configuration", "settings",
-                             "manage", "user", "password", "delete", "modify"]
+                indicators = [
+                    "admin",
+                    "dashboard",
+                    "configuration",
+                    "settings",
+                    "manage",
+                    "user",
+                    "password",
+                    "delete",
+                    "modify",
+                ]
                 found_indicators = [i for i in indicators if i in content_lower]
 
                 if found_indicators:
@@ -204,14 +216,14 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                         severity=Severity.HIGH,
                         description=f"Administrative path '{path}' is accessible without authentication",
                         evidence=f"URL: {url}, Status: {response.status_code}, "
-                                f"Found indicators: {', '.join(found_indicators[:5])}",
+                        f"Found indicators: {', '.join(found_indicators[:5])}",
                         remediation="Implement proper authentication and authorization checks. "
-                                   "Use role-based access control (RBAC) for administrative functions.",
+                        "Use role-based access control (RBAC) for administrative functions.",
                         metadata={
                             "path": path,
                             "status_code": response.status_code,
-                            "indicators": found_indicators
-                        }
+                            "indicators": found_indicators,
+                        },
                     )
 
             # Update progress for this section (0-33%)
@@ -227,7 +239,9 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
         # Test path traversal in URL path
         test_endpoints = ["/file", "/download", "/read", "/view", "/get", "/load", "/include"]
-        total_tests = len(test_endpoints) * len(self.PATH_TRAVERSAL_PAYLOADS) * len(self.SENSITIVE_FILES)
+        total_tests = (
+            len(test_endpoints) * len(self.PATH_TRAVERSAL_PAYLOADS) * len(self.SENSITIVE_FILES)
+        )
         current_test = 0
 
         for endpoint in test_endpoints:
@@ -256,13 +270,13 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                                     description="Path traversal vulnerability allows reading sensitive files",
                                     evidence=f"URL: {test_url}, Response contains sensitive file content",
                                     remediation="Sanitize file path inputs. Use allowlists for permitted files. "
-                                               "Avoid using user input directly in file operations.",
+                                    "Avoid using user input directly in file operations.",
                                     metadata={
                                         "endpoint": endpoint,
                                         "payload": payload,
                                         "file": sensitive_file,
-                                        "url": test_url
-                                    }
+                                        "url": test_url,
+                                    },
                                 )
 
                     current_test += 1
@@ -274,7 +288,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
         """Check if path traversal was successful based on response content."""
         # Linux /etc/passwd indicators
         if "etc/passwd" in file:
-            return bool(re.search(r'root:.*:0:0:', content))
+            return bool(re.search(r"root:.*:0:0:", content))
 
         # Windows win.ini indicators
         if "win.ini" in file:
@@ -323,7 +337,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             if baseline_response and baseline_response.status_code == 200:
                 baseline_responses[endpoint] = {
                     "status": baseline_response.status_code,
-                    "length": len(baseline_response.text)
+                    "length": len(baseline_response.text),
                 }
 
                 # Test other IDs
@@ -345,7 +359,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                                     "Different content returned for different IDs without authorization check."
                                 ),
                                 evidence=f"Baseline URL: {baseline_url}, Test URL: {test_url}, "
-                                        f"Different response lengths indicate accessible data",
+                                f"Different response lengths indicate accessible data",
                                 remediation=(
                                     "Implement proper authorization checks. Verify the requesting user "
                                     "has permission to access the requested resource. Use indirect references."
@@ -355,8 +369,8 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                                     "baseline_id": 1,
                                     "test_id": test_id,
                                     "baseline_length": baseline_responses[endpoint]["length"],
-                                    "test_length": len(response.text)
-                                }
+                                    "test_length": len(response.text),
+                                },
                             )
                             break  # One finding per endpoint is enough
 
@@ -387,7 +401,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             description="Starting scan for broken access control vulnerabilities",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -411,5 +425,5 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             description="Completed scan for broken access control vulnerabilities",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

@@ -14,6 +14,7 @@ from attacks.base import BaseAttack, Finding
 
 class OWASPCategory(Enum):
     """OWASP Top 10 2021 categories."""
+
     A01_BROKEN_ACCESS_CONTROL = "A01:2021 - Broken Access Control"
     A02_CRYPTOGRAPHIC_FAILURES = "A02:2021 - Cryptographic Failures"
     A03_INJECTION = "A03:2021 - Injection"
@@ -29,6 +30,7 @@ class OWASPCategory(Enum):
 @dataclass
 class OWASPTestCase:
     """Represents a single OWASP test case."""
+
     name: str
     description: str
     category: OWASPCategory
@@ -84,33 +86,33 @@ class BaseOWASPAttack(BaseAttack):
             "timeout": {
                 "type": "integer",
                 "default": 10,
-                "description": "Request timeout in seconds"
+                "description": "Request timeout in seconds",
             },
             "user_agent": {
                 "type": "string",
                 "default": "AttackSim Security Scanner/1.0",
-                "description": "Custom User-Agent header"
+                "description": "Custom User-Agent header",
             },
             "verify_ssl": {
                 "type": "boolean",
                 "default": True,
-                "description": "Verify SSL certificates"
+                "description": "Verify SSL certificates",
             },
             "follow_redirects": {
                 "type": "boolean",
                 "default": True,
-                "description": "Follow HTTP redirects"
+                "description": "Follow HTTP redirects",
             },
             "max_retries": {
                 "type": "integer",
                 "default": 3,
-                "description": "Maximum request retries"
+                "description": "Maximum request retries",
             },
             "delay": {
                 "type": "float",
                 "default": 0.1,
-                "description": "Delay between requests in seconds"
-            }
+                "description": "Delay between requests in seconds",
+            },
         }
 
     def _get_session(self) -> requests.Session:
@@ -122,13 +124,15 @@ class BaseOWASPAttack(BaseAttack):
         """
         if self._session is None:
             self._session = requests.Session()
-            self._session.headers.update({
-                "User-Agent": self._user_agent,
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.5",
-                "Accept-Encoding": "gzip, deflate",
-                "Connection": "keep-alive"
-            })
+            self._session.headers.update(
+                {
+                    "User-Agent": self._user_agent,
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.5",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                }
+            )
         return self._session
 
     def _make_request(
@@ -138,7 +142,7 @@ class BaseOWASPAttack(BaseAttack):
         data: Optional[Dict] = None,
         headers: Optional[Dict] = None,
         params: Optional[Dict] = None,
-        json_data: Optional[Dict] = None
+        json_data: Optional[Dict] = None,
     ) -> Optional[requests.Response]:
         """
         Make an HTTP request with error handling.
@@ -166,7 +170,7 @@ class BaseOWASPAttack(BaseAttack):
                 json=json_data,
                 timeout=self._timeout,
                 verify=self._verify_ssl,
-                allow_redirects=self._follow_redirects
+                allow_redirects=self._follow_redirects,
             )
             return response
         except requests.RequestException:
@@ -211,9 +215,10 @@ class BaseOWASPAttack(BaseAttack):
         """
         # Simple form extraction - could be enhanced with BeautifulSoup
         import re
+
         forms = []
 
-        form_pattern = r'<form[^>]*>(.*?)</form>'
+        form_pattern = r"<form[^>]*>(.*?)</form>"
         action_pattern = r'action=["\']([^"\']*)["\']'
         method_pattern = r'method=["\']([^"\']*)["\']'
         input_pattern = r'<input[^>]*name=["\']([^"\']*)["\'][^>]*>'
@@ -225,19 +230,18 @@ class BaseOWASPAttack(BaseAttack):
             method_match = re.search(method_pattern, form_html, re.IGNORECASE)
             inputs = re.findall(input_pattern, form_html, re.IGNORECASE)
 
-            forms.append({
-                "action": action_match.group(1) if action_match else "",
-                "method": method_match.group(1).upper() if method_match else "GET",
-                "inputs": inputs
-            })
+            forms.append(
+                {
+                    "action": action_match.group(1) if action_match else "",
+                    "method": method_match.group(1).upper() if method_match else "GET",
+                    "inputs": inputs,
+                }
+            )
 
         return forms
 
     def _check_response_for_patterns(
-        self,
-        response: requests.Response,
-        patterns: List[str],
-        case_sensitive: bool = False
+        self, response: requests.Response, patterns: List[str], case_sensitive: bool = False
     ) -> List[str]:
         """
         Check response content for patterns.
@@ -251,6 +255,7 @@ class BaseOWASPAttack(BaseAttack):
             List of matched patterns
         """
         import re
+
         content = response.text
         matches = []
 
@@ -282,7 +287,6 @@ class BaseOWASPAttack(BaseAttack):
         Returns:
             List of OWASPTestCase objects to execute
         """
-        pass
 
     @abstractmethod
     def run(self, target: str) -> Generator[Finding, None, None]:
@@ -295,7 +299,6 @@ class BaseOWASPAttack(BaseAttack):
         Yields:
             Finding objects for each vulnerability discovered
         """
-        pass
 
     def get_info(self) -> Dict[str, Any]:
         """Get attack module information including OWASP category."""

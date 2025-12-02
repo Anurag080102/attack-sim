@@ -12,6 +12,7 @@ This module implements detection of logging and monitoring vulnerabilities inclu
 import re
 import time
 from typing import Generator, Dict, Any, List
+
 # urljoin removed - not currently used
 
 from attacks.base import Finding, Severity
@@ -74,57 +75,57 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
 
     # Patterns indicating debug/development mode
     DEBUG_PATTERNS = [
-        r'DEBUG\s*=\s*True',
-        r'debug\s*mode',
-        r'development\s*mode',
-        r'FLASK_DEBUG',
-        r'DJANGO_DEBUG',
-        r'APP_DEBUG',
-        r'WP_DEBUG',
-        r'display_errors\s*=\s*On',
-        r'error_reporting\s*=\s*E_ALL',
+        r"DEBUG\s*=\s*True",
+        r"debug\s*mode",
+        r"development\s*mode",
+        r"FLASK_DEBUG",
+        r"DJANGO_DEBUG",
+        r"APP_DEBUG",
+        r"WP_DEBUG",
+        r"display_errors\s*=\s*On",
+        r"error_reporting\s*=\s*E_ALL",
     ]
 
     # Stack trace patterns by language
     STACK_TRACE_PATTERNS = {
         "python": [
-            r'Traceback \(most recent call last\)',
+            r"Traceback \(most recent call last\)",
             r'File "[^"]+", line \d+',
-            r'raise \w+Error',
+            r"raise \w+Error",
             r'\.py", line \d+',
         ],
         "java": [
-            r'at \w+\.\w+\(\w+\.java:\d+\)',
-            r'java\.\w+\.\w+Exception',
-            r'\.java:\d+\)',
-            r'Caused by:',
+            r"at \w+\.\w+\(\w+\.java:\d+\)",
+            r"java\.\w+\.\w+Exception",
+            r"\.java:\d+\)",
+            r"Caused by:",
         ],
         "php": [
-            r'Fatal error:',
-            r'Parse error:',
-            r'Warning:.*in .* on line',
-            r'Stack trace:',
-            r'#\d+ .+\.php\(\d+\)',
+            r"Fatal error:",
+            r"Parse error:",
+            r"Warning:.*in .* on line",
+            r"Stack trace:",
+            r"#\d+ .+\.php\(\d+\)",
         ],
         "dotnet": [
-            r'System\.\w+Exception',
-            r'at \w+\.\w+\.\w+\(',
-            r'\.cs:line \d+',
-            r'Stack Trace:',
-            r'Server Error in',
+            r"System\.\w+Exception",
+            r"at \w+\.\w+\.\w+\(",
+            r"\.cs:line \d+",
+            r"Stack Trace:",
+            r"Server Error in",
         ],
         "javascript": [
-            r'at \w+\s+\([^)]+:\d+:\d+\)',
-            r'TypeError:',
-            r'ReferenceError:',
-            r'SyntaxError:',
-            r'Error:.*\n\s+at',
+            r"at \w+\s+\([^)]+:\d+:\d+\)",
+            r"TypeError:",
+            r"ReferenceError:",
+            r"SyntaxError:",
+            r"Error:.*\n\s+at",
         ],
         "ruby": [
-            r'\.rb:\d+:in',
-            r'NoMethodError',
-            r'NameError',
-            r'ActionController::',
+            r"\.rb:\d+:in",
+            r"NoMethodError",
+            r"NameError",
+            r"ActionController::",
         ],
     }
 
@@ -134,10 +135,13 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
         (r'/(?:home|var|usr|opt|etc)/[^\s<>"]+', "Unix path disclosure"),
         (r'(?:mysql|postgres|oracle|mongodb)://[^\s<>"]+', "Database connection string"),
         (r'password["\']?\s*[:=]\s*["\'][^"\']+["\']', "Password in error"),
-        (r'(?:api[_-]?key|secret|token)["\']?\s*[:=]\s*["\'][^"\']+["\']', "API key/secret exposure"),
-        (r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)', "Email address"),
-        (r'(?:version|v)\s*[:=]?\s*[\d.]+', "Version disclosure"),
-        (r'(?:server|apache|nginx|iis|php|python|ruby|node)[/\s]*[\d.]+', "Software version"),
+        (
+            r'(?:api[_-]?key|secret|token)["\']?\s*[:=]\s*["\'][^"\']+["\']',
+            "API key/secret exposure",
+        ),
+        (r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", "Email address"),
+        (r"(?:version|v)\s*[:=]?\s*[\d.]+", "Version disclosure"),
+        (r"(?:server|apache|nginx|iis|php|python|ruby|node)[/\s]*[\d.]+", "Software version"),
     ]
 
     def __init__(self):
@@ -160,23 +164,25 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "test_errors": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test error handling for information disclosure"
-            },
-            "test_debug": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for debug endpoints and modes"
-            },
-            "test_stack_traces": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for stack trace exposure"
+        options.update(
+            {
+                "test_errors": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test error handling for information disclosure",
+                },
+                "test_debug": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for debug endpoints and modes",
+                },
+                "test_stack_traces": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for stack trace exposure",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -187,22 +193,22 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                 description="Test for verbose error messages",
                 category=OWASPCategory.A09_LOGGING_MONITORING,
                 payloads=self.ERROR_TRIGGER_URLS,
-                detection_patterns=["error", "exception", "traceback"]
+                detection_patterns=["error", "exception", "traceback"],
             ),
             OWASPTestCase(
                 name="Debug Endpoints",
                 description="Check for accessible debug endpoints",
                 category=OWASPCategory.A09_LOGGING_MONITORING,
                 payloads=self.DEBUG_ENDPOINTS,
-                detection_patterns=self.DEBUG_PATTERNS
+                detection_patterns=self.DEBUG_PATTERNS,
             ),
             OWASPTestCase(
                 name="Stack Trace Exposure",
                 description="Detect exposed stack traces",
                 category=OWASPCategory.A09_LOGGING_MONITORING,
                 payloads=[],
-                detection_patterns=list(self.STACK_TRACE_PATTERNS.keys())
-            )
+                detection_patterns=list(self.STACK_TRACE_PATTERNS.keys()),
+            ),
         ]
 
     def _test_error_disclosure(self, target: str) -> Generator[Finding, None, None]:
@@ -231,15 +237,11 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                                 title=f"Stack Trace Exposed ({lang})",
                                 severity=Severity.MEDIUM,
                                 description=f"Error response contains {lang} stack trace, "
-                                           "potentially exposing internal code structure.",
+                                "potentially exposing internal code structure.",
                                 evidence=f"URL: {test_url}, Pattern: {pattern[:50]}",
                                 remediation="Configure custom error pages that don't expose "
-                                           "stack traces. Log detailed errors server-side only.",
-                                metadata={
-                                    "url": test_url,
-                                    "language": lang,
-                                    "pattern": pattern
-                                }
+                                "stack traces. Log detailed errors server-side only.",
+                                metadata={"url": test_url, "language": lang, "pattern": pattern},
                             )
                             break
 
@@ -256,12 +258,12 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                             description=f"Error response contains {description.lower()}",
                             evidence=f"URL: {test_url}, Found: {unique_matches}",
                             remediation="Sanitize error messages. Remove paths, versions, "
-                                       "and other sensitive information from user-facing errors.",
+                            "and other sensitive information from user-facing errors.",
                             metadata={
                                 "url": test_url,
                                 "type": description,
-                                "matches": unique_matches
-                            }
+                                "matches": unique_matches,
+                            },
                         )
 
             self.set_progress((idx + 1) / total_urls * 33)
@@ -286,11 +288,21 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                 content = response.text.lower()
                 content_length = len(response.text)
 
-                # Check for actual debug content (not just a redirect or error page)
+                # Check for actual debug content (not just a redirect or error
+                # page)
                 debug_indicators = [
-                    "debug", "configuration", "environment", "settings",
-                    "variables", "phpinfo", "server info", "system",
-                    "actuator", "beans", "mappings", "health"
+                    "debug",
+                    "configuration",
+                    "environment",
+                    "settings",
+                    "variables",
+                    "phpinfo",
+                    "server info",
+                    "system",
+                    "actuator",
+                    "beans",
+                    "mappings",
+                    "health",
                 ]
 
                 found_indicators = [i for i in debug_indicators if i in content]
@@ -306,15 +318,15 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                         title=f"Debug Endpoint Accessible: {endpoint}",
                         severity=severity,
                         description=f"Debug/development endpoint is publicly accessible. "
-                                   f"Found indicators: {found_indicators}",
+                        f"Found indicators: {found_indicators}",
                         evidence=f"URL: {test_url}, Status: 200, Size: {content_length} bytes",
                         remediation="Disable debug endpoints in production. "
-                                   "Restrict access via authentication or IP allowlisting.",
+                        "Restrict access via authentication or IP allowlisting.",
                         metadata={
                             "endpoint": endpoint,
                             "indicators": found_indicators,
-                            "size": content_length
-                        }
+                            "size": content_length,
+                        },
                     )
 
             self.set_progress(33 + (idx + 1) / total_endpoints * 33)
@@ -345,8 +357,8 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                     description="Application appears to be running in debug mode",
                     evidence=f"Pattern matched: {pattern}",
                     remediation="Disable debug mode in production. Set DEBUG=False "
-                               "and ensure production configurations are used.",
-                    metadata={"pattern": pattern}
+                    "and ensure production configurations are used.",
+                    metadata={"pattern": pattern},
                 )
 
         # Check for debug-related headers
@@ -368,11 +380,8 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                     description=f"{description} found in response headers",
                     evidence=f"Header: {header}: {headers[header]}",
                     remediation="Remove debug headers in production. "
-                               "Configure web server to strip sensitive headers.",
-                    metadata={
-                        "header": header,
-                        "value": headers[header]
-                    }
+                    "Configure web server to strip sensitive headers.",
+                    metadata={"header": header, "value": headers[header]},
                 )
 
         # Check for verbose server errors (custom test)
@@ -390,14 +399,14 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
 
                 # Check for detailed error output
                 verbose_error_patterns = [
-                    r'Settings\.py',
-                    r'urls\.py',
-                    r'views\.py',
-                    r'models\.py',
-                    r'web\.config',
-                    r'applicationhost\.config',
-                    r'httpd\.conf',
-                    r'nginx\.conf',
+                    r"Settings\.py",
+                    r"urls\.py",
+                    r"views\.py",
+                    r"models\.py",
+                    r"web\.config",
+                    r"applicationhost\.config",
+                    r"httpd\.conf",
+                    r"nginx\.conf",
                 ]
 
                 for pattern in verbose_error_patterns:
@@ -408,7 +417,7 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                             description="Error response references configuration files",
                             evidence=f"URL: {url}, Pattern: {pattern}",
                             remediation="Configure custom error pages without file references",
-                            metadata={"url": url, "pattern": pattern}
+                            metadata={"url": url, "pattern": pattern},
                         )
                         break
 
@@ -435,7 +444,7 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
             description="Starting scan for logging and monitoring failures",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -459,5 +468,5 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
             description="Completed scan for logging and monitoring failures",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

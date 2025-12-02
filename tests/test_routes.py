@@ -8,12 +8,9 @@ This module contains unit tests for all Flask routes including:
 """
 
 import pytest
-import json
 import time
 import tempfile
-import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from app import create_app
 from app.routes.attacks import attack_manager, AttackStatus
@@ -33,6 +30,7 @@ def app():
 
     # Clean up temp directory after tests (ignore errors on Windows)
     import shutil
+
     try:
         shutil.rmtree(temp_dir, ignore_errors=True)
     except Exception:
@@ -186,9 +184,7 @@ class TestAttackExecutionEndpoints:
 
     def test_run_attack_missing_attack_id(self, client):
         """Test running attack without attack_id returns 400."""
-        response = client.post("/api/attacks/run", json={
-            "target": "http://example.com"
-        })
+        response = client.post("/api/attacks/run", json={"target": "http://example.com"})
 
         assert response.status_code == 400
         data = response.get_json()
@@ -196,9 +192,7 @@ class TestAttackExecutionEndpoints:
 
     def test_run_attack_missing_target(self, client):
         """Test running attack without target returns 400."""
-        response = client.post("/api/attacks/run", json={
-            "attack_id": "bruteforce"
-        })
+        response = client.post("/api/attacks/run", json={"attack_id": "bruteforce"})
 
         assert response.status_code == 400
         data = response.get_json()
@@ -206,20 +200,22 @@ class TestAttackExecutionEndpoints:
 
     def test_run_attack_invalid_attack_id(self, client):
         """Test running invalid attack returns 404."""
-        response = client.post("/api/attacks/run", json={
-            "attack_id": "nonexistent",
-            "target": "http://example.com"
-        })
+        response = client.post(
+            "/api/attacks/run", json={"attack_id": "nonexistent", "target": "http://example.com"}
+        )
 
         assert response.status_code == 404
 
     def test_run_attack_success(self, client):
         """Test running a valid attack returns job info."""
-        response = client.post("/api/attacks/run", json={
-            "attack_id": "a05",  # Security misconfiguration - lightweight
-            "target": "http://example.com",
-            "config": {}
-        })
+        response = client.post(
+            "/api/attacks/run",
+            json={
+                "attack_id": "a05",  # Security misconfiguration - lightweight
+                "target": "http://example.com",
+                "config": {},
+            },
+        )
 
         assert response.status_code == 202
         data = response.get_json()
@@ -230,10 +226,9 @@ class TestAttackExecutionEndpoints:
     def test_get_attack_status_valid(self, client):
         """Test getting status for valid job."""
         # First start an attack
-        run_response = client.post("/api/attacks/run", json={
-            "attack_id": "a05",
-            "target": "http://example.com"
-        })
+        run_response = client.post(
+            "/api/attacks/run", json={"attack_id": "a05", "target": "http://example.com"}
+        )
         job_id = run_response.get_json()["job"]["id"]
 
         # Get status
@@ -254,10 +249,9 @@ class TestAttackExecutionEndpoints:
     def test_get_attack_results_valid(self, client):
         """Test getting results for valid job."""
         # First start an attack
-        run_response = client.post("/api/attacks/run", json={
-            "attack_id": "a05",
-            "target": "http://example.com"
-        })
+        run_response = client.post(
+            "/api/attacks/run", json={"attack_id": "a05", "target": "http://example.com"}
+        )
         job_id = run_response.get_json()["job"]["id"]
 
         # Get results
@@ -334,29 +328,25 @@ class TestReportEndpoints:
 
     def test_generate_report_invalid_job(self, client):
         """Test generating report for invalid job returns 404."""
-        response = client.post("/api/reports/generate", json={
-            "job_id": "invalid-job-id"
-        })
+        response = client.post("/api/reports/generate", json={"job_id": "invalid-job-id"})
 
         assert response.status_code == 404
 
     def test_generate_report_success(self, client, app):
         """Test generating report for valid job."""
         # First run an attack
-        run_response = client.post("/api/attacks/run", json={
-            "attack_id": "a05",
-            "target": "http://example.com"
-        })
+        run_response = client.post(
+            "/api/attacks/run", json={"attack_id": "a05", "target": "http://example.com"}
+        )
         job_id = run_response.get_json()["job"]["id"]
 
         # Wait a moment for the attack to process
         time.sleep(0.5)
 
         # Generate report
-        response = client.post("/api/reports/generate", json={
-            "job_id": job_id,
-            "title": "Test Report"
-        })
+        response = client.post(
+            "/api/reports/generate", json={"job_id": job_id, "title": "Test Report"}
+        )
 
         assert response.status_code == 201
         data = response.get_json()
@@ -372,18 +362,16 @@ class TestReportEndpoints:
     def test_delete_report_success(self, client, app):
         """Test deleting a valid report."""
         # Run an attack
-        run_response = client.post("/api/attacks/run", json={
-            "attack_id": "a05",
-            "target": "http://example.com"
-        })
+        run_response = client.post(
+            "/api/attacks/run", json={"attack_id": "a05", "target": "http://example.com"}
+        )
         job_id = run_response.get_json()["job"]["id"]
         time.sleep(0.5)
 
         # Generate report
-        gen_response = client.post("/api/reports/generate", json={
-            "job_id": job_id,
-            "title": "Delete Test"
-        })
+        gen_response = client.post(
+            "/api/reports/generate", json={"job_id": job_id, "title": "Delete Test"}
+        )
         assert gen_response.status_code == 201
         report_id = gen_response.get_json()["report_id"]
 
@@ -398,18 +386,16 @@ class TestReportEndpoints:
     def test_report_lifecycle(self, client, app):
         """Test complete report lifecycle: generate, retrieve, download, delete."""
         # Run an attack
-        run_response = client.post("/api/attacks/run", json={
-            "attack_id": "a05",
-            "target": "http://example.com"
-        })
+        run_response = client.post(
+            "/api/attacks/run", json={"attack_id": "a05", "target": "http://example.com"}
+        )
         job_id = run_response.get_json()["job"]["id"]
         time.sleep(0.5)
 
         # Generate report
-        gen_response = client.post("/api/reports/generate", json={
-            "job_id": job_id,
-            "title": "Lifecycle Test"
-        })
+        gen_response = client.post(
+            "/api/reports/generate", json={"job_id": job_id, "title": "Lifecycle Test"}
+        )
         assert gen_response.status_code == 201
         report_id = gen_response.get_json()["report_id"]
 
@@ -436,7 +422,8 @@ class TestReportEndpoints:
         assert download_html.mimetype == "text/html"
         assert b"<!DOCTYPE html>" in download_html.data
 
-        # Note: Delete test skipped due to Windows file locking in temp directory
+        # Note: Delete test skipped due to Windows file locking in temp
+        # directory
 
 
 class TestAttackManager:
@@ -446,9 +433,7 @@ class TestAttackManager:
         """Test creating a job via attack manager."""
         with app.app_context():
             job = attack_manager.create_job(
-                attack_id="bruteforce",
-                target="http://example.com",
-                config={"username": "admin"}
+                attack_id="bruteforce", target="http://example.com", config={"username": "admin"}
             )
 
             assert job is not None
@@ -460,9 +445,7 @@ class TestAttackManager:
         """Test creating job with invalid attack returns None."""
         with app.app_context():
             job = attack_manager.create_job(
-                attack_id="nonexistent",
-                target="http://example.com",
-                config={}
+                attack_id="nonexistent", target="http://example.com", config={}
             )
 
             assert job is None
@@ -470,11 +453,7 @@ class TestAttackManager:
     def test_start_job(self, app):
         """Test starting a job."""
         with app.app_context():
-            job = attack_manager.create_job(
-                attack_id="a05",
-                target="http://example.com",
-                config={}
-            )
+            job = attack_manager.create_job(attack_id="a05", target="http://example.com", config={})
 
             result = attack_manager.start_job(job.id)
             assert result is True
@@ -487,9 +466,7 @@ class TestAttackManager:
         """Test getting a job by ID."""
         with app.app_context():
             job = attack_manager.create_job(
-                attack_id="bruteforce",
-                target="http://example.com",
-                config={}
+                attack_id="bruteforce", target="http://example.com", config={}
             )
 
             retrieved = attack_manager.get_job(job.id)
@@ -516,9 +493,7 @@ class TestAttackManager:
         """Test job serialization."""
         with app.app_context():
             job = attack_manager.create_job(
-                attack_id="bruteforce",
-                target="http://example.com",
-                config={"key": "value"}
+                attack_id="bruteforce", target="http://example.com", config={"key": "value"}
             )
 
             job_dict = job.to_dict()
@@ -536,27 +511,21 @@ class TestInputValidation:
 
     def test_attack_run_empty_target(self, client):
         """Test running attack with empty target."""
-        response = client.post("/api/attacks/run", json={
-            "attack_id": "bruteforce",
-            "target": ""
-        })
+        response = client.post("/api/attacks/run", json={"attack_id": "bruteforce", "target": ""})
 
         assert response.status_code == 400
 
     def test_attack_run_empty_attack_id(self, client):
         """Test running attack with empty attack_id."""
-        response = client.post("/api/attacks/run", json={
-            "attack_id": "",
-            "target": "http://example.com"
-        })
+        response = client.post(
+            "/api/attacks/run", json={"attack_id": "", "target": "http://example.com"}
+        )
 
         assert response.status_code == 400
 
     def test_report_generate_empty_job_id(self, client):
         """Test generating report with empty job_id."""
-        response = client.post("/api/reports/generate", json={
-            "job_id": ""
-        })
+        response = client.post("/api/reports/generate", json={"job_id": ""})
 
         assert response.status_code == 400
 

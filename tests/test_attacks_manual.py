@@ -97,9 +97,7 @@ def test_dictionary_wordlist_loading():
     print("=" * 60)
 
     attack = DictionaryAttack()
-    attack.configure(
-        username="admin", password_wordlist="wordlists/common_passwords.txt"
-    )
+    attack.configure(username="admin", password_wordlist="wordlists/common_passwords.txt")
 
     # Load wordlist
     try:

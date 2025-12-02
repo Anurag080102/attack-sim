@@ -9,12 +9,12 @@ This module contains unit tests for all attack modules including:
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from pathlib import Path
 import tempfile
 import os
 
-from attacks.base import BaseAttack, Finding, Severity
+from attacks.base import Finding, Severity
 from attacks import AttackRegistry
 from attacks.bruteforce import BruteForceAttack
 from attacks.dictionary import DictionaryAttack
@@ -22,16 +22,6 @@ from attacks.owasp import OWASPRegistry
 from attacks.owasp.base_owasp import BaseOWASPAttack, OWASPCategory
 
 # Import OWASP attack modules to ensure they're registered
-import attacks.owasp.a01_broken_access
-import attacks.owasp.a02_crypto_failures
-import attacks.owasp.a03_injection
-import attacks.owasp.a04_insecure_design
-import attacks.owasp.a05_security_misconfig
-import attacks.owasp.a06_outdated_components
-import attacks.owasp.a07_auth_failures
-import attacks.owasp.a08_integrity_failures
-import attacks.owasp.a09_logging_monitoring
-import attacks.owasp.a10_ssrf
 
 
 class TestSeverityEnum:
@@ -60,7 +50,7 @@ class TestFinding:
             severity=Severity.HIGH,
             description="A test finding",
             evidence="Some evidence",
-            remediation="Fix the issue"
+            remediation="Fix the issue",
         )
 
         assert finding.title == "Test Finding"
@@ -76,7 +66,7 @@ class TestFinding:
             severity=Severity.CRITICAL,
             description="Critical issue",
             evidence="Evidence here",
-            remediation="Fix immediately"
+            remediation="Fix immediately",
         )
 
         result = finding.to_dict()
@@ -97,7 +87,7 @@ class TestFinding:
             description="Test",
             evidence="Test",
             remediation="Test",
-            metadata={"key": "value", "count": 42}
+            metadata={"key": "value", "count": 42},
         )
 
         assert finding.metadata["key"] == "value"
@@ -169,11 +159,7 @@ class TestBruteForceAttack:
         """Test custom configuration is applied correctly."""
         attack = BruteForceAttack()
         attack.configure(
-            username="testuser",
-            charset="abc",
-            min_length=2,
-            max_length=3,
-            max_threads=2
+            username="testuser", charset="abc", min_length=2, max_length=3, max_threads=2
         )
 
         assert attack._config["username"] == "testuser"
@@ -251,7 +237,7 @@ class TestBruteForceAttack:
         assert not attack.is_cancelled()
         assert not attack.is_running()
 
-    @patch('attacks.bruteforce.requests.Session')
+    @patch("attacks.bruteforce.requests.Session")
     def test_run_generates_findings(self, mock_session_class):
         """Test that running attack generates findings."""
         # Setup mock
@@ -271,7 +257,7 @@ class TestBruteForceAttack:
             max_length=1,
             max_threads=1,
             timeout=1,
-            delay=0
+            delay=0,
         )
 
         findings = list(attack.run("http://localhost"))
@@ -288,7 +274,9 @@ class TestDictionaryAttack:
         """Test attack has correct name and description."""
         attack = DictionaryAttack()
         assert attack.name == "Dictionary Attack"
-        assert "wordlist" in attack.description.lower() or "dictionary" in attack.description.lower()
+        assert (
+            "wordlist" in attack.description.lower() or "dictionary" in attack.description.lower()
+        )
 
     def test_default_configuration(self):
         """Test default configuration is applied."""
@@ -306,7 +294,7 @@ class TestDictionaryAttack:
             username="testuser",
             password_wordlist="custom/passwords.txt",
             max_threads=2,
-            stop_on_success=False
+            stop_on_success=False,
         )
 
         assert attack._config["username"] == "testuser"
@@ -346,17 +334,14 @@ class TestDictionaryAttack:
     def test_credential_generation_single_user(self):
         """Test credential generation with single username."""
         # Create a temporary wordlist
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("pass1\npass2\npass3\n")
             temp_wordlist = f.name
 
         try:
             attack = DictionaryAttack()
             attack._base_path = Path(temp_wordlist).parent.parent
-            attack.configure(
-                username="admin",
-                password_wordlist=temp_wordlist
-            )
+            attack.configure(username="admin", password_wordlist=temp_wordlist)
 
             credentials = list(attack._generate_credentials())
 
@@ -369,20 +354,17 @@ class TestDictionaryAttack:
     def test_count_total_attempts(self):
         """Test counting total credential combinations."""
         # Create temporary wordlists
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("pass1\npass2\npass3\n")
             temp_passwords = f.name
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("user1\nuser2\n")
             temp_users = f.name
 
         try:
             attack = DictionaryAttack()
-            attack.configure(
-                password_wordlist=temp_passwords,
-                username_wordlist=temp_users
-            )
+            attack.configure(password_wordlist=temp_passwords, username_wordlist=temp_users)
 
             # Should be 2 users * 3 passwords = 6
             count = attack._count_total_attempts()
@@ -455,7 +437,7 @@ class TestOWASPCategory:
             "A07_AUTH_FAILURES",
             "A08_INTEGRITY_FAILURES",
             "A09_LOGGING_MONITORING",
-            "A10_SSRF"
+            "A10_SSRF",
         ]
 
         for name in expected:
@@ -557,11 +539,7 @@ class TestInjectionAttack:
     def test_configure_injection_options(self):
         """Test configuring injection-specific options."""
         attack = OWASPRegistry.create("a03")
-        attack.configure(
-            test_sql=True,
-            test_xss=False,
-            test_cmd=True
-        )
+        attack.configure(test_sql=True, test_xss=False, test_cmd=True)
 
         assert attack._config["test_sql"] is True
         assert attack._config["test_xss"] is False

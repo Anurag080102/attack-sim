@@ -1,6 +1,7 @@
 """
 Attack-Sim Flask Application Factory
 """
+
 from flask import Flask
 import logging
 
@@ -19,6 +20,7 @@ def create_app(config_name: str = "development") -> Flask:
 
     # Load configuration
     from app.config import config
+
     app.config.from_object(config[config_name])
 
     # Configure logging
@@ -26,10 +28,12 @@ def create_app(config_name: str = "development") -> Flask:
 
     # Register error handlers
     from app.errors import register_error_handlers
+
     register_error_handlers(app)
 
     # Register blueprints
     from app.routes import register_blueprints
+
     register_blueprints(app)
 
     # Health check endpoint
@@ -53,7 +57,7 @@ def _configure_logging(app: Flask) -> None:
     logging.basicConfig(
         level=log_level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     # Set Flask's logger level

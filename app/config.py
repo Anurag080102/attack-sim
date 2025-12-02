@@ -8,6 +8,7 @@ This module provides configuration classes for different environments:
 
 Configuration values can be overridden via environment variables.
 """
+
 import os
 from pathlib import Path
 

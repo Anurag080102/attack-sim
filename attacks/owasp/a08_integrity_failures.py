@@ -34,40 +34,53 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
     # Serialization indicators in responses/cookies
     SERIALIZATION_PATTERNS = {
         "java": [
-            r'rO0AB',  # Base64 Java serialized object
-            r'aced0005',  # Java serialization magic bytes (hex)
-            r'org\.apache\.',
-            r'java\.util\.',
-            r'java\.lang\.',
+            r"rO0AB",  # Base64 Java serialized object
+            r"aced0005",  # Java serialization magic bytes (hex)
+            r"org\.apache\.",
+            r"java\.util\.",
+            r"java\.lang\.",
         ],
         "php": [
-            r'a:\d+:\{',  # PHP serialized array
-            r'O:\d+:"',   # PHP serialized object
-            r's:\d+:"',   # PHP serialized string
-            r'i:\d+;',    # PHP serialized integer
+            r"a:\d+:\{",  # PHP serialized array
+            r'O:\d+:"',  # PHP serialized object
+            r's:\d+:"',  # PHP serialized string
+            r"i:\d+;",  # PHP serialized integer
         ],
         "python": [
-            r'\x80\x03',  # Python pickle
-            r'\x80\x04',  # Python pickle protocol 4
-            r'ccopy_reg',
-            r'c__builtin__',
+            r"\x80\x03",  # Python pickle
+            r"\x80\x04",  # Python pickle protocol 4
+            r"ccopy_reg",
+            r"c__builtin__",
         ],
         "dotnet": [
-            r'AAEAAAD',  # .NET BinaryFormatter
-            r'TypeName.*Assembly',
-            r'System\.',
+            r"AAEAAAD",  # .NET BinaryFormatter
+            r"TypeName.*Assembly",
+            r"System\.",
         ],
         "node": [
-            r'_$$ND_FUNC$$_',  # node-serialize
-        ]
+            r"_$$ND_FUNC$$_",  # node-serialize
+        ],
     }
 
     # Common cookie/parameter names that might contain serialized data
     SERIALIZED_PARAM_NAMES = [
-        "data", "object", "session", "state", "viewstate",
-        "__VIEWSTATE", "__EVENTVALIDATION", "token", "auth",
-        "user", "profile", "cart", "basket", "order",
-        "preferences", "settings", "config"
+        "data",
+        "object",
+        "session",
+        "state",
+        "viewstate",
+        "__VIEWSTATE",
+        "__EVENTVALIDATION",
+        "token",
+        "auth",
+        "user",
+        "profile",
+        "cart",
+        "basket",
+        "order",
+        "preferences",
+        "settings",
+        "config",
     ]
 
     # Subresource Integrity check
@@ -75,13 +88,13 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
     # CDN resources that should have SRI
     CDN_PATTERNS = [
-        r'cdn\.jsdelivr\.net',
-        r'cdnjs\.cloudflare\.com',
-        r'unpkg\.com',
-        r'ajax\.googleapis\.com',
-        r'code\.jquery\.com',
-        r'stackpath\.bootstrapcdn\.com',
-        r'maxcdn\.bootstrapcdn\.com',
+        r"cdn\.jsdelivr\.net",
+        r"cdnjs\.cloudflare\.com",
+        r"unpkg\.com",
+        r"ajax\.googleapis\.com",
+        r"code\.jquery\.com",
+        r"stackpath\.bootstrapcdn\.com",
+        r"maxcdn\.bootstrapcdn\.com",
     ]
 
     def __init__(self):
@@ -104,23 +117,25 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
-        options.update({
-            "test_serialization": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for insecure serialization"
-            },
-            "test_sri": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for missing Subresource Integrity"
-            },
-            "test_jwt": {
-                "type": "boolean",
-                "default": True,
-                "description": "Test for JWT vulnerabilities"
+        options.update(
+            {
+                "test_serialization": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for insecure serialization",
+                },
+                "test_sri": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for missing Subresource Integrity",
+                },
+                "test_jwt": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Test for JWT vulnerabilities",
+                },
             }
-        })
+        )
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
@@ -131,22 +146,22 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 description="Detect serialized objects in cookies and parameters",
                 category=OWASPCategory.A08_INTEGRITY_FAILURES,
                 payloads=[],
-                detection_patterns=list(self.SERIALIZATION_PATTERNS.keys())
+                detection_patterns=list(self.SERIALIZATION_PATTERNS.keys()),
             ),
             OWASPTestCase(
                 name="Missing Subresource Integrity",
                 description="Check for missing SRI on CDN resources",
                 category=OWASPCategory.A08_INTEGRITY_FAILURES,
                 payloads=[],
-                detection_patterns=self.CDN_PATTERNS
+                detection_patterns=self.CDN_PATTERNS,
             ),
             OWASPTestCase(
                 name="JWT Vulnerabilities",
                 description="Test for JWT algorithm confusion and weak signing",
                 category=OWASPCategory.A08_INTEGRITY_FAILURES,
                 payloads=[],
-                detection_patterns=["jwt", "bearer", "token"]
-            )
+                detection_patterns=["jwt", "bearer", "token"],
+            ),
         ]
 
     def _detect_serialization_format(self, data: str) -> List[Dict[str, str]]:
@@ -156,10 +171,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
         for lang, patterns in self.SERIALIZATION_PATTERNS.items():
             for pattern in patterns:
                 if re.search(pattern, data, re.IGNORECASE):
-                    findings.append({
-                        "language": lang,
-                        "pattern": pattern
-                    })
+                    findings.append({"language": lang, "pattern": pattern})
 
         return findings
 
@@ -180,7 +192,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
             # Try to decode base64
             try:
-                decoded: str = base64.b64decode(cookie_value).decode('utf-8', errors='ignore')
+                decoded: str = base64.b64decode(cookie_value).decode("utf-8", errors="ignore")
             except Exception:
                 decoded = cookie_value
 
@@ -194,18 +206,18 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                         title=f"Potential Serialized Object in Cookie ({finding['language']})",
                         severity=Severity.HIGH,
                         description=f"Cookie '{cookie.name}' appears to contain a serialized "
-                                   f"{finding['language']} object. This may be vulnerable to "
-                                   "insecure deserialization attacks.",
+                        f"{finding['language']} object. This may be vulnerable to "
+                        "insecure deserialization attacks.",
                         evidence=f"Cookie: {cookie.name}, Pattern: {finding['pattern']}, "
-                                f"Value preview: {value_preview}...",
+                        f"Value preview: {value_preview}...",
                         remediation="Avoid deserializing untrusted data. Use safer data formats "
-                                   "like JSON. Implement integrity checks (HMAC) on serialized data. "
-                                   "Consider using language-specific secure alternatives.",
+                        "like JSON. Implement integrity checks (HMAC) on serialized data. "
+                        "Consider using language-specific secure alternatives.",
                         metadata={
                             "cookie_name": cookie.name,
-                            "language": finding['language'],
-                            "pattern": finding['pattern']
-                        }
+                            "language": finding["language"],
+                            "pattern": finding["pattern"],
+                        },
                     )
 
         # Check response body for serialized data indicators
@@ -221,12 +233,12 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                         description=f"Response contains patterns indicating {lang} serialization",
                         evidence=f"Pattern: {pattern}, Matches: {len(matches)}",
                         remediation="Review the use of serialization. Ensure proper integrity "
-                                   "verification and avoid deserializing untrusted input.",
+                        "verification and avoid deserializing untrusted input.",
                         metadata={
                             "language": lang,
                             "pattern": pattern,
-                            "match_count": len(matches)
-                        }
+                            "match_count": len(matches),
+                        },
                     )
 
         self.set_progress(33)
@@ -263,12 +275,12 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 # Check if the tag has integrity attribute
                 # We need to find the full tag for this resource
                 resource_escaped = re.escape(resource)
-                tag_pattern = rf'<(?:script|link)[^>]*{resource_escaped}[^>]*>'
+                tag_pattern = rf"<(?:script|link)[^>]*{resource_escaped}[^>]*>"
                 tag_match = re.search(tag_pattern, content, re.IGNORECASE)
 
                 if tag_match:
                     tag = tag_match.group(0)
-                    has_integrity = 'integrity=' in tag.lower()
+                    has_integrity = "integrity=" in tag.lower()
 
                     if not has_integrity:
                         cdn_resources_without_sri.append(resource)
@@ -278,16 +290,16 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 title="Missing Subresource Integrity (SRI)",
                 severity=Severity.MEDIUM,
                 description=f"Found {len(cdn_resources_without_sri)} CDN resources without "
-                           "Subresource Integrity hashes. This could allow attackers to inject "
-                           "malicious code if the CDN is compromised.",
+                "Subresource Integrity hashes. This could allow attackers to inject "
+                "malicious code if the CDN is compromised.",
                 evidence=f"Resources without SRI: {cdn_resources_without_sri[:5]}",
                 remediation="Add integrity attributes to all external script and stylesheet tags. "
-                           "Use tools like srihash.org to generate hashes. "
-                           "Example: integrity=\"sha384-...\" crossorigin=\"anonymous\"",
+                "Use tools like srihash.org to generate hashes. "
+                'Example: integrity="sha384-..." crossorigin="anonymous"',
                 metadata={
                     "resources": cdn_resources_without_sri,
-                    "count": len(cdn_resources_without_sri)
-                }
+                    "count": len(cdn_resources_without_sri),
+                },
             )
 
         self.set_progress(66)
@@ -304,7 +316,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
             return
 
         # Look for JWTs in cookies and headers
-        jwt_pattern = r'eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*'
+        jwt_pattern = r"eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*"
 
         # Check cookies
         for cookie in response.cookies:
@@ -331,49 +343,49 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
     def _analyze_jwt(self, jwt: str, source: str) -> Generator[Finding, None, None]:
         """Analyze a JWT for vulnerabilities."""
         try:
-            parts = jwt.split('.')
+            parts = jwt.split(".")
             if len(parts) != 3:
                 return
 
             # Decode header
-            header_b64 = parts[0] + '=' * (4 - len(parts[0]) % 4)
-            header_json = base64.urlsafe_b64decode(header_b64).decode('utf-8')
+            header_b64 = parts[0] + "=" * (4 - len(parts[0]) % 4)
+            header_json = base64.urlsafe_b64decode(header_b64).decode("utf-8")
             header = json.loads(header_json)
 
             # Decode payload
-            payload_b64 = parts[1] + '=' * (4 - len(parts[1]) % 4)
-            payload_json = base64.urlsafe_b64decode(payload_b64).decode('utf-8')
+            payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
+            payload_json = base64.urlsafe_b64decode(payload_b64).decode("utf-8")
             payload = json.loads(payload_json)
 
             # Check algorithm
-            alg = header.get('alg', '').upper()
+            alg = header.get("alg", "").upper()
 
-            if alg == 'NONE':
+            if alg == "NONE":
                 yield Finding(
                     title="JWT Uses 'none' Algorithm",
                     severity=Severity.CRITICAL,
                     description="JWT is configured to use 'none' algorithm, meaning no signature "
-                               "verification. Attackers can forge tokens.",
+                    "verification. Attackers can forge tokens.",
                     evidence=f"Source: {source}, Algorithm: {alg}",
                     remediation="Always use strong signing algorithms (RS256, ES256). "
-                               "Never accept 'none' algorithm in production.",
-                    metadata={"source": source, "algorithm": alg}
+                    "Never accept 'none' algorithm in production.",
+                    metadata={"source": source, "algorithm": alg},
                 )
 
-            if alg in ['HS256', 'HS384', 'HS512']:
+            if alg in ["HS256", "HS384", "HS512"]:
                 yield Finding(
                     title="JWT Uses Symmetric Algorithm",
                     severity=Severity.LOW,
                     description=f"JWT uses symmetric algorithm ({alg}). If the secret is weak "
-                               "or leaked, tokens can be forged.",
+                    "or leaked, tokens can be forged.",
                     evidence=f"Source: {source}, Algorithm: {alg}",
                     remediation="Consider using asymmetric algorithms (RS256, ES256) for "
-                               "better security. Ensure HMAC secrets are strong (256+ bits).",
-                    metadata={"source": source, "algorithm": alg}
+                    "better security. Ensure HMAC secrets are strong (256+ bits).",
+                    metadata={"source": source, "algorithm": alg},
                 )
 
             # Check for sensitive data in payload
-            sensitive_keys = ['password', 'secret', 'private', 'key', 'credit', 'ssn']
+            sensitive_keys = ["password", "secret", "private", "key", "credit", "ssn"]
             for key in payload.keys():
                 if any(s in key.lower() for s in sensitive_keys):
                     yield Finding(
@@ -382,19 +394,19 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                         description=f"JWT payload contains field '{key}' which may be sensitive",
                         evidence=f"Source: {source}, Sensitive field: {key}",
                         remediation="Avoid storing sensitive data in JWTs. JWTs are encoded, "
-                                   "not encrypted, and can be easily decoded.",
-                        metadata={"source": source, "field": key}
+                        "not encrypted, and can be easily decoded.",
+                        metadata={"source": source, "field": key},
                     )
 
             # Check expiration
-            if 'exp' not in payload:
+            if "exp" not in payload:
                 yield Finding(
                     title="JWT Missing Expiration",
                     severity=Severity.MEDIUM,
                     description="JWT does not have an expiration time (exp claim)",
                     evidence=f"Source: {source}",
                     remediation="Always include an 'exp' claim in JWTs to limit token lifetime.",
-                    metadata={"source": source}
+                    metadata={"source": source},
                 )
 
         except Exception:
@@ -420,7 +432,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
             description="Starting scan for software and data integrity failures",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )
 
         try:
@@ -444,5 +456,5 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
             description="Completed scan for software and data integrity failures",
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
-            metadata={"target": target}
+            metadata={"target": target},
         )

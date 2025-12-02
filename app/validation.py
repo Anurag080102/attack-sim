@@ -67,8 +67,11 @@ def validate_url(url: str, field_name: str = "url") -> str:
             raise ValidationError(f"'{field_name}' must have a valid hostname", field_name)
 
         # Check for localhost or IP addresses (valid for security testing)
-        ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
-        hostname_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
+        ip_pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
+        hostname_pattern = (
+            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?"
+            r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+        )
 
         if hostname == "localhost":
             pass  # localhost is valid
@@ -85,11 +88,16 @@ def validate_url(url: str, field_name: str = "url") -> str:
     except Exception as e:
         if isinstance(e, ValidationError):
             raise
-        raise ValidationError(f"'{field_name}' is not a valid URL: {str(e)}", field_name)
+        raise ValidationError(
+            f"'{field_name}' is not a valid URL: {
+                str(e)}",
+            field_name,
+        )
 
 
-def validate_string(value: Any, field_name: str, min_length: int = 0,
-                   max_length: int = None, pattern: str = None) -> str:
+def validate_string(
+    value: Any, field_name: str, min_length: int = 0, max_length: int = None, pattern: str = None
+) -> str:
     """
     Validate a string value.
 
@@ -113,15 +121,11 @@ def validate_string(value: Any, field_name: str, min_length: int = 0,
 
     if len(value) < min_length:
         raise ValidationError(
-            f"'{field_name}' must be at least {min_length} characters",
-            field_name
+            f"'{field_name}' must be at least {min_length} characters", field_name
         )
 
     if max_length is not None and len(value) > max_length:
-        raise ValidationError(
-            f"'{field_name}' must be at most {max_length} characters",
-            field_name
-        )
+        raise ValidationError(f"'{field_name}' must be at most {max_length} characters", field_name)
 
     if pattern and not re.match(pattern, value):
         raise ValidationError(f"'{field_name}' has invalid format", field_name)
@@ -129,8 +133,9 @@ def validate_string(value: Any, field_name: str, min_length: int = 0,
     return value
 
 
-def validate_integer(value: Any, field_name: str, min_value: int = None,
-                    max_value: int = None) -> int:
+def validate_integer(
+    value: Any, field_name: str, min_value: int = None, max_value: int = None
+) -> int:
     """
     Validate an integer value.
 
@@ -152,22 +157,17 @@ def validate_integer(value: Any, field_name: str, min_value: int = None,
         raise ValidationError(f"'{field_name}' must be an integer", field_name)
 
     if min_value is not None and int_value < min_value:
-        raise ValidationError(
-            f"'{field_name}' must be at least {min_value}",
-            field_name
-        )
+        raise ValidationError(f"'{field_name}' must be at least {min_value}", field_name)
 
     if max_value is not None and int_value > max_value:
-        raise ValidationError(
-            f"'{field_name}' must be at most {max_value}",
-            field_name
-        )
+        raise ValidationError(f"'{field_name}' must be at most {max_value}", field_name)
 
     return int_value
 
 
-def validate_attack_config(config: Dict[str, Any],
-                          config_options: Dict[str, Any]) -> Dict[str, Any]:
+def validate_attack_config(
+    config: Dict[str, Any], config_options: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     Validate attack configuration against its schema.
 
@@ -203,9 +203,7 @@ def validate_attack_config(config: Dict[str, Any],
                 validated[key] = validate_string(value, key)
             elif option_type == "integer":
                 validated[key] = validate_integer(
-                    value, key,
-                    min_value=option.get("min"),
-                    max_value=option.get("max")
+                    value, key, min_value=option.get("min"), max_value=option.get("max")
                 )
             elif option_type == "boolean":
                 if isinstance(value, bool):
@@ -222,10 +220,7 @@ def validate_attack_config(config: Dict[str, Any],
             elif option_type == "select":
                 options_list = option.get("options", [])
                 if value not in options_list:
-                    raise ValidationError(
-                        f"'{key}' must be one of: {', '.join(options_list)}",
-                        key
-                    )
+                    raise ValidationError(f"'{key}' must be one of: {', '.join(options_list)}", key)
                 validated[key] = value
             elif option_type == "array":
                 if not isinstance(value, list):
@@ -267,7 +262,7 @@ def validate_job_id(job_id: str) -> str:
         raise ValidationError("job_id must be a non-empty string", "job_id")
 
     # UUID format validation
-    uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    uuid_pattern = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     if not re.match(uuid_pattern, job_id.lower()):
         raise ValidationError("job_id must be a valid UUID", "job_id")
 
@@ -291,7 +286,7 @@ def validate_report_id(report_id: str) -> str:
         raise ValidationError("report_id must be a non-empty string", "report_id")
 
     # Report ID format: YYYYMMDD_HHMMSS
-    report_pattern = r'^\d{8}_\d{6}$'
+    report_pattern = r"^\d{8}_\d{6}$"
     if not re.match(report_pattern, report_id):
         raise ValidationError("report_id has invalid format", "report_id")
 
@@ -312,11 +307,11 @@ def sanitize_html(text: str) -> str:
         return str(text)
 
     replacements = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#x27;",
     }
 
     for char, replacement in replacements.items():
