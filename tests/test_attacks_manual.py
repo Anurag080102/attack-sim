@@ -108,7 +108,7 @@ def test_dictionary_wordlist_loading():
         print(f"✓ Sample passwords: {passwords[:5]}...")
     except FileNotFoundError as e:
         print(f"✗ Failed to load wordlist: {e}")
-        return False
+        assert False, f"Failed to load password wordlist: {e}"
 
     # Load usernames
     try:
@@ -117,10 +117,9 @@ def test_dictionary_wordlist_loading():
         print(f"✓ Sample usernames: {usernames[:5]}...")
     except FileNotFoundError as e:
         print(f"✗ Failed to load wordlist: {e}")
-        return False
+        assert False, f"Failed to load username wordlist: {e}"
 
     print()
-    return True
 
 
 def test_attack_list():

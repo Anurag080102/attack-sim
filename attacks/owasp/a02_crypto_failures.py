@@ -25,15 +25,15 @@ from attacks.owasp import OWASPRegistry
 class CryptographicFailuresAttack(BaseOWASPAttack):
     """
     Cryptographic Failures vulnerability scanner.
-    
+
     Tests for weak cryptographic implementations, insecure protocols,
     and sensitive data exposure.
     """
-    
+
     name = "Cryptographic Failures Scanner"
     description = "Detects cryptographic vulnerabilities including weak SSL/TLS and cipher suites"
     category = OWASPCategory.A02_CRYPTOGRAPHIC_FAILURES
-    
+
     # Weak cipher suites that should be flagged
     WEAK_CIPHERS = [
         "RC4",
@@ -46,12 +46,12 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         "ADH",
         "AECDH",
     ]
-    
+
     # Deprecated/insecure TLS versions
     DEPRECATED_PROTOCOLS = [
         ssl.PROTOCOL_SSLv23,  # May negotiate to SSLv3
     ]
-    
+
     # Insecure protocol names for reporting
     INSECURE_PROTOCOL_NAMES = {
         "SSLv2": "SSL 2.0 - Severely broken",
@@ -59,7 +59,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         "TLSv1.0": "TLS 1.0 - Deprecated, vulnerable to BEAST",
         "TLSv1.1": "TLS 1.1 - Deprecated",
     }
-    
+
     # Headers that indicate secure transport
     SECURITY_HEADERS = {
         "strict-transport-security": {
@@ -68,7 +68,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             "description": "HSTS header is missing, site vulnerable to SSL stripping attacks"
         },
     }
-    
+
     # Sensitive data patterns that shouldn't appear in URLs or unencrypted responses
     SENSITIVE_DATA_PATTERNS = [
         (r'password["\']?\s*[:=]\s*["\']?[\w@#$%^&*]+', "Password in response"),
@@ -80,15 +80,15 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         (r'\b\d{3}-\d{2}-\d{4}\b', "SSN pattern"),
         (r'\b\d{16}\b', "Possible credit card number"),
     ]
-    
+
     def __init__(self):
         super().__init__()
         self._ssl_context: Optional[ssl.SSLContext] = None
-    
+
     def configure(self, **kwargs) -> None:
         """
         Configure cryptographic failures attack parameters.
-        
+
         Args:
             check_ssl: Whether to check SSL/TLS configuration (default: True)
             check_headers: Whether to check security headers (default: True)
@@ -100,7 +100,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         self._config["check_headers"] = kwargs.get("check_headers", True)
         self._config["check_sensitive_data"] = kwargs.get("check_sensitive_data", True)
         self._config["ssl_timeout"] = kwargs.get("ssl_timeout", 5)
-    
+
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
         options = super().get_config_options()
@@ -127,7 +127,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             }
         })
         return options
-    
+
     def get_test_cases(self) -> List[OWASPTestCase]:
         """Get test cases for cryptographic failures."""
         return [
@@ -153,15 +153,15 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                 detection_patterns=[p[0] for p in self.SENSITIVE_DATA_PATTERNS]
             )
         ]
-    
+
     def _get_ssl_info(self, hostname: str, port: int = 443) -> Optional[Dict[str, Any]]:
         """
         Get SSL/TLS information from a host.
-        
+
         Args:
             hostname: Target hostname
             port: Target port (default: 443)
-            
+
         Returns:
             Dictionary with SSL info or None if connection failed
         """
@@ -169,16 +169,16 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-            
+
             with socket.create_connection(
-                (hostname, port), 
+                (hostname, port),
                 timeout=self._config.get("ssl_timeout", 5)
             ) as sock:
                 with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                     cert = ssock.getpeercert(binary_form=False)
                     cipher = ssock.cipher()
                     version = ssock.version()
-                    
+
                     return {
                         "certificate": cert,
                         "cipher": cipher,
@@ -188,13 +188,13 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                     }
         except (socket.error, ssl.SSLError, OSError):
             return None
-    
+
     def _check_deprecated_protocols(
         self, hostname: str, port: int = 443
     ) -> List[Tuple[str, bool]]:
         """
         Check which deprecated protocols are supported.
-        
+
         Returns:
             List of (protocol_name, is_supported) tuples
         """
@@ -203,16 +203,16 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             ("TLSv1.0", ssl.PROTOCOL_TLSv1 if hasattr(ssl, 'PROTOCOL_TLSv1') else None),
             ("TLSv1.1", ssl.PROTOCOL_TLSv1_1 if hasattr(ssl, 'PROTOCOL_TLSv1_1') else None),
         ]
-        
+
         for proto_name, proto_version in protocols_to_test:
             if proto_version is None:
                 continue
-                
+
             try:
                 context = ssl.SSLContext(proto_version)
                 context.check_hostname = False
                 context.verify_mode = ssl.CERT_NONE
-                
+
                 with socket.create_connection(
                     (hostname, port),
                     timeout=self._config.get("ssl_timeout", 5)
@@ -221,32 +221,28 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                         results.append((proto_name, True))
             except (socket.error, ssl.SSLError, OSError):
                 results.append((proto_name, False))
-        
+
         return results
-    
+
     def _test_ssl_configuration(self, target: str) -> Generator[Finding, None, None]:
         """Test SSL/TLS configuration."""
         if not self._config.get("check_ssl", True):
             return
-        
+
         parsed = urlparse(self._normalize_url(target))
         hostname = parsed.hostname
         port = parsed.port or (443 if parsed.scheme == "https" else 80)
-        
+
         if not hostname:
             return
-        
+
         # Check if HTTPS is available
-        https_url = f"https://{hostname}"
-        if port != 443:
-            https_url = f"https://{hostname}:{port}"
-        
         ssl_info = self._get_ssl_info(hostname, 443 if port == 80 else port)
-        
+
         if ssl_info is None and parsed.scheme == "http":
             # Target uses HTTP, check if HTTPS is available at all
             ssl_info_443 = self._get_ssl_info(hostname, 443)
-            
+
             if ssl_info_443 is None:
                 yield Finding(
                     title="No HTTPS Available",
@@ -270,12 +266,12 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                     metadata={"hostname": hostname}
                 )
                 ssl_info = ssl_info_443
-        
+
         if ssl_info:
             # Check cipher strength
             cipher_name = ssl_info.get("cipher_name", "")
             cipher_bits = ssl_info.get("cipher_bits", 0)
-            
+
             # Check for weak ciphers
             for weak_cipher in self.WEAK_CIPHERS:
                 if weak_cipher.upper() in cipher_name.upper():
@@ -293,7 +289,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                         }
                     )
                     break
-            
+
             # Check cipher bit strength
             if cipher_bits and cipher_bits < 128:
                 yield Finding(
@@ -305,7 +301,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                                "256-bit AES is recommended.",
                     metadata={"cipher": cipher_name, "bits": cipher_bits}
                 )
-            
+
             # Check TLS version
             version = ssl_info.get("version", "")
             if version in self.INSECURE_PROTOCOL_NAMES:
@@ -317,13 +313,13 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                     remediation="Disable TLS 1.0 and 1.1. Use TLS 1.2 or TLS 1.3 only.",
                     metadata={"version": version}
                 )
-        
+
         # Check for deprecated protocol support
         deprecated = self._check_deprecated_protocols(
-            hostname, 
+            hostname,
             443 if port == 80 else port
         )
-        
+
         for proto_name, is_supported in deprecated:
             if is_supported:
                 yield Finding(
@@ -335,22 +331,22 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                                "Only allow TLS 1.2 and TLS 1.3.",
                     metadata={"protocol": proto_name}
                 )
-        
+
         self.set_progress(33)
-    
+
     def _test_security_headers(self, target: str) -> Generator[Finding, None, None]:
         """Test for missing security headers."""
         if not self._config.get("check_headers", True):
             return
-        
+
         base_url = self._normalize_url(target)
         response = self._make_request(base_url)
-        
+
         if not response:
             return
-        
+
         headers = self._get_headers_dict(response)
-        
+
         # Check for HSTS
         if "strict-transport-security" not in headers:
             parsed = urlparse(base_url)
@@ -380,7 +376,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                         remediation="Set max-age to at least 15768000 (6 months) or 31536000 (1 year)",
                         metadata={"hsts_value": hsts_value, "max_age": max_age}
                     )
-        
+
         # Check for secure cookie attributes on Set-Cookie headers
         set_cookie = headers.get("set-cookie", "")
         if set_cookie:
@@ -394,38 +390,38 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                     remediation="Add the Secure flag to all cookies containing sensitive data",
                     metadata={"cookie_header": set_cookie}
                 )
-        
+
         self.set_progress(66)
-    
+
     def _test_sensitive_data_exposure(self, target: str) -> Generator[Finding, None, None]:
         """Scan for sensitive data exposure in responses."""
         if not self._config.get("check_sensitive_data", True):
             return
-        
+
         base_url = self._normalize_url(target)
-        
+
         # Test main page and common endpoints
         endpoints = ["", "/api", "/api/config", "/config", "/debug", "/info", "/.env"]
-        
+
         for endpoint in endpoints:
             if self.is_cancelled():
                 break
-            
+
             url = self._build_url(base_url, endpoint) if endpoint else base_url
             response = self._make_request(url)
-            
+
             if not response or response.status_code != 200:
                 continue
-            
+
             content = response.text
-            
+
             for pattern, description in self.SENSITIVE_DATA_PATTERNS:
                 matches = re.findall(pattern, content, re.IGNORECASE)
-                
+
                 if matches:
                     # Limit the number of matches shown
                     sample_matches = matches[:3]
-                    
+
                     # Redact sensitive data in evidence
                     redacted_matches = []
                     for match in sample_matches:
@@ -433,7 +429,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                             redacted_matches.append(match[:5] + "..." + match[-3:])
                         else:
                             redacted_matches.append("***REDACTED***")
-                    
+
                     yield Finding(
                         title=f"Sensitive Data Exposure: {description}",
                         severity=Severity.HIGH,
@@ -448,24 +444,24 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                             "match_count": len(matches)
                         }
                     )
-            
+
             time.sleep(self._delay_between_requests)
-        
+
         self.set_progress(100)
-    
+
     def run(self, target: str) -> Generator[Finding, None, None]:
         """
         Execute cryptographic failures attack against the target.
-        
+
         Args:
             target: Target URL
-            
+
         Yields:
             Finding objects for each vulnerability discovered
         """
         self.reset()
         self._is_running = True
-        
+
         yield Finding(
             title="Cryptographic Failures Scan Started",
             severity=Severity.INFO,
@@ -474,22 +470,22 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             remediation="N/A - Informational",
             metadata={"target": target}
         )
-        
+
         try:
             # Test 1: SSL/TLS Configuration (0-33%)
             yield from self._test_ssl_configuration(target)
-            
+
             # Test 2: Security Headers (33-66%)
             yield from self._test_security_headers(target)
-            
+
             # Test 3: Sensitive Data Exposure (66-100%)
             yield from self._test_sensitive_data_exposure(target)
-            
+
         finally:
             self._is_running = False
             self.set_progress(100.0)
             self.cleanup()
-        
+
         yield Finding(
             title="Cryptographic Failures Scan Completed",
             severity=Severity.INFO,

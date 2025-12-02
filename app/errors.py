@@ -9,7 +9,7 @@ from flask import Flask, jsonify, request
 from werkzeug.exceptions import HTTPException
 import logging
 from functools import wraps
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 
 # Set up logging
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class AppError(Exception):
     """Base exception class for application errors."""
-    
+
     def __init__(
         self,
         message: str,
@@ -28,7 +28,7 @@ class AppError(Exception):
     ):
         """
         Initialize application error.
-        
+
         Args:
             message: Human-readable error message
             status_code: HTTP status code
@@ -40,7 +40,7 @@ class AppError(Exception):
         self.status_code = status_code
         self.error_code = error_code or self._generate_error_code()
         self.details = details or {}
-    
+
     def _generate_error_code(self) -> str:
         """Generate error code from class name."""
         name = self.__class__.__name__
@@ -51,7 +51,7 @@ class AppError(Exception):
                 result.append('_')
             result.append(char.upper())
         return ''.join(result)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert error to dictionary for JSON response."""
         response = {
@@ -68,7 +68,7 @@ class AppError(Exception):
 
 class ValidationError(AppError):
     """Raised when input validation fails."""
-    
+
     def __init__(
         self,
         message: str,
@@ -88,7 +88,7 @@ class ValidationError(AppError):
 
 class NotFoundError(AppError):
     """Raised when a requested resource is not found."""
-    
+
     def __init__(
         self,
         resource_type: str,
@@ -110,7 +110,7 @@ class NotFoundError(AppError):
 
 class AuthenticationError(AppError):
     """Raised when authentication fails."""
-    
+
     def __init__(
         self,
         message: str = "Authentication required",
@@ -126,7 +126,7 @@ class AuthenticationError(AppError):
 
 class AuthorizationError(AppError):
     """Raised when user lacks permission for an action."""
-    
+
     def __init__(
         self,
         message: str = "Permission denied",
@@ -142,7 +142,7 @@ class AuthorizationError(AppError):
 
 class ConflictError(AppError):
     """Raised when there's a conflict with existing resource."""
-    
+
     def __init__(
         self,
         message: str,
@@ -162,7 +162,7 @@ class ConflictError(AppError):
 
 class RateLimitError(AppError):
     """Raised when rate limit is exceeded."""
-    
+
     def __init__(
         self,
         message: str = "Rate limit exceeded",
@@ -182,7 +182,7 @@ class RateLimitError(AppError):
 
 class ServiceUnavailableError(AppError):
     """Raised when a service is temporarily unavailable."""
-    
+
     def __init__(
         self,
         message: str = "Service temporarily unavailable",
@@ -202,7 +202,7 @@ class ServiceUnavailableError(AppError):
 
 class AttackError(AppError):
     """Raised when an attack execution fails."""
-    
+
     def __init__(
         self,
         message: str,
@@ -225,7 +225,7 @@ class AttackError(AppError):
 
 class ReportError(AppError):
     """Raised when report generation or retrieval fails."""
-    
+
     def __init__(
         self,
         message: str,
@@ -245,7 +245,7 @@ class ReportError(AppError):
 
 class ConfigurationError(AppError):
     """Raised when there's a configuration error."""
-    
+
     def __init__(
         self,
         message: str,
@@ -266,11 +266,11 @@ class ConfigurationError(AppError):
 def register_error_handlers(app: Flask) -> None:
     """
     Register error handlers with the Flask application.
-    
+
     Args:
         app: Flask application instance
     """
-    
+
     @app.errorhandler(AppError)
     def handle_app_error(error: AppError) -> Tuple[Dict[str, Any], int]:
         """Handle custom application errors."""
@@ -279,7 +279,7 @@ def register_error_handlers(app: Flask) -> None:
             extra={"details": error.details}
         )
         return jsonify(error.to_dict()), error.status_code
-    
+
     @app.errorhandler(HTTPException)
     def handle_http_exception(error: HTTPException) -> Tuple[Dict[str, Any], int]:
         """Handle Werkzeug HTTP exceptions."""
@@ -295,7 +295,7 @@ def register_error_handlers(app: Flask) -> None:
             extra={"path": request.path, "method": request.method}
         )
         return jsonify(response), error.code
-    
+
     @app.errorhandler(404)
     def handle_not_found(error: HTTPException) -> Tuple[Dict[str, Any], int]:
         """Handle 404 Not Found errors."""
@@ -307,7 +307,7 @@ def register_error_handlers(app: Flask) -> None:
             }
         }
         return jsonify(response), 404
-    
+
     @app.errorhandler(405)
     def handle_method_not_allowed(error: HTTPException) -> Tuple[Dict[str, Any], int]:
         """Handle 405 Method Not Allowed errors."""
@@ -319,7 +319,7 @@ def register_error_handlers(app: Flask) -> None:
             }
         }
         return jsonify(response), 405
-    
+
     @app.errorhandler(415)
     def handle_unsupported_media_type(error: HTTPException) -> Tuple[Dict[str, Any], int]:
         """Handle 415 Unsupported Media Type errors."""
@@ -331,7 +331,7 @@ def register_error_handlers(app: Flask) -> None:
             }
         }
         return jsonify(response), 415
-    
+
     @app.errorhandler(500)
     def handle_internal_error(error: Exception) -> Tuple[Dict[str, Any], int]:
         """Handle 500 Internal Server Error."""
@@ -347,7 +347,7 @@ def register_error_handlers(app: Flask) -> None:
         if app.debug:
             response["error"]["debug_message"] = str(error)
         return jsonify(response), 500
-    
+
     @app.errorhandler(Exception)
     def handle_unexpected_error(error: Exception) -> Tuple[Dict[str, Any], int]:
         """Handle any unexpected exceptions."""
@@ -369,7 +369,7 @@ def register_error_handlers(app: Flask) -> None:
 def safe_execute(func):
     """
     Decorator for safe execution of functions with proper error handling.
-    
+
     Catches exceptions and converts them to appropriate AppError instances.
     """
     @wraps(func)

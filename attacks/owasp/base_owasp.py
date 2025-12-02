@@ -7,9 +7,9 @@ from typing import Generator, Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 import requests
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
-from attacks.base import BaseAttack, Finding, Severity
+from attacks.base import BaseAttack, Finding
 
 
 class OWASPCategory(Enum):
@@ -39,15 +39,15 @@ class OWASPTestCase:
 class BaseOWASPAttack(BaseAttack):
     """
     Abstract base class for OWASP Top 10 attack modules.
-    
+
     Provides common functionality for OWASP vulnerability scanning including:
     - HTTP request utilities
     - Common detection patterns
     - Standard test case execution
     """
-    
+
     category: Optional[OWASPCategory] = None
-    
+
     def __init__(self):
         super().__init__()
         self._session: Optional[requests.Session] = None
@@ -57,11 +57,11 @@ class BaseOWASPAttack(BaseAttack):
         self._follow_redirects: bool = True
         self._max_retries: int = 3
         self._delay_between_requests: float = 0.1
-    
+
     def configure(self, **kwargs) -> None:
         """
         Configure OWASP attack parameters.
-        
+
         Args:
             timeout: Request timeout in seconds (default: 10)
             user_agent: Custom User-Agent string
@@ -77,7 +77,7 @@ class BaseOWASPAttack(BaseAttack):
         self._max_retries = kwargs.get("max_retries", self._max_retries)
         self._delay_between_requests = kwargs.get("delay", self._delay_between_requests)
         self._config.update(kwargs)
-    
+
     def get_config_options(self) -> Dict[str, Any]:
         """Get available configuration options for OWASP attacks."""
         return {
@@ -112,11 +112,11 @@ class BaseOWASPAttack(BaseAttack):
                 "description": "Delay between requests in seconds"
             }
         }
-    
+
     def _get_session(self) -> requests.Session:
         """
         Get or create an HTTP session.
-        
+
         Returns:
             requests.Session: Configured session object
         """
@@ -130,7 +130,7 @@ class BaseOWASPAttack(BaseAttack):
                 "Connection": "keep-alive"
             })
         return self._session
-    
+
     def _make_request(
         self,
         url: str,
@@ -142,7 +142,7 @@ class BaseOWASPAttack(BaseAttack):
     ) -> Optional[requests.Response]:
         """
         Make an HTTP request with error handling.
-        
+
         Args:
             url: Target URL
             method: HTTP method (GET, POST, PUT, DELETE, etc.)
@@ -150,12 +150,12 @@ class BaseOWASPAttack(BaseAttack):
             headers: Additional headers
             params: URL parameters
             json_data: JSON data for POST requests
-            
+
         Returns:
             Response object if successful, None otherwise
         """
         session = self._get_session()
-        
+
         try:
             response = session.request(
                 method=method,
@@ -171,68 +171,68 @@ class BaseOWASPAttack(BaseAttack):
             return response
         except requests.RequestException:
             return None
-    
+
     def _normalize_url(self, target: str) -> str:
         """
         Normalize target URL to ensure it has a scheme.
-        
+
         Args:
             target: Target URL or IP
-            
+
         Returns:
             Normalized URL with scheme
         """
         if not target.startswith(("http://", "https://")):
             target = f"http://{target}"
         return target.rstrip("/")
-    
+
     def _build_url(self, base: str, path: str) -> str:
         """
         Build a full URL from base and path.
-        
+
         Args:
             base: Base URL
             path: Path to append
-            
+
         Returns:
             Full URL
         """
         return urljoin(base + "/", path.lstrip("/"))
-    
+
     def _extract_forms(self, html: str) -> List[Dict[str, Any]]:
         """
         Extract form information from HTML.
-        
+
         Args:
             html: HTML content
-            
+
         Returns:
             List of form dictionaries with action, method, and inputs
         """
         # Simple form extraction - could be enhanced with BeautifulSoup
         import re
         forms = []
-        
+
         form_pattern = r'<form[^>]*>(.*?)</form>'
         action_pattern = r'action=["\']([^"\']*)["\']'
         method_pattern = r'method=["\']([^"\']*)["\']'
         input_pattern = r'<input[^>]*name=["\']([^"\']*)["\'][^>]*>'
-        
+
         for form_match in re.finditer(form_pattern, html, re.DOTALL | re.IGNORECASE):
             form_html = form_match.group(0)
-            
+
             action_match = re.search(action_pattern, form_html, re.IGNORECASE)
             method_match = re.search(method_pattern, form_html, re.IGNORECASE)
             inputs = re.findall(input_pattern, form_html, re.IGNORECASE)
-            
+
             forms.append({
                 "action": action_match.group(1) if action_match else "",
                 "method": method_match.group(1).upper() if method_match else "GET",
                 "inputs": inputs
             })
-        
+
         return forms
-    
+
     def _check_response_for_patterns(
         self,
         response: requests.Response,
@@ -241,69 +241,69 @@ class BaseOWASPAttack(BaseAttack):
     ) -> List[str]:
         """
         Check response content for patterns.
-        
+
         Args:
             response: HTTP response object
             patterns: List of patterns to search for
             case_sensitive: Whether search is case sensitive
-            
+
         Returns:
             List of matched patterns
         """
         import re
         content = response.text
         matches = []
-        
+
         flags = 0 if case_sensitive else re.IGNORECASE
-        
+
         for pattern in patterns:
             if re.search(pattern, content, flags):
                 matches.append(pattern)
-        
+
         return matches
-    
+
     def _get_headers_dict(self, response: requests.Response) -> Dict[str, str]:
         """
         Get response headers as a dictionary.
-        
+
         Args:
             response: HTTP response object
-            
+
         Returns:
             Dictionary of headers (lowercase keys)
         """
         return {k.lower(): v for k, v in response.headers.items()}
-    
+
     @abstractmethod
     def get_test_cases(self) -> List[OWASPTestCase]:
         """
         Get the test cases for this OWASP category.
-        
+
         Returns:
             List of OWASPTestCase objects to execute
         """
         pass
-    
+
     @abstractmethod
     def run(self, target: str) -> Generator[Finding, None, None]:
         """
         Execute the OWASP attack and yield findings.
-        
+
         Args:
             target: Target URL
-            
+
         Yields:
             Finding objects for each vulnerability discovered
         """
         pass
-    
+
     def get_info(self) -> Dict[str, Any]:
         """Get attack module information including OWASP category."""
         info = super().get_info()
         if self.category:
             info["owasp_category"] = self.category.value
         return info
-    
+
     def cleanup(self) -> None:
         """Clean up resources after attack completion."""
         if self._session:

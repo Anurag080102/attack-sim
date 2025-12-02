@@ -12,24 +12,24 @@ from attacks.owasp.base_owasp import BaseOWASPAttack, OWASPCategory, OWASPTestCa
 class OWASPRegistry:
     """
     Registry for managing OWASP attack modules.
-    
+
     Provides methods to register, discover, and instantiate OWASP attack modules
     with category-based filtering.
     """
-    
+
     _attacks: Dict[str, Type[BaseOWASPAttack]] = {}
-    
+
     @classmethod
     def register(cls, attack_id: str):
         """
         Decorator to register an OWASP attack class.
-        
+
         Args:
             attack_id: Unique identifier for the attack (e.g., "a01", "a03")
-            
+
         Returns:
             Decorator function
-            
+
         Example:
             @OWASPRegistry.register("a01")
             class BrokenAccessControlAttack(BaseOWASPAttack):
@@ -39,29 +39,29 @@ class OWASPRegistry:
             cls._attacks[attack_id] = attack_class
             return attack_class
         return decorator
-    
+
     @classmethod
     def get(cls, attack_id: str) -> Optional[Type[BaseOWASPAttack]]:
         """
         Get an OWASP attack class by ID.
-        
+
         Args:
             attack_id: Unique identifier for the attack
-            
+
         Returns:
             Attack class if found, None otherwise
         """
         return cls._attacks.get(attack_id)
-    
+
     @classmethod
     def create(cls, attack_id: str, **config) -> Optional[BaseOWASPAttack]:
         """
         Create an instance of an OWASP attack by ID.
-        
+
         Args:
             attack_id: Unique identifier for the attack
             **config: Configuration options to pass to the attack
-            
+
         Returns:
             Attack instance if found, None otherwise
         """
@@ -72,12 +72,12 @@ class OWASPRegistry:
                 instance.configure(**config)
             return instance
         return None
-    
+
     @classmethod
     def list_attacks(cls) -> List[Dict[str, str]]:
         """
         List all registered OWASP attacks with their info.
-        
+
         Returns:
             List of attack information dictionaries
         """
@@ -88,15 +88,15 @@ class OWASPRegistry:
             info["id"] = attack_id
             attacks.append(info)
         return attacks
-    
+
     @classmethod
     def get_by_category(cls, category: OWASPCategory) -> List[Dict[str, str]]:
         """
         Get all attacks for a specific OWASP category.
-        
+
         Args:
             category: OWASPCategory enum value
-            
+
         Returns:
             List of attack information dictionaries
         """
@@ -108,22 +108,22 @@ class OWASPRegistry:
                 info["id"] = attack_id
                 attacks.append(info)
         return attacks
-    
+
     @classmethod
     def get_attack_ids(cls) -> List[str]:
         """
         Get list of all registered OWASP attack IDs.
-        
+
         Returns:
             List of attack IDs
         """
         return list(cls._attacks.keys())
-    
+
     @classmethod
     def get_all_categories(cls) -> List[Dict[str, str]]:
         """
         Get all OWASP categories with their registered attacks.
-        
+
         Returns:
             List of category information with attack counts
         """
@@ -137,7 +137,7 @@ class OWASPRegistry:
                 "attacks": [a["id"] for a in attacks]
             })
         return categories
-    
+
     @classmethod
     def clear(cls) -> None:
         """Clear all registered attacks. Useful for testing."""
