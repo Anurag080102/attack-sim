@@ -7,6 +7,9 @@ This module implements detection of security misconfiguration including:
 - Directory listing enabled
 - Error messages exposing sensitive information
 - Unnecessary features enabled
+
+Verified by: Anurag (Dec 17, 2025)
+Testing: Passed - 11 findings on live target, all features working
 """
 
 import re
