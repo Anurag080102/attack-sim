@@ -198,36 +198,44 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
     def _version_in_range(self, version: str, range_str: str) -> bool:
         """
         Check if a version is in a vulnerable range.
+        
+        Compares version numbers to determine if a detected version falls within
+        a known vulnerable version range. Uses semantic versioning comparison.
 
         Args:
             version: Version string (e.g., "1.12.4")
             range_str: Range string (e.g., "1.0.0-1.12.0")
 
         Returns:
-            True if version is in the vulnerable range
+            True if version is in the vulnerable range, False otherwise
         """
         if not version or not range_str:
             return False
 
         try:
+            # Parse version into numeric parts (major, minor, patch)
             version_parts = [int(x) for x in re.findall(r"\d+", version)][:3]
             while len(version_parts) < 3:
                 version_parts.append(0)
 
             if "-" in range_str:
+                # Parse min and max versions from range
                 min_ver, max_ver = range_str.split("-")
                 min_parts = [int(x) for x in re.findall(r"\d+", min_ver)][:3]
                 max_parts = [int(x) for x in re.findall(r"\d+", max_ver)][:3]
 
+                # Normalize to 3-part version numbers
                 while len(min_parts) < 3:
                     min_parts.append(0)
                 while len(max_parts) < 3:
                     max_parts.append(0)
 
+                # Check if version falls within range (inclusive)
                 return min_parts <= version_parts <= max_parts
 
             return False
         except (ValueError, IndexError):
+            # Handle malformed version strings gracefully
             return False
 
     def _detect_server_software(self, target: str) -> Generator[Finding, None, None]:
