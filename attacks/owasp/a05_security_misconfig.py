@@ -200,7 +200,17 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         ]
 
     def _test_security_headers(self, target: str) -> Generator[Finding, None, None]:
-        """Test for missing security headers."""
+        """
+        Test for missing security headers.
+        
+        Checks HTTP response headers for security-related headers that help protect
+        against various attacks like XSS, clickjacking, and MIME sniffing.
+        
+        Returns findings for:
+        - Missing headers that should be present
+        - Headers with weak or incorrect values
+        - Server information disclosure
+        """
         if not self._config.get("test_headers", True):
             return
 
@@ -210,6 +220,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         if not response:
             return
 
+        # Get response headers as lowercase dictionary for case-insensitive comparison
         headers = self._get_headers_dict(response)
 
         for header_name, expected_pattern, severity, description in self.SECURITY_HEADERS:
