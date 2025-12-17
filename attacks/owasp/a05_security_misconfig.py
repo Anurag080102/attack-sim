@@ -254,6 +254,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                     )
 
         # Check for information disclosure in headers
+        # Servers often expose version info which helps attackers identify vulnerabilities
         for header in self.SERVER_HEADERS:
             if header in headers:
                 value = headers[header]
