@@ -344,13 +344,14 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     {"name": lib_name, "version": version, "source": "javascript"}
                 )
 
-                # Check for known vulnerabilities
+                # Cross-reference against known vulnerability database
                 vulns_found = []
                 if lib_name in self.KNOWN_VULNS:
                     for vuln_range, cve, description in self.KNOWN_VULNS[lib_name]:
                         if self._version_in_range(version, vuln_range):
                             vulns_found.append((cve, description))
 
+                # Report vulnerabilities if any were found
                 if vulns_found:
                     for cve, description in vulns_found:
                         yield Finding(
@@ -368,7 +369,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                             },
                         )
                 else:
-                    # Check if using deprecated library
+                    # No CVEs found, but check if library is deprecated entirely
                     is_deprecated = vuln_versions == "all"
 
                     if is_deprecated:
