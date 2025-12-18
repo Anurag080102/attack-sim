@@ -312,14 +312,15 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
         content = response.text
 
-        # Extract script sources
+        # Extract external script file URLs from HTML
         script_pattern = r'<script[^>]+src=["\']([^"\']+)["\']'
         scripts = re.findall(script_pattern, content, re.IGNORECASE)
 
-        # Also check inline scripts and main page
+        # Start with main page content
         all_content = content
 
-        # Fetch a few script files
+        # Download and analyze external script files (limit to first 10)
+        # This helps find version info that might not be in the main page
         for script_src in scripts[:10]:
             if self.is_cancelled():
                 return
@@ -332,7 +333,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
             time.sleep(self._delay_between_requests)
 
-        # Detect libraries
+        # Search for library version patterns in collected content
         for lib_name, version_pattern, vuln_versions in self.JS_LIBRARIES:
             match = re.search(version_pattern, all_content, re.IGNORECASE)
 
