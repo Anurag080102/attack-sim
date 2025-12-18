@@ -449,9 +449,10 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     },
                 )
 
-        # WordPress-specific checks
+        # WordPress-specific security checks
+        # WordPress often leaves version disclosure files accessible
         if "wp-content" in content or "wp-includes" in content:
-            # Check for readme.html (version disclosure)
+            # Check for readme.html which exposes WordPress version
             readme_url = self._build_url(base_url, "/readme.html")
             readme_response = self._make_request(readme_url)
 
