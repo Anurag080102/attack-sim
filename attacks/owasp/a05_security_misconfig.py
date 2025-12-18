@@ -418,19 +418,22 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
 
         base_url = self._normalize_url(target)
 
+        # Patterns that indicate directory listing is enabled
+        # Different web servers show different formats
         directory_listing_indicators = [
-            "Index of /",
+            "Index of /",           # Common Apache format
             "Index of",
-            "[DIR]",
-            "Parent Directory",
-            "<title>Index of",
-            "Directory listing for",
-            "Apache Server at",
-            "nginx/",
+            "[DIR]",                # Directory marker in listings
+            "Parent Directory",     # Parent folder link
+            "<title>Index of",      # HTML title format
+            "Directory listing for", # Python/other servers
+            "Apache Server at",     # Apache signature
+            "nginx/",               # Nginx signature
         ]
 
         total_dirs = len(self.COMMON_DIRECTORIES)
 
+        # Test each common directory for listing exposure
         for idx, directory in enumerate(self.COMMON_DIRECTORIES):
             if self.is_cancelled():
                 return
