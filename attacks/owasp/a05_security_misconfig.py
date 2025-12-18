@@ -345,19 +345,22 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         form_url = self._build_url(login_url, form_action) if form_action else login_url
         form_method = login_form.get("method", "POST").upper()
 
+        # Test each credential pair
         for username, password in credentials:
             if self.is_cancelled():
                 return
 
+            # Build login request with credentials
             data = {username_field: username, password_field: password}
 
+            # Send request using form's specified method
             if form_method == "POST":
                 response = self._make_request(form_url, method="POST", data=data)
             else:
                 response = self._make_request(form_url, params=data)
 
             if response:
-                # Check for successful login indicators
+                # Look for signs of successful authentication in response
                 success_indicators = [
                     "dashboard",
                     "welcome",
@@ -368,6 +371,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                     "admin panel",
                 ]
 
+                # Look for signs of failed authentication
                 failure_indicators = [
                     "invalid",
                     "incorrect",
