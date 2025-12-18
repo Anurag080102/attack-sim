@@ -278,7 +278,8 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
 
         base_url = self._normalize_url(target)
 
-        # Find login pages
+        # Common login page paths to check
+        # Includes standard paths (/login) and CMS-specific paths (wp-admin for WordPress)
         login_paths = [
             "/login",
             "/admin",
@@ -295,6 +296,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         login_url = None
         login_form = None
 
+        # Try each path until we find a login form
         for path in login_paths:
             test_url = self._build_url(base_url, path)
             response = self._make_request(test_url)
