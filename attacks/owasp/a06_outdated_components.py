@@ -6,6 +6,9 @@ This module implements detection of vulnerable and outdated components including
 - JavaScript library version detection
 - Framework version identification
 - Known CVE matching for detected versions
+
+Verified by: Anurag (Dec 17, 2025)
+Testing: Passed - 5 findings on live target, detected Nginx & PHP vulnerabilities
 """
 
 import re
@@ -195,36 +198,44 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
     def _version_in_range(self, version: str, range_str: str) -> bool:
         """
         Check if a version is in a vulnerable range.
+        
+        Compares version numbers to determine if a detected version falls within
+        a known vulnerable version range. Uses semantic versioning comparison.
 
         Args:
             version: Version string (e.g., "1.12.4")
             range_str: Range string (e.g., "1.0.0-1.12.0")
 
         Returns:
-            True if version is in the vulnerable range
+            True if version is in the vulnerable range, False otherwise
         """
         if not version or not range_str:
             return False
 
         try:
+            # Parse version into numeric parts (major, minor, patch)
             version_parts = [int(x) for x in re.findall(r"\d+", version)][:3]
             while len(version_parts) < 3:
                 version_parts.append(0)
 
             if "-" in range_str:
+                # Parse min and max versions from range
                 min_ver, max_ver = range_str.split("-")
                 min_parts = [int(x) for x in re.findall(r"\d+", min_ver)][:3]
                 max_parts = [int(x) for x in re.findall(r"\d+", max_ver)][:3]
 
+                # Normalize to 3-part version numbers
                 while len(min_parts) < 3:
                     min_parts.append(0)
                 while len(max_parts) < 3:
                     max_parts.append(0)
 
+                # Check if version falls within range (inclusive)
                 return min_parts <= version_parts <= max_parts
 
             return False
         except (ValueError, IndexError):
+            # Handle malformed version strings gracefully
             return False
 
     def _detect_server_software(self, target: str) -> Generator[Finding, None, None]:
@@ -301,14 +312,15 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
         content = response.text
 
-        # Extract script sources
+        # Extract external script file URLs from HTML
         script_pattern = r'<script[^>]+src=["\']([^"\']+)["\']'
         scripts = re.findall(script_pattern, content, re.IGNORECASE)
 
-        # Also check inline scripts and main page
+        # Start with main page content
         all_content = content
 
-        # Fetch a few script files
+        # Download and analyze external script files (limit to first 10)
+        # This helps find version info that might not be in the main page
         for script_src in scripts[:10]:
             if self.is_cancelled():
                 return
@@ -321,7 +333,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
             time.sleep(self._delay_between_requests)
 
-        # Detect libraries
+        # Search for library version patterns in collected content
         for lib_name, version_pattern, vuln_versions in self.JS_LIBRARIES:
             match = re.search(version_pattern, all_content, re.IGNORECASE)
 
@@ -332,13 +344,14 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     {"name": lib_name, "version": version, "source": "javascript"}
                 )
 
-                # Check for known vulnerabilities
+                # Cross-reference against known vulnerability database
                 vulns_found = []
                 if lib_name in self.KNOWN_VULNS:
                     for vuln_range, cve, description in self.KNOWN_VULNS[lib_name]:
                         if self._version_in_range(version, vuln_range):
                             vulns_found.append((cve, description))
 
+                # Report vulnerabilities if any were found
                 if vulns_found:
                     for cve, description in vulns_found:
                         yield Finding(
@@ -356,7 +369,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                             },
                         )
                 else:
-                    # Check if using deprecated library
+                    # No CVEs found, but check if library is deprecated entirely
                     is_deprecated = vuln_versions == "all"
 
                     if is_deprecated:
@@ -436,9 +449,10 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     },
                 )
 
-        # WordPress-specific checks
+        # WordPress-specific security checks
+        # WordPress often leaves version disclosure files accessible
         if "wp-content" in content or "wp-includes" in content:
-            # Check for readme.html (version disclosure)
+            # Check for readme.html which exposes WordPress version
             readme_url = self._build_url(base_url, "/readme.html")
             readme_response = self._make_request(readme_url)
 

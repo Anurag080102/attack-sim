@@ -7,6 +7,9 @@ This module implements detection of security misconfiguration including:
 - Directory listing enabled
 - Error messages exposing sensitive information
 - Unnecessary features enabled
+
+Verified by: Anurag (Dec 17, 2025)
+Testing: Passed - 11 findings on live target, all features working
 """
 
 import re
@@ -197,7 +200,17 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         ]
 
     def _test_security_headers(self, target: str) -> Generator[Finding, None, None]:
-        """Test for missing security headers."""
+        """
+        Test for missing security headers.
+        
+        Checks HTTP response headers for security-related headers that help protect
+        against various attacks like XSS, clickjacking, and MIME sniffing.
+        
+        Returns findings for:
+        - Missing headers that should be present
+        - Headers with weak or incorrect values
+        - Server information disclosure
+        """
         if not self._config.get("test_headers", True):
             return
 
@@ -207,6 +220,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         if not response:
             return
 
+        # Get response headers as lowercase dictionary for case-insensitive comparison
         headers = self._get_headers_dict(response)
 
         for header_name, expected_pattern, severity, description in self.SECURITY_HEADERS:
@@ -240,6 +254,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                     )
 
         # Check for information disclosure in headers
+        # Servers often expose version info which helps attackers identify vulnerabilities
         for header in self.SERVER_HEADERS:
             if header in headers:
                 value = headers[header]
@@ -263,7 +278,8 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
 
         base_url = self._normalize_url(target)
 
-        # Find login pages
+        # Common login page paths to check
+        # Includes standard paths (/login) and CMS-specific paths (wp-admin for WordPress)
         login_paths = [
             "/login",
             "/admin",
@@ -280,6 +296,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         login_url = None
         login_form = None
 
+        # Try each path until we find a login form
         for path in login_paths:
             test_url = self._build_url(base_url, path)
             response = self._make_request(test_url)
@@ -328,19 +345,22 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         form_url = self._build_url(login_url, form_action) if form_action else login_url
         form_method = login_form.get("method", "POST").upper()
 
+        # Test each credential pair
         for username, password in credentials:
             if self.is_cancelled():
                 return
 
+            # Build login request with credentials
             data = {username_field: username, password_field: password}
 
+            # Send request using form's specified method
             if form_method == "POST":
                 response = self._make_request(form_url, method="POST", data=data)
             else:
                 response = self._make_request(form_url, params=data)
 
             if response:
-                # Check for successful login indicators
+                # Look for signs of successful authentication in response
                 success_indicators = [
                     "dashboard",
                     "welcome",
@@ -351,6 +371,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                     "admin panel",
                 ]
 
+                # Look for signs of failed authentication
                 failure_indicators = [
                     "invalid",
                     "incorrect",
@@ -397,19 +418,22 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
 
         base_url = self._normalize_url(target)
 
+        # Patterns that indicate directory listing is enabled
+        # Different web servers show different formats
         directory_listing_indicators = [
-            "Index of /",
+            "Index of /",           # Common Apache format
             "Index of",
-            "[DIR]",
-            "Parent Directory",
-            "<title>Index of",
-            "Directory listing for",
-            "Apache Server at",
-            "nginx/",
+            "[DIR]",                # Directory marker in listings
+            "Parent Directory",     # Parent folder link
+            "<title>Index of",      # HTML title format
+            "Directory listing for", # Python/other servers
+            "Apache Server at",     # Apache signature
+            "nginx/",               # Nginx signature
         ]
 
         total_dirs = len(self.COMMON_DIRECTORIES)
 
+        # Test each common directory for listing exposure
         for idx, directory in enumerate(self.COMMON_DIRECTORIES):
             if self.is_cancelled():
                 return
