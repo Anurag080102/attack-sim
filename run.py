@@ -6,7 +6,11 @@ Run this script to start the Flask development server.
 Usage: python run.py
 """
 import os
+import logging
 from app import create_app
+
+# Suppress noisy charset_normalizer debug logs
+logging.getLogger('charset_normalizer').setLevel(logging.WARNING)
 
 # Get configuration from environment variable, default to development
 config_name = os.environ.get("FLASK_CONFIG", "development")

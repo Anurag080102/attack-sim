@@ -324,7 +324,25 @@ def get_attack(attack_id: str):
     if attack is None:
         return jsonify({"error": f"Attack '{attack_id}' not found"}), 404
 
-    return jsonify(attack.get_info())
+    attack_info = attack.get_info()
+    
+    # Convert config_options to parameters format for API consistency
+    if "config_options" in attack_info:
+        attack_info["parameters"] = {}
+        for key, option in attack_info["config_options"].items():
+            attack_info["parameters"][key] = {
+                "name": option.get("name", key.replace("_", " ").title()),
+                "type": option.get("type", "string"),
+                "default": option.get("default"),
+                "description": option.get("description", ""),
+                "options": option.get("options"),
+                "min": option.get("min"),
+                "max": option.get("max"),
+                "required": option.get("required", False),
+                "placeholder": option.get("placeholder", ""),
+            }
+    
+    return jsonify(attack_info)
 
 
 @attacks_bp.route("/attacks/run", methods=["POST"])
@@ -356,6 +374,9 @@ def run_attack():
     attack_id = data.get("attack_id")
     target = data.get("target")
     config = data.get("config", {})
+    
+    # Debug: Log received config
+    print(f"[DEBUG] Received attack config: {config}")
 
     # Validate attack_id format
     try:

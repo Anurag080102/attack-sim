@@ -131,13 +131,21 @@ document.getElementById('attack-form').addEventListener('submit', async function
         config: {}
     };
     
-    // Extract config parameters
-    for (const [key, value] of formData.entries()) {
-        if (key.startsWith('config.')) {
-            const configKey = key.replace('config.', '');
-            data.config[configKey] = value;
+    // Extract ALL config parameters (including defaults)
+    document.querySelectorAll('[name^="config."]').forEach(field => {
+        const configKey = field.name.replace('config.', '');
+        
+        if (field.type === 'checkbox') {
+            data.config[configKey] = field.checked;
+        } else if (field.type === 'number') {
+            data.config[configKey] = field.value ? Number(field.value) : field.value;
+        } else {
+            data.config[configKey] = field.value;
         }
-    }
+    });
+    
+    // Debug: Log what we're sending
+    console.log('Sending attack config:', data);
     
     try {
         const response = await fetch('/api/attacks/run', {

@@ -340,6 +340,9 @@ async function runAttack() {
         }
     });
     
+    // Debug: Show what we're sending
+    console.log('🚀 Starting attack with config:', { attack_id: attackId, target, config });
+    
     try {
         const result = await API.runAttack({ attack_id: attackId, target, config });
         

@@ -94,6 +94,22 @@ def attack_config_page(attack_id: str):
     else:
         attack_info["category"] = "owasp"
 
+    # Convert config_options to parameters format for template
+    if "config_options" in attack_info:
+        attack_info["parameters"] = {}
+        for key, option in attack_info["config_options"].items():
+            attack_info["parameters"][key] = {
+                "name": key.replace("_", " ").title(),
+                "type": option.get("type", "string"),
+                "default": option.get("default"),
+                "description": option.get("description"),
+                "options": option.get("options"),
+                "min": option.get("min"),
+                "max": option.get("max"),
+                "required": option.get("required", False),
+                "placeholder": option.get("placeholder", ""),
+            }
+
     return render_template("attack_config.html", attack=attack_info, active_page="dashboard")
 
 
