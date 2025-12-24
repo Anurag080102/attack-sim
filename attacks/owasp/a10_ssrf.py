@@ -133,6 +133,9 @@ class SSRFAttack(BaseOWASPAttack):
         "goto",
         "view",
         "open",
+        "resource",
+        "webhook",
+        "avatar",
     ]
 
     # Patterns indicating SSRF success
@@ -515,24 +518,39 @@ class SSRFAttack(BaseOWASPAttack):
                 # Endpoint exists, check for URL parameters
                 content = response.text.lower()
 
-                url_indicators = ["url", "uri", "link", "fetch", "load"]
+                url_indicators = ["url","uri","redirect","dest","target","callback","webhook","fetch","resource","image","file","load","link",]
                 found_indicators = [i for i in url_indicators if i in content]
+                
+                indicator_count = len(found_indicators)
+                if indicator_count >= 2:
+                    severity = Severity.MEDIUM
+                    confidence = "high"
+                else:
+                    severity = Severity.LOW
+                    confidence = "low"
+
 
                 if found_indicators or response.status_code == 200:
                     yield Finding(
                         title=f"Potential SSRF Surface: {endpoint}",
-                        severity=Severity.LOW,
-                        description=f"Endpoint may be vulnerable to SSRF. "
-                        f"URL-related indicators found: {found_indicators}",
+                        severity=severity,
+                        description=(
+                            "Endpoint may be vulnerable to SSRF. "
+                            f"URL-related indicators found: {found_indicators}"
+                        ),
                         evidence=f"URL: {test_url}, Status: {response.status_code}",
-                        remediation="Review this endpoint for SSRF vulnerabilities. "
-                        "Implement strict URL validation if it accepts URL parameters.",
+                        remediation=(
+                            "Review this endpoint for SSRF vulnerabilities. "
+                            "Implement strict URL validation if it accepts URL parameters."
+                        ),
                         metadata={
                             "endpoint": endpoint,
                             "indicators": found_indicators,
+                            "confidence": confidence,
                             "status_code": response.status_code,
                         },
                     )
+
 
             self.set_progress(75 + (idx + 1) / total * 25)
             time.sleep(self._delay_between_requests)
