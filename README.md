@@ -2,7 +2,7 @@
 
 **Application Automatic Attacks Simulation Tool**
 
-A web-based security testing tool with a simple GUI that enables automated simulation of common attack vectors including brute force attacks, dictionary attacks, and OWASP Top 10 vulnerabilities.
+A web-based security testing tool with a simple GUI that enables automated simulation of OWASP Top 10 vulnerabilities.
 
 ---
 
@@ -71,7 +71,7 @@ docker run -p 8080:8080 -p 9090:9090 webgoat/webgoat
 ## Table of Contents
 
 - [Attack-Sim](#attack-sim)
-  - [⚠️ Disclaimer](#️-disclaimer)
+  - [⚠️ Legal Disclaimer](#️-legal-disclaimer)
   - [🎯 Legal Testing Resources](#-legal-testing-resources)
     - [General-Purpose Vulnerable Applications](#general-purpose-vulnerable-applications)
     - [Per-Attack Testing Targets](#per-attack-testing-targets)
@@ -80,21 +80,63 @@ docker run -p 8080:8080 -p 9090:9090 webgoat/webgoat
   - [Features](#features)
   - [OWASP Top 10 Attack Modules](#owasp-top-10-attack-modules)
   - [Quick Start](#quick-start)
+  - [Installation](#installation)
     - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Running the Application](#running-the-application)
-  - [Project Structure](#project-structure)
-  - [Technology Stack](#technology-stack)
-  - [Development](#development)
-    - [Running Tests](#running-tests)
-    - [Test Structure](#test-structure)
-    - [Code Formatting](#code-formatting)
+    - [Installation Steps](#installation-steps)
+    - [Verify Installation](#verify-installation)
+  - [Usage Guide](#usage-guide)
+    - [Web Interface](#web-interface)
+    - [Running Attacks](#running-attacks)
+      - [Step 1: Select an Attack](#step-1-select-an-attack)
+      - [Step 2: Configure the Attack](#step-2-configure-the-attack)
+      - [Step 3: Start the Attack](#step-3-start-the-attack)
+    - [Attack Configuration](#attack-configuration)
+      - [OWASP Scanner Options](#owasp-scanner-options)
+    - [Viewing Results](#viewing-results)
+      - [Severity Levels](#severity-levels)
+      - [Finding Details](#finding-details)
+    - [Generating Reports](#generating-reports)
+  - [Attack Modules Reference](#attack-modules-reference)
+    - [OWASP Top 10 Scanners](#owasp-top-10-scanners)
+      - [A01 - Broken Access Control](#a01---broken-access-control)
+      - [A02 - Cryptographic Failures](#a02---cryptographic-failures)
+      - [A03 - Injection](#a03---injection)
+      - [A04 - Insecure Design](#a04---insecure-design)
+      - [A05 - Security Misconfiguration](#a05---security-misconfiguration)
+      - [A06 - Vulnerable Components](#a06---vulnerable-components)
+      - [A07 - Authentication Failures](#a07---authentication-failures)
+      - [A08 - Integrity Failures](#a08---integrity-failures)
+      - [A09 - Logging \& Monitoring](#a09---logging--monitoring)
+      - [A10 - SSRF](#a10---ssrf)
   - [API Documentation](#api-documentation)
+    - [Base URL](#base-url)
     - [Attack Endpoints](#attack-endpoints)
     - [Report Endpoints](#report-endpoints)
-    - [Health Endpoint](#health-endpoint)
-  - [License](#license)
+    - [Example: Run an Attack](#example-run-an-attack)
+    - [Example: Check Job Status](#example-check-job-status)
+  - [Configuration](#configuration)
+    - [Environment Variables](#environment-variables)
+    - [Configuration Files](#configuration-files)
+    - [Running in Production](#running-in-production)
+  - [Project Structure](#project-structure)
+  - [Development](#development)
+    - [Setting Up Development Environment](#setting-up-development-environment)
+    - [Running Tests](#running-tests)
+    - [Test Suite Overview](#test-suite-overview)
+    - [Code Quality](#code-quality)
+    - [Adding a New Attack Module](#adding-a-new-attack-module)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+      - [Application won't start](#application-wont-start)
+      - [Attacks timeout immediately](#attacks-timeout-immediately)
+      - [No findings reported](#no-findings-reported)
+      - [Import errors](#import-errors)
+    - [Getting Help](#getting-help)
   - [Contributing](#contributing)
+    - [Development Workflow](#development-workflow)
+    - [Commit Message Format](#commit-message-format)
+  - [License](#license)
+  - [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -103,9 +145,7 @@ docker run -p 8080:8080 -p 9090:9090 webgoat/webgoat
 | Feature | Description |
 |---------|-------------|
 | **Target Configuration** | Input target URL/IP and configure connection parameters |
-| **Attack Selection** | Choose from available attack modules via intuitive UI |
-| **Brute Force Attack** | Automated credential guessing with configurable charset, length, and threading |
-| **Dictionary Attack** | Password cracking using customizable wordlist files |
+| **Attack Selection** | Choose from available OWASP Top 10 attack modules via intuitive UI |
 | **OWASP Top 10 Scanner** | Automated detection of OWASP Top 10 (2021) vulnerabilities |
 | **Real-time Progress** | Live display of attack progress with percentage completion |
 | **Severity Classification** | Findings categorized by severity (Critical, High, Medium, Low, Info) |
@@ -143,7 +183,7 @@ cd attack-sim
 uv sync
 
 # Run the application
-uv run python run.py
+uv run src/main/python/main.py
 
 # Open browser to http://localhost:5000
 ```
@@ -155,10 +195,10 @@ uv run python run.py
 ### Prerequisites
 
 - **Python 3.11** or higher
-- **[uv](https://docs.astral.sh/uv/)** (recommended Python package manager)
+- **[uv](https://docs.astral.sh/uv/)** - Fast Python package manager
 - Git (for cloning the repository)
 
-### Option 1: Using uv (Recommended)
+### Installation Steps
 
 ```bash
 # Clone the repository
@@ -172,34 +212,11 @@ uv sync
 uv sync --all-extras
 ```
 
-### Option 2: Using pip
-
-```bash
-# Clone the repository
-git clone https://github.com/Anurag080102/attack-sim.git
-cd attack-sim
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install flask requests python-dotenv werkzeug
-
-# For development
-pip install pytest pytest-flask black flake8
-```
-
 ### Verify Installation
 
 ```bash
 # Run the application
-uv run python run.py  # or: python run.py
+uv run src/main/python/main.py
 
 # You should see:
 # ==================================================
@@ -218,13 +235,13 @@ uv run python run.py  # or: python run.py
 
 1. **Start the application**:
    ```bash
-   uv run python run.py
+   uv run src/main/python/main.py
    ```
 
 2. **Open your browser** to `http://localhost:5000`
 
 3. **Dashboard Overview**:
-   - View available attack modules (Core attacks and OWASP scanners)
+   - View available OWASP Top 10 attack modules
    - See recent attack jobs and their status
    - Access reports and settings
 
@@ -233,9 +250,7 @@ uv run python run.py  # or: python run.py
 #### Step 1: Select an Attack
 
 From the dashboard, click on an attack card to configure it:
-- **Brute Force Attack**: Systematically tries password combinations
-- **Dictionary Attack**: Uses wordlists to try common passwords
-- **OWASP Scanners**: A01 through A10 vulnerability scanners
+- **OWASP Top 10 Scanners**: A01 through A10 vulnerability scanners
 
 #### Step 2: Configure the Attack
 
@@ -256,33 +271,6 @@ Enter the required parameters:
 4. Use **"Cancel"** to stop a running attack
 
 ### Attack Configuration
-
-#### Brute Force Attack Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `username` | string | `admin` | Target username |
-| `charset` | string | `a-z0-9` | Characters for password generation |
-| `min_length` | integer | `1` | Minimum password length |
-| `max_length` | integer | `4` | Maximum password length |
-| `login_url` | string | `/login` | Login endpoint path |
-| `username_field` | string | `username` | Form field name for username |
-| `password_field` | string | `password` | Form field name for password |
-| `max_threads` | integer | `5` | Concurrent threads (1-20) |
-| `timeout` | integer | `10` | Request timeout in seconds |
-| `delay` | float | `0.1` | Delay between requests |
-| `success_indicator` | string | - | Text indicating successful login |
-| `failure_indicator` | string | `invalid` | Text indicating failed login |
-
-#### Dictionary Attack Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `username` | string | `admin` | Target username |
-| `password_wordlist` | file | `wordlists/common_passwords.txt` | Password wordlist file |
-| `username_wordlist` | file | - | Username wordlist (for enumeration) |
-| `stop_on_success` | boolean | `true` | Stop after finding valid credentials |
-| `max_threads` | integer | `5` | Concurrent threads |
 
 #### OWASP Scanner Options
 
@@ -326,56 +314,7 @@ Each finding includes:
 
 ## Attack Modules Reference
 
-### Brute Force Attack
-
-**ID**: `bruteforce`
-
-Systematically generates and tests password combinations against a target login endpoint.
-
-**How it works**:
-1. Generates passwords using the specified charset and length range
-2. Sends login requests with each generated password
-3. Analyzes responses to detect successful authentication
-4. Supports multi-threaded execution for faster testing
-
-**Example API Request**:
-```json
-POST /api/attacks/run
-{
-  "attack_id": "bruteforce",
-  "target": "http://target.example.com",
-  "config": {
-    "username": "admin",
-    "charset": "abcdefghijklmnopqrstuvwxyz0123456789",
-    "min_length": 1,
-    "max_length": 4,
-    "max_threads": 5
-  }
-}
-```
-
-### Dictionary Attack
-
-**ID**: `dictionary`
-
-Uses wordlists of common passwords and usernames to discover valid credentials.
-
-**Included Wordlists**:
-- `wordlists/common_passwords.txt` - Top 100 common passwords
-- `wordlists/common_usernames.txt` - Common usernames
-
-**Custom Wordlists**:
-You can use custom wordlists by providing the path:
-```json
-{
-  "config": {
-    "password_wordlist": "/path/to/custom_passwords.txt",
-    "username_wordlist": "/path/to/custom_users.txt"
-  }
-}
-```
-
-### OWASP Scanners
+### OWASP Top 10 Scanners
 
 #### A01 - Broken Access Control
 Tests for authorization bypass, IDOR, path traversal, and privilege escalation.
@@ -447,11 +386,11 @@ http://localhost:5000/api
 curl -X POST http://localhost:5000/api/attacks/run \
   -H "Content-Type: application/json" \
   -d '{
-    "attack_id": "dictionary",
+    "attack_id": "a05",
     "target": "http://target.example.com",
     "config": {
-      "username": "admin",
-      "max_threads": 3
+      "timeout": 10,
+      "delay": 0.5
     }
   }'
 ```
@@ -462,8 +401,8 @@ curl -X POST http://localhost:5000/api/attacks/run \
   "message": "Attack started",
   "job": {
     "id": "abc123-def456-...",
-    "attack_id": "dictionary",
-    "attack_name": "Dictionary Attack",
+    "attack_id": "a05",
+    "attack_name": "Security Misconfiguration Scanner",
     "target": "http://target.example.com",
     "status": "running",
     "progress": 0.0,
@@ -519,7 +458,7 @@ export SECRET_KEY="your-secure-secret-key"
 export FLASK_HOST=0.0.0.0
 
 # Run with a production WSGI server (e.g., gunicorn)
-pip install gunicorn
+uv add gunicorn
 gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app('production')"
 ```
 
@@ -529,66 +468,72 @@ gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app('production')"
 
 ```
 attack-sim/
-├── app/                         # Flask application
-│   ├── __init__.py             # App factory
-│   ├── config.py               # Configuration classes
-│   ├── errors.py               # Error handlers
-│   ├── validation.py           # Input validation utilities
-│   ├── routes/
-│   │   ├── __init__.py         # Blueprint registration
-│   │   ├── dashboard.py        # Dashboard routes
-│   │   ├── attacks.py          # Attack API endpoints
-│   │   └── reports.py          # Report endpoints
-│   ├── static/
-│   │   ├── css/style.css       # Application styles
-│   │   └── js/app.js           # Frontend JavaScript
-│   └── templates/
-│       ├── base.html           # Base template
-│       ├── dashboard.html      # Main dashboard
-│       ├── attack_config.html  # Attack configuration
-│       ├── results.html        # Results display
-│       ├── reports.html        # Reports page
-│       └── error.html          # Error pages
+├── src/
+│   ├── main/
+│   │   ├── python/
+│   │   │   ├── main.py              # Application entry point
+│   │   │   ├── app/                 # Flask application
+│   │   │   │   ├── __init__.py      # App factory
+│   │   │   │   ├── config.py        # Configuration classes
+│   │   │   │   ├── errors.py        # Error handlers
+│   │   │   │   ├── validation.py    # Input validation
+│   │   │   │   ├── routes/
+│   │   │   │   │   ├── __init__.py  # Blueprint registration
+│   │   │   │   │   ├── dashboard.py # Dashboard routes
+│   │   │   │   │   ├── attacks.py   # Attack API endpoints
+│   │   │   │   │   └── reports.py   # Report endpoints
+│   │   │   │   ├── static/
+│   │   │   │   │   ├── css/
+│   │   │   │   │   │   └── style.css
+│   │   │   │   │   └── js/
+│   │   │   │   │       └── app.js
+│   │   │   │   └── templates/
+│   │   │   │       ├── base.html
+│   │   │   │       ├── dashboard.html
+│   │   │   │       ├── attack_config.html
+│   │   │   │       ├── results.html
+│   │   │   │       ├── reports.html
+│   │   │   │       └── error.html
+│   │   │   └── attacks/             # Attack modules
+│   │   │       ├── __init__.py      # Attack registry
+│   │   │       ├── base.py          # BaseAttack, Finding, Severity
+│   │   │       └── owasp/
+│   │   │           ├── __init__.py  # OWASP registry
+│   │   │           ├── base_owasp.py
+│   │   │           ├── a01_broken_access.py
+│   │   │           ├── a02_crypto_failures.py
+│   │   │           ├── a03_injection.py
+│   │   │           ├── a04_insecure_design.py
+│   │   │           ├── a05_security_misconfig.py
+│   │   │           ├── a06_outdated_components.py
+│   │   │           ├── a07_auth_failures.py
+│   │   │           ├── a08_integrity_failures.py
+│   │   │           ├── a09_logging_monitoring.py
+│   │   │           └── a10_ssrf.py
+│   │   └── resources/
+│   │       └── wordlists/
+│   │           ├── common_passwords.txt
+│   │           └── common_usernames.txt
+│   └── test/
+│       ├── python/
+│       │   ├── __init__.py
+│       │   ├── conftest.py          # Pytest fixtures
+│       │   ├── test_attacks.py      # Attack module tests
+│       │   ├── test_routes.py       # Route/API tests
+│       │   ├── test_integration.py  # Integration tests
+│       │   └── manual_api_test.py   # Manual API testing
+│       └── resources/               # Test resources
 │
-├── attacks/                     # Attack modules
-│   ├── __init__.py             # Attack registry
-│   ├── base.py                 # BaseAttack class, Finding, Severity
-│   ├── bruteforce.py           # Brute force attack
-│   ├── dictionary.py           # Dictionary attack
-│   └── owasp/
-│       ├── __init__.py         # OWASP registry
-│       ├── base_owasp.py       # Base OWASP scanner
-│       ├── a01_broken_access.py
-│       ├── a02_crypto_failures.py
-│       ├── a03_injection.py
-│       ├── a04_insecure_design.py
-│       ├── a05_security_misconfig.py
-│       ├── a06_outdated_components.py
-│       ├── a07_auth_failures.py
-│       ├── a08_integrity_failures.py
-│       ├── a09_logging_monitoring.py
-│       └── a10_ssrf.py
-│
-├── wordlists/                   # Wordlist files
-│   ├── common_passwords.txt    # Top 100 passwords
-│   └── common_usernames.txt    # Common usernames
-│
-├── reports/                     # Generated reports (gitignored)
-│
-├── tests/                       # Test suite
-│   ├── __init__.py
-│   ├── conftest.py             # Pytest fixtures
-│   ├── test_attacks.py         # Attack module tests
-│   ├── test_routes.py          # Route/API tests
-│   ├── test_integration.py     # Integration tests
-│   └── test_api_endpoints.py   # Endpoint tests
+├── target/                          # Build outputs (gitignored)
+│   └── reports/                     # Generated reports
 │
 ├── .github/
-│   └── instructions/           # Project specifications
+│   └── instructions/                # Project specifications
 │
-├── pyproject.toml              # Project configuration
-├── run.py                      # Application entry point
-└── README.md                   # This file
+├── AGENTS.md                        # Agent workflow guide
+├── pyproject.toml                   # Project configuration
+├── uv.lock                          # Dependency lock file
+└── README.md                        # This file
 ```
 
 ---
@@ -619,10 +564,10 @@ uv run pytest
 uv run pytest -v
 
 # Run specific test file
-uv run pytest tests/test_attacks.py
+uv run pytest src/tests/python/test_attacks.py
 
 # Run specific test
-uv run pytest tests/test_attacks.py::TestBruteForceAttack::test_password_generation
+uv run pytest src/tests/python/test_attacks.py::TestInjectionAttack::test_injection_payloads_exist
 
 # Run with coverage report
 uv run pytest --cov=app --cov=attacks --cov-report=html
@@ -641,13 +586,10 @@ uv run pytest --cov=app --cov=attacks --cov-report=html
 
 ```bash
 # Format code with Black
-uv run black .
+uv run ruff format
 
 # Check linting with Flake8
-uv run flake8 .
-
-# Type checking (if using mypy)
-uv run mypy app attacks
+uv run ruff check
 ```
 
 ### Adding a New Attack Module
@@ -766,8 +708,6 @@ We welcome contributions! Please follow these guidelines:
 - `refactor`: Code refactoring
 - `style`: Code style changes
 - `chore`: Maintenance tasks
-
-See `.github/instructions/owasp-attacks-implementation.instructions.md` for detailed guidelines.
 
 ---
 
