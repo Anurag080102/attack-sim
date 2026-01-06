@@ -1,18 +1,94 @@
 """
 A07:2025 - Authentication Failures Attack Module.
 
-This module implements comprehensive detection of authentication vulnerabilities:
-- Smart authentication endpoint discovery
-- Username enumeration (response-based and timing-based)
-- Default credentials testing
-- Weak password policy detection
-- Session management security (fixation, tokens, cookies)
-- JWT token security analysis
-- Rate limiting and brute force protection detection
-- Multi-factor authentication presence detection
-- Password reset flow security testing
+This module provides a comprehensive security scanner for detecting authentication
+and session management vulnerabilities as defined in OWASP Top 10:2025 A07.
 
-Reference: https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/
+Overview
+--------
+Authentication failures remain one of the most critical web application security
+risks. This scanner identifies weaknesses that could allow attackers to compromise
+passwords, keys, session tokens, or exploit implementation flaws to assume other
+users' identities.
+
+Features
+--------
+The scanner implements the following security tests:
+
+1. **Endpoint Discovery**
+   - Smart crawling with keyword-based scoring
+   - Detection of login, registration, password reset, and OAuth endpoints
+   - Form extraction with field type identification
+
+2. **Username Enumeration**
+   - Response-based detection (status codes, content length, error messages)
+   - Timing-based detection using statistical analysis
+   - Password reset flow enumeration
+
+3. **Credential Testing**
+   - Default credential pair testing (admin:admin, root:root, etc.)
+   - Weak password policy detection
+   - Common password acceptance testing
+
+4. **Session Management**
+   - Cookie security attributes (HttpOnly, Secure, SameSite)
+   - Session token entropy analysis
+   - Session fixation vulnerability detection
+   - Sequential/predictable token detection
+
+5. **JWT Security**
+   - Algorithm validation (none, weak symmetric)
+   - Expiration claim verification
+   - Sensitive data exposure in payload
+   - Audience/issuer claim presence
+
+6. **Brute Force Protection**
+   - Account lockout mechanism detection
+   - Rate limiting header analysis
+   - CAPTCHA presence detection
+
+7. **Multi-Factor Authentication**
+   - MFA presence detection
+   - Configuration assessment
+
+8. **Password Reset Security**
+   - User enumeration via reset flow
+   - Host header injection testing
+
+Usage
+-----
+    from attacks.owasp.a07_auth_failures import AuthFailuresAttack
+
+    scanner = AuthFailuresAttack()
+    scanner.configure(timeout=10, verify_ssl=True)
+
+    for finding in scanner.run("https://target.com"):
+        print(f"[{finding.severity}] {finding.title}")
+
+Configuration Options
+--------------------
+- test_enumeration: Enable username enumeration tests (default: True)
+- test_default_credentials: Test common credential pairs (default: True)
+- test_password_policy: Test password strength requirements (default: True)
+- test_session: Test session management security (default: True)
+- test_session_fixation: Test for session fixation (default: True)
+- test_jwt: Analyze JWT token security (default: True)
+- test_lockout: Test brute force protection (default: True)
+- test_mfa: Detect MFA presence (default: True)
+- test_password_reset: Test password reset security (default: True)
+- timing_samples: Number of samples for timing analysis (default: 5)
+- max_lockout_attempts: Max attempts for lockout testing (default: 10)
+
+References
+----------
+- OWASP A07:2025: https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/
+- NIST 800-63b Digital Identity Guidelines
+- CWE-287: Improper Authentication
+- CWE-384: Session Fixation
+- CWE-521: Weak Password Requirements
+
+Author: Security Scanner Project
+Version: 2.0.0
 """
 
 import base64
@@ -34,18 +110,83 @@ from attacks.owasp.base_owasp import BaseOWASPAttack, OWASPCategory, OWASPTestCa
 @OWASPRegistry.register("a07")
 class AuthFailuresAttack(BaseOWASPAttack):
     """
-    Authentication Failures scanner (OWASP A07:2025).
+    Authentication Failures Scanner (OWASP A07:2025).
 
-    Comprehensive scanner for authentication and session management vulnerabilities
-    that can detect issues on real-world websites.
+    A comprehensive security scanner that detects authentication and session
+    management vulnerabilities in web applications. This scanner is designed
+    to work against real-world websites while minimizing false positives.
+
+    The scanner performs non-destructive testing and respects rate limits.
+    It does not attempt to create accounts, modify data, or perform actions
+    that could impact the target application's state (except for necessary
+    login form submissions with test credentials).
+
+    Attributes
+    ----------
+    name : str
+        Human-readable name of the attack module.
+    description : str
+        Brief description of the scanner's purpose.
+    category : OWASPCategory
+        OWASP Top 10 category (A07_AUTH_FAILURES).
+
+    Class Constants
+    ---------------
+    WEAK_PASSWORDS : List[str]
+        Common weak passwords from breach databases for policy testing.
+    DEFAULT_CREDENTIALS : List[Tuple[str, str]]
+        Default username/password pairs commonly found in applications.
+    TEST_USERNAMES : List[str]
+        Usernames to test for enumeration vulnerabilities.
+    AUTH_PATH_PATTERNS : Dict[str, List[str]]
+        URL patterns for discovering authentication endpoints.
+    AUTH_KEYWORDS : List[str]
+        Keywords indicating authentication-related content.
+    SESSION_COOKIE_PATTERNS : List[str]
+        Common session cookie name patterns.
+
+    Example
+    -------
+    Basic usage::
+
+        scanner = AuthFailuresAttack()
+        scanner.configure(
+            timeout=10,
+            test_default_credentials=True,
+            test_jwt=True
+        )
+
+        for finding in scanner.run("https://example.com"):
+            if finding.severity in [Severity.HIGH, Severity.CRITICAL]:
+                print(f"ALERT: {finding.title}")
+                print(f"  Evidence: {finding.evidence}")
+                print(f"  Fix: {finding.remediation}")
+
+    Notes
+    -----
+    - The scanner requires network access to the target.
+    - Some tests may trigger rate limiting or account lockouts.
+    - Configure `max_lockout_attempts` conservatively for production targets.
+    - Results should be verified manually before reporting.
+
+    See Also
+    --------
+    BaseOWASPAttack : Base class for OWASP attack modules.
+    OWASPRegistry : Registry for discovering and instantiating attacks.
     """
 
     name = "Authentication Failures Scanner"
     description = "Detects authentication and session management vulnerabilities"
     category = OWASPCategory.A07_AUTH_FAILURES
 
-    # Extended list of weak passwords from common breaches
-    WEAK_PASSWORDS = [
+    # =========================================================================
+    # Class Constants - Password Lists
+    # =========================================================================
+
+    #: Extended list of weak passwords sourced from common breach databases.
+    #: Includes passwords from RockYou, Adobe, and other major breaches.
+    #: Used for testing password policy enforcement.
+    WEAK_PASSWORDS: List[str] = [
         "123456",
         "password",
         "12345678",
@@ -85,8 +226,15 @@ class AuthFailuresAttack(BaseOWASPAttack):
         "123",
     ]
 
-    # Default credential pairs to test
-    DEFAULT_CREDENTIALS = [
+    # =========================================================================
+    # Class Constants - Default Credentials
+    # =========================================================================
+
+    #: Default credential pairs commonly found in web applications.
+    #: Includes generic defaults (admin:admin) and CMS-specific credentials.
+    #: Testing these credentials can reveal serious security misconfigurations.
+    #: Format: List of (username, password) tuples.
+    DEFAULT_CREDENTIALS: List[Tuple[str, str]] = [
         ("admin", "admin"),
         ("admin", "password"),
         ("admin", "123456"),
@@ -109,8 +257,14 @@ class AuthFailuresAttack(BaseOWASPAttack):
         ("drupal", "drupal"),
     ]
 
-    # Common usernames for enumeration
-    TEST_USERNAMES = [
+    # =========================================================================
+    # Class Constants - Test Usernames
+    # =========================================================================
+
+    #: Common usernames used for enumeration testing.
+    #: These are frequently used administrative or system accounts.
+    #: The scanner tests these against the target to detect enumeration flaws.
+    TEST_USERNAMES: List[str] = [
         "admin",
         "administrator",
         "root",
@@ -126,8 +280,14 @@ class AuthFailuresAttack(BaseOWASPAttack):
         "demo",
     ]
 
-    # Authentication endpoint patterns
-    AUTH_PATH_PATTERNS = {
+    # =========================================================================
+    # Class Constants - Endpoint Discovery Patterns
+    # =========================================================================
+
+    #: URL path patterns for discovering authentication endpoints.
+    #: Organized by endpoint type (login, register, forgot_password, etc.).
+    #: Includes patterns for various frameworks (Django, Rails, WordPress, etc.).
+    AUTH_PATH_PATTERNS: Dict[str, List[str]] = {
         "login": [
             "/login",
             "/signin",
@@ -198,8 +358,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
         ],
     }
 
-    # Keywords for identifying auth-related pages
-    AUTH_KEYWORDS = [
+    #: Keywords that indicate authentication-related page content.
+    #: Used to verify discovered endpoints are actually auth pages.
+    AUTH_KEYWORDS: List[str] = [
         "login",
         "signin",
         "sign in",
@@ -220,8 +381,14 @@ class AuthFailuresAttack(BaseOWASPAttack):
         "stay signed",
     ]
 
-    # Session cookie name patterns
-    SESSION_COOKIE_PATTERNS = [
+    # =========================================================================
+    # Class Constants - Session Cookie Patterns
+    # =========================================================================
+
+    #: Common session cookie name patterns across different platforms.
+    #: Used to identify session cookies for security attribute analysis.
+    #: Covers PHP, Java, .NET, ColdFusion, Node.js, and generic patterns.
+    SESSION_COOKIE_PATTERNS: List[str] = [
         "session",
         "sessionid",
         "sess",
@@ -239,15 +406,76 @@ class AuthFailuresAttack(BaseOWASPAttack):
         "access_token",
     ]
 
-    def __init__(self):
+    # =========================================================================
+    # Initialization
+    # =========================================================================
+
+    def __init__(self) -> None:
+        """
+        Initialize the Authentication Failures scanner.
+
+        Sets up internal state for tracking discovered endpoints, forms,
+        and session tokens during the scan.
+        """
         super().__init__()
+        #: Discovered authentication endpoints by type (login, register, etc.)
         self._discovered_endpoints: Dict[str, Optional[str]] = {}
-        self._discovered_forms: List[Dict] = []
+        #: Authentication forms extracted from discovered pages
+        self._discovered_forms: List[Dict[str, Any]] = []
+        #: Session tokens collected during testing
         self._session_tokens: List[str] = []
+        #: Number of samples for timing-based enumeration detection
         self._timing_samples: int = 5
 
-    def configure(self, **kwargs) -> None:
-        """Configure authentication failures attack parameters."""
+    # =========================================================================
+    # Configuration
+    # =========================================================================
+
+    def configure(self, **kwargs: Any) -> None:
+        """
+        Configure the authentication failures scanner.
+
+        Extends the base configuration with A07-specific options for
+        controlling which tests are performed and their parameters.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Configuration options. Supports all base options plus:
+
+            test_password_policy : bool, default=True
+                Test for weak password policy enforcement.
+            test_enumeration : bool, default=True
+                Test for username enumeration vulnerabilities.
+            test_session : bool, default=True
+                Test session management security.
+            test_lockout : bool, default=True
+                Test for account lockout mechanisms.
+            test_default_credentials : bool, default=True
+                Test common default credential pairs.
+            test_jwt : bool, default=True
+                Analyze JWT token security.
+            test_session_fixation : bool, default=True
+                Test for session fixation vulnerabilities.
+            test_mfa : bool, default=True
+                Detect multi-factor authentication presence.
+            test_password_reset : bool, default=True
+                Test password reset flow security.
+            timing_samples : int, default=5
+                Number of requests for timing analysis.
+            max_lockout_attempts : int, default=10
+                Maximum login attempts for lockout testing.
+
+        Example
+        -------
+        >>> scanner = AuthFailuresAttack()
+        >>> scanner.configure(
+        ...     timeout=15,
+        ...     test_default_credentials=True,
+        ...     test_jwt=True,
+        ...     max_lockout_attempts=5  # Conservative for production
+        ... )
+        """
         super().configure(**kwargs)
         self._config["test_password_policy"] = kwargs.get("test_password_policy", True)
         self._config["test_enumeration"] = kwargs.get("test_enumeration", True)
@@ -2121,13 +2349,52 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
     def run(self, target: str) -> Generator[Finding, None, None]:
         """
-        Execute comprehensive authentication failures scan.
+        Execute comprehensive authentication failures security scan.
 
-        Args:
-            target: Target URL
+        Performs a complete assessment of the target's authentication and
+        session management security, organized into eight testing phases:
 
-        Yields:
-            Finding objects for each vulnerability discovered
+        1. Endpoint Discovery (0-5%): Locate authentication endpoints
+        2. Username Enumeration (5-20%): Test for user disclosure
+        3. Default Credentials (20-35%): Test common credential pairs
+        4. Password Policy (35-50%): Assess password requirements
+        5. Session Management (50-65%): Analyze session security
+        6. JWT Security (65-75%): Analyze token implementation
+        7. Rate Limiting (75-85%): Test brute force protection
+        8. MFA Detection (85-90%): Check for multi-factor auth
+        9. Password Reset (90-95%): Test reset flow security
+
+        Parameters
+        ----------
+        target : str
+            The target URL to scan. Should be the base URL of the web
+            application (e.g., "https://example.com").
+
+        Yields
+        ------
+        Finding
+            Security findings as they are discovered. Each Finding contains:
+            - title: Brief description of the issue
+            - severity: INFO, LOW, MEDIUM, HIGH, or CRITICAL
+            - description: Detailed explanation
+            - evidence: Proof of the vulnerability
+            - remediation: How to fix the issue
+            - metadata: Additional technical details
+
+        Example
+        -------
+        >>> scanner = AuthFailuresAttack()
+        >>> scanner.configure(timeout=10)
+        >>> findings = list(scanner.run("https://target.com"))
+        >>> critical = [f for f in findings if f.severity == Severity.CRITICAL]
+        >>> print(f"Found {len(critical)} critical issues")
+
+        Notes
+        -----
+        - Progress is reported via `set_progress()` (0-100%)
+        - Scan can be cancelled via `cancel()` method
+        - Respects `_delay_between_requests` for rate limiting
+        - Errors are caught and reported as INFO findings
         """
         self.reset()
         self._is_running = True
