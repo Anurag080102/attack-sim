@@ -204,32 +204,19 @@ async function loadAttacks() {
         const data = await API.getAttacks();
         AppState.attacks = data.attacks;
         
-        const coreContainer = document.getElementById('core-attacks');
         const owaspContainer = document.getElementById('owasp-attacks');
         
-        if (!coreContainer || !owaspContainer) return;
+        if (!owaspContainer) return;
         
         // Clear loading
-        coreContainer.innerHTML = '';
         owaspContainer.innerHTML = '';
         
-        // Separate and render attacks
-        const coreAttacks = data.attacks.filter(a => a.category === 'core');
-        const owaspAttacks = data.attacks.filter(a => a.category === 'owasp');
-        
-        coreAttacks.forEach(attack => {
-            coreContainer.appendChild(renderAttackCard(attack));
-        });
-        
-        owaspAttacks.forEach(attack => {
+        // Render OWASP attacks
+        data.attacks.forEach(attack => {
             owaspContainer.appendChild(renderAttackCard(attack));
         });
         
-        if (coreAttacks.length === 0) {
-            coreContainer.innerHTML = '<p class="text-muted">No core attacks available</p>';
-        }
-        
-        if (owaspAttacks.length === 0) {
+        if (data.attacks.length === 0) {
             owaspContainer.innerHTML = '<p class="text-muted">No OWASP attacks available</p>';
         }
         
