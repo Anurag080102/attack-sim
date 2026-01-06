@@ -1254,19 +1254,53 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
         # Summary of discovered URLs
         if self._discovered_urls:
+            # Prepare evidence with all crawled URLs and scores
+            evidence_parts = [
+                f"Crawled {len(self._crawled_urls)} pages and discovered {len(self._discovered_urls)} total URLs\n",
+                f"Found {len(self._scored_urls)} potentially sensitive URLs (score > 30)\n"
+            ]
+            
+            # Add top scored URLs
+            if self._scored_urls:
+                evidence_parts.append("\n=== Top Scored URLs (Most Likely Sensitive) ===")
+                for url, score in self._scored_urls[:10]:
+                    evidence_parts.append(f"- [{score:.1f}] {url}")
+                if len(self._scored_urls) > 10:
+                    evidence_parts.append(f"  ... and {len(self._scored_urls) - 10} more high-scoring URLs")
+            
+            # Add all crawled URLs
+            evidence_parts.append("\n=== All Crawled URLs ===")
+            sorted_crawled = sorted(self._crawled_urls)
+            for url in sorted_crawled[:50]:
+                evidence_parts.append(f"- {url}")
+            if len(sorted_crawled) > 50:
+                evidence_parts.append(f"  ... and {len(sorted_crawled) - 50} more crawled URLs")
+            
+            # Add all discovered URLs (that weren't necessarily crawled)
+            non_crawled = self._discovered_urls - self._crawled_urls
+            if non_crawled:
+                evidence_parts.append("\n=== Additional Discovered URLs (Not Crawled) ===")
+                sorted_discovered = sorted(non_crawled)
+                for url in sorted_discovered[:30]:
+                    evidence_parts.append(f"- {url}")
+                if len(sorted_discovered) > 30:
+                    evidence_parts.append(f"  ... and {len(sorted_discovered) - 30} more discovered URLs")
+            
             yield Finding(
                 title="URL Discovery Summary",
                 severity=Severity.INFO,
-                description=f"Crawling discovered {len(self._discovered_urls)} URLs, "
-                           f"scored {len(self._scored_urls)} as potentially sensitive",
-                evidence=f"Top scored URLs:\n" + "\n".join(
-                    f"- {url} (score: {score:.1f})" 
-                    for url, score in self._scored_urls[:5]
-                ) if self._scored_urls else "No high-scoring URLs found",
+                description=f"Website crawling completed: discovered {len(self._discovered_urls)} URLs, "
+                           f"crawled {len(self._crawled_urls)} pages, "
+                           f"identified {len(self._scored_urls)} potentially sensitive endpoints",
+                evidence="\n".join(evidence_parts),
                 remediation="N/A - Informational",
                 metadata={
                     "total_discovered": len(self._discovered_urls),
+                    "total_crawled": len(self._crawled_urls),
                     "high_score_count": len(self._scored_urls),
+                    "crawled_urls": list(self._crawled_urls),
+                    "discovered_urls": list(self._discovered_urls),
+                    "scored_urls": [(url, score) for url, score in self._scored_urls],
                 },
             )
 
