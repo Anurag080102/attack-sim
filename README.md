@@ -183,7 +183,7 @@ cd attack-sim
 uv sync
 
 # Run the application
-uv run attack-sim
+uv run src/main/python/main.py
 
 # Open browser to http://localhost:5000
 ```
@@ -216,7 +216,7 @@ uv sync --all-extras
 
 ```bash
 # Run the application
-uv run attack-sim
+uv run src/main/python/main.py
 
 # You should see:
 # ==================================================
@@ -235,7 +235,7 @@ uv run attack-sim
 
 1. **Start the application**:
    ```bash
-   uv run attack-sim
+   uv run src/main/python/main.py
    ```
 
 2. **Open your browser** to `http://localhost:5000`
@@ -564,10 +564,10 @@ uv run pytest
 uv run pytest -v
 
 # Run specific test file
-uv run pytest tests/test_attacks.py
+uv run pytest src/tests/python/test_attacks.py
 
 # Run specific test
-uv run pytest tests/test_attacks.py::TestInjectionAttack::test_injection_payloads_exist
+uv run pytest src/tests/python/test_attacks.py::TestInjectionAttack::test_injection_payloads_exist
 
 # Run with coverage report
 uv run pytest --cov=app --cov=attacks --cov-report=html
@@ -586,13 +586,10 @@ uv run pytest --cov=app --cov=attacks --cov-report=html
 
 ```bash
 # Format code with Black
-uv run black .
+uv run ruff format
 
 # Check linting with Flake8
-uv run flake8 .
-
-# Type checking (if using mypy)
-uv run mypy app attacks
+uv run ruff check
 ```
 
 ### Adding a New Attack Module
@@ -711,8 +708,6 @@ We welcome contributions! Please follow these guidelines:
 - `refactor`: Code refactoring
 - `style`: Code style changes
 - `chore`: Maintenance tasks
-
-See `.github/instructions/owasp-attacks-implementation.instructions.md` for detailed guidelines.
 
 ---
 
