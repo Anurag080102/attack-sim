@@ -516,3 +516,57 @@ def list_owasp_categories():
     """
     categories = OWASPRegistry.get_all_categories()
     return jsonify({"categories": categories, "total": len(categories)})
+
+
+@attacks_bp.route("/attacks/run-all", methods=["POST"])
+def run_all_attacks():
+    """
+    Run all OWASP attacks against a target.
+
+    Request body:
+        {
+            "target": "http://example.com",
+            "config": {...}
+        }
+
+    Returns:
+        JSON with list of job IDs
+    """
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Request body is required"}), 400
+
+    # Validate required fields
+    try:
+        validate_required(data, ["target"])
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+
+    target = data.get("target")
+    config = data.get("config", {})
+
+    # Validate and normalize target URL
+    try:
+        target = validate_url(target, "target")
+    except ValidationError as e:
+        return jsonify({"error": e.message}), 400
+
+    # Get all OWASP attack IDs
+    attack_ids = OWASPRegistry.get_attack_ids()
+
+    if not attack_ids:
+        return jsonify({"error": "No OWASP attacks available"}), 404
+
+    # Create and start jobs for all attacks
+    jobs = []
+    for attack_id in attack_ids:
+        job = attack_manager.create_job(attack_id, target, config)
+        if job:
+            if attack_manager.start_job(job.id):
+                jobs.append(job.to_dict())
+
+    if not jobs:
+        return jsonify({"error": "Failed to start any attacks"}), 500
+
+    return jsonify({"message": f"Started {len(jobs)} attacks", "jobs": jobs}), 202

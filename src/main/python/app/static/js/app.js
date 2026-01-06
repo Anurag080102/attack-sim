@@ -51,6 +51,10 @@ const API = {
         method: 'POST', 
         body: JSON.stringify(data) 
     }),
+    runAllAttacks: (data) => API.request('/attacks/run-all', { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+    }),
     getStatus: (jobId) => API.request(`/attacks/status/${jobId}`),
     getResults: (jobId) => API.request(`/attacks/results/${jobId}`),
     cancelAttack: (jobId) => API.request(`/attacks/cancel/${jobId}`, { method: 'POST' }),
@@ -343,6 +347,20 @@ async function runAttack() {
         
     } catch (error) {
         Toast.error(error.message, 'Failed to start attack');
+    }
+}
+
+async function runAllAttacks() {
+    const target = prompt('Enter target URL for all OWASP attacks:');
+    
+    if (!target) return;
+    
+    try {
+        const result = await API.runAllAttacks({ target, config: {} });
+        Toast.success(`Started ${result.jobs.length} OWASP attacks`, 'Success');
+        loadJobs();
+    } catch (error) {
+        Toast.error(error.message, 'Failed to start attacks');
     }
 }
 
@@ -671,6 +689,9 @@ function setupEventListeners() {
     
     // Run attack
     document.getElementById('run-attack')?.addEventListener('click', runAttack);
+    
+    // Run all attacks
+    document.getElementById('run-all-attacks')?.addEventListener('click', runAllAttacks);
     
     // Cancel running attack
     document.getElementById('cancel-attack')?.addEventListener('click', cancelAttack);

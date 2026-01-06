@@ -6,12 +6,6 @@ This module contains unit tests for all attack modules including:
 - OWASP attack modules
 """
 
-
-from attacks import AttackRegistry
-from attacks.base import Finding, Severity
-from attacks.owasp import OWASPRegistry
-from attacks.owasp.base_owasp import BaseOWASPAttack, OWASPCategory
-
 # Import OWASP attack modules to ensure they're registered
 import attacks.owasp.a01_broken_access  # noqa: F401
 import attacks.owasp.a02_crypto_failures  # noqa: F401
@@ -23,6 +17,10 @@ import attacks.owasp.a07_auth_failures  # noqa: F401
 import attacks.owasp.a08_integrity_failures  # noqa: F401
 import attacks.owasp.a09_logging_monitoring  # noqa: F401
 import attacks.owasp.a10_ssrf  # noqa: F401
+from attacks import AttackRegistry
+from attacks.base import Finding, Severity
+from attacks.owasp import OWASPRegistry
+from attacks.owasp.base_owasp import BaseOWASPAttack, OWASPCategory
 
 
 class TestSeverityEnum:
