@@ -644,10 +644,15 @@ class AuthFailuresAttack(BaseOWASPAttack):
         Discover authentication-related endpoints using multiple strategies.
 
         Strategies:
-        1. Check common authentication paths
-        2. Crawl homepage for auth-related links
+        1. Check common authentication paths (server-side routes)
+        2. Crawl homepage for auth-related links (including hash-based SPA routes)
         3. Parse HTML for forms with password fields
-        4. Check API endpoints
+        4. Check for SPA hash-based routes (#/login, #!/login)
+        5. Check API endpoints
+
+        Notes:
+            Supports Single Page Applications (SPAs) that use hash-based routing
+            like Angular, React, and Vue applications (e.g., #/login, #!/login).
         """
         base_url = self._normalize_url(target)
         endpoints: Dict[str, Optional[str]] = {
@@ -658,7 +663,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             "profile": None,
         }
 
-        # Strategy 1: Check common paths
+        # Strategy 1: Check common server-side paths
         for endpoint_type, paths in self.AUTH_PATH_PATTERNS.items():
             if endpoints.get(endpoint_type):
                 continue
@@ -678,9 +683,10 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
                 time.sleep(self._delay_between_requests)
 
-        # Strategy 2: Crawl homepage for links
+        # Strategy 2: Crawl homepage for links (includes hash-based routes)
         homepage_response = self._make_request(base_url)
         if homepage_response:
+            # Extract standard links and hash-based SPA routes
             discovered = self._extract_auth_links(homepage_response.text, base_url)
             for endpoint_type, url in discovered.items():
                 if not endpoints.get(endpoint_type):
@@ -691,8 +697,123 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 homepage_response.text, base_url
             )
 
+            # Strategy 4: Check for SPA hash-based routes if not found yet
+            if not endpoints.get("login"):
+                spa_endpoints = self._discover_spa_routes(
+                    homepage_response.text, base_url
+                )
+                for endpoint_type, url in spa_endpoints.items():
+                    if not endpoints.get(endpoint_type):
+                        endpoints[endpoint_type] = url
+
         self._discovered_endpoints = endpoints
         return endpoints
+
+    def _discover_spa_routes(self, html: str, base_url: str) -> Dict[str, str]:
+        """
+        Discover SPA (Single Page Application) hash-based routes.
+
+        SPAs like Angular, React, and Vue often use hash-based routing where
+        the route is specified after a # symbol (e.g., #/login, #!/login).
+        These routes are handled client-side by JavaScript.
+
+        Args:
+            html: HTML content to search for route references
+            base_url: Base URL of the application
+
+        Returns:
+            Dictionary mapping endpoint types to full URLs with hash routes
+        """
+        discovered = {}
+
+        # Common hash-based route patterns for SPAs
+        hash_route_patterns = {
+            "login": [
+                "#/login",
+                "#!/login",
+                "#login",
+                "#/signin",
+                "#/sign-in",
+                "#/auth/login",
+                "#/user/login",
+                "#/account/login",
+            ],
+            "register": [
+                "#/register",
+                "#!/register",
+                "#register",
+                "#/signup",
+                "#/sign-up",
+                "#/auth/register",
+            ],
+            "forgot_password": [
+                "#/forgot-password",
+                "#!/forgot-password",
+                "#/forgot",
+                "#/reset-password",
+                "#/password/forgot",
+            ],
+        }
+
+        # Look for hash routes in href attributes
+        href_pattern = r'href=["\']([#][^"\']*)["\']'
+        hash_hrefs = re.findall(href_pattern, html, re.IGNORECASE)
+
+        for href in hash_hrefs:
+            href_lower = href.lower()
+
+            # Check for login routes
+            if any(kw in href_lower for kw in ["login", "signin", "sign-in"]):
+                if "login" not in discovered:
+                    discovered["login"] = base_url + href
+
+            # Check for register routes
+            elif any(kw in href_lower for kw in ["register", "signup", "sign-up"]):
+                if "register" not in discovered:
+                    discovered["register"] = base_url + href
+
+            # Check for forgot password routes
+            elif any(kw in href_lower for kw in ["forgot", "reset", "recover"]):
+                if "forgot_password" not in discovered:
+                    discovered["forgot_password"] = base_url + href
+
+        # Look for route definitions in JavaScript (Angular, React Router, Vue)
+        # Pattern: path: '/login' or route: '/login' or to: '/login'
+        js_route_patterns = [
+            r'path\s*:\s*["\']/?([^"\']+)["\']',
+            r'route\s*:\s*["\']/?([^"\']+)["\']',
+            r'to\s*:\s*["\']/?([^"\']+)["\']',
+            r'navigate\s*\(\s*["\']/?([^"\']+)["\']',
+            r'routerLink\s*=\s*["\']/?([^"\']+)["\']',
+        ]
+
+        for pattern in js_route_patterns:
+            routes = re.findall(pattern, html, re.IGNORECASE)
+            for route in routes:
+                route_lower = route.lower()
+
+                if any(kw in route_lower for kw in ["login", "signin"]):
+                    if "login" not in discovered:
+                        # Construct hash-based URL
+                        discovered["login"] = f"{base_url}#/{route.lstrip('/')}"
+
+                elif any(kw in route_lower for kw in ["register", "signup"]):
+                    if "register" not in discovered:
+                        discovered["register"] = f"{base_url}#/{route.lstrip('/')}"
+
+        # If still not found, try common hash routes directly
+        if not discovered:
+            for endpoint_type, routes in hash_route_patterns.items():
+                for route in routes[:3]:  # Check first 3 patterns
+                    # For SPAs, the route exists if the main page loads an app
+                    # We mark it as discovered and will verify during testing
+                    if endpoint_type not in discovered:
+                        # Check if this pattern appears in the HTML
+                        if route in html or route.replace("#/", "#!/") in html:
+                            discovered[endpoint_type] = base_url + route
+                            break
+
+        return discovered
 
     def _is_auth_page(self, html: str, endpoint_type: str) -> bool:
         """Check if HTML content appears to be an authentication page."""
