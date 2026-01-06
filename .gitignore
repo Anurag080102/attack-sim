@@ -68,7 +68,6 @@ docs/_build/
 
 # PyBuilder
 .pybuilder/
-target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -110,9 +109,9 @@ venv.bak/
 # Project Specific
 # ========================
 
-# Reports directory content (keep .gitkeep)
-reports/*
-!reports/.gitkeep
+# Maven-style target directory (build outputs)
+target/*
+!target/reports/.gitkeep
 
 # Local configuration
 *.local.py
@@ -163,3 +162,4 @@ cython_debug/
 # ========================
 prompts/
 .claude/
+.github/
