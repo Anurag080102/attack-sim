@@ -97,6 +97,38 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
         r"maxcdn\.bootstrapcdn\.com",
     ]
 
+    # CI/CD Pipeline configuration files to check for
+    CI_CD_FILES = [
+        ".gitlab-ci.yml",
+        ".github/workflows/main.yml",
+        ".github/workflows/ci.yml",
+        ".travis.yml",
+        "Jenkinsfile",
+        "circle.yml",
+        "bitbucket-pipelines.yml",
+        "azure-pipelines.yml",
+    ]
+
+    # Sensitive file extensions that should ideally be signed or verified
+    SENSITIVE_EXTENSIONS = [
+        ".exe",
+        ".dll",
+        ".so",
+        ".dylib",
+        ".rpm",
+        ".deb",
+        ".apk",
+        ".ipa",
+        ".dmg",
+        ".pkg",
+        ".iso",
+        ".bin",
+        ".msi",
+        ".jar",
+        ".war",
+        ".ear",
+    ]
+
     def __init__(self):
         super().__init__()
 
@@ -108,11 +140,16 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
             test_serialization: Test for insecure serialization (default: True)
             test_sri: Test for missing Subresource Integrity (default: True)
             test_jwt: Test for JWT vulnerabilities (default: True)
+            test_ci_cd: Test for exposed CI/CD configuration files (default: True)
+            test_artifacts: Test for unsigned/unverified download artifacts
+                (default: True)
         """
         super().configure(**kwargs)
         self._config["test_serialization"] = kwargs.get("test_serialization", True)
         self._config["test_sri"] = kwargs.get("test_sri", True)
         self._config["test_jwt"] = kwargs.get("test_jwt", True)
+        self._config["test_ci_cd"] = kwargs.get("test_ci_cd", True)
+        self._config["test_artifacts"] = kwargs.get("test_artifacts", True)
 
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options."""
@@ -133,6 +170,18 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     "type": "boolean",
                     "default": True,
                     "description": "Test for JWT vulnerabilities",
+                },
+                "test_ci_cd": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Check for exposed CI/CD pipeline configurations",
+                },
+                "test_artifacts": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": (
+                        "Check for potentially unverified downloadable artifacts"
+                    ),
                 },
             }
         )
@@ -161,6 +210,21 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 category=OWASPCategory.A08_INTEGRITY_FAILURES,
                 payloads=[],
                 detection_patterns=["jwt", "bearer", "token"],
+            ),
+            OWASPTestCase(
+                name="CI/CD Exposure",
+                description="Check for exposed CI/CD configuration files",
+                category=OWASPCategory.A08_INTEGRITY_FAILURES,
+                # Sample payloads
+                payloads=[f"/{f}" for f in self.CI_CD_FILES[:3]],
+                detection_patterns=["pipeline", "build", "stage"],
+            ),
+            OWASPTestCase(
+                name="Unsigned Artifacts",
+                description="Detect links to sensitive files without integrity checks",
+                category=OWASPCategory.A08_INTEGRITY_FAILURES,
+                payloads=[],
+                detection_patterns=self.SENSITIVE_EXTENSIONS,
             ),
         ]
 
@@ -209,16 +273,26 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                         cookie_value[:100] if len(cookie_value) > 100 else cookie_value
                     )
                     yield Finding(
-                        title=f"Potential Serialized Object in Cookie ({finding['language']})",
+                        title=(
+                            f"Potential Serialized Object in "
+                            f"Cookie ({finding['language']})"
+                        ),
                         severity=Severity.HIGH,
-                        description=f"Cookie '{cookie.name}' appears to contain a serialized "
-                        f"{finding['language']} object. This may be vulnerable to "
-                        "insecure deserialization attacks.",
-                        evidence=f"Cookie: {cookie.name}, Pattern: {finding['pattern']}, "
-                        f"Value preview: {value_preview}...",
-                        remediation="Avoid deserializing untrusted data. Use safer data formats "
-                        "like JSON. Implement integrity checks (HMAC) on serialized data. "
-                        "Consider using language-specific secure alternatives.",
+                        description=(
+                            f"Cookie '{cookie.name}' appears to contain a serialized "
+                            f"{finding['language']} object. This may be vulnerable to "
+                            "insecure deserialization attacks."
+                        ),
+                        evidence=(
+                            f"Cookie: {cookie.name}, Pattern: {finding['pattern']}, "
+                            f"Value preview: {value_preview}..."
+                        ),
+                        remediation=(
+                            "Avoid deserializing untrusted data. Use safer data "
+                            "formats like JSON. Implement integrity checks (HMAC) on "
+                            "serialized data. Consider using language-specific secure "
+                            "alternatives."
+                        ),
                         metadata={
                             "cookie_name": cookie.name,
                             "language": finding["language"],
@@ -236,10 +310,15 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     yield Finding(
                         title=f"Serialized Data Detected ({lang})",
                         severity=Severity.MEDIUM,
-                        description=f"Response contains patterns indicating {lang} serialization",
+                        description=(
+                            f"Response contains patterns indicating {lang} "
+                            "serialization"
+                        ),
                         evidence=f"Pattern: {pattern}, Matches: {len(matches)}",
-                        remediation="Review the use of serialization. Ensure proper integrity "
-                        "verification and avoid deserializing untrusted input.",
+                        remediation=(
+                            "Review the use of serialization. Ensure proper integrity "
+                            "verification and avoid deserializing untrusted input."
+                        ),
                         metadata={
                             "language": lang,
                             "pattern": pattern,
@@ -299,13 +378,17 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
             yield Finding(
                 title="Missing Subresource Integrity (SRI)",
                 severity=Severity.MEDIUM,
-                description=f"Found {len(cdn_resources_without_sri)} CDN resources without "
-                "Subresource Integrity hashes. This could allow attackers to inject "
-                "malicious code if the CDN is compromised.",
+                description=(
+                    f"Found {len(cdn_resources_without_sri)} CDN resources without "
+                    "Subresource Integrity hashes. This could allow attackers to "
+                    "inject malicious code if the CDN is compromised."
+                ),
                 evidence=f"Resources without SRI: {cdn_resources_without_sri[:5]}",
-                remediation="Add integrity attributes to all external script and stylesheet tags. "
-                "Use tools like srihash.org to generate hashes. "
-                'Example: integrity="sha384-..." crossorigin="anonymous"',
+                remediation=(
+                    "Add integrity attributes to all external script and stylesheet "
+                    "tags. Use tools like srihash.org to generate hashes. "
+                    'Example: integrity="sha384-..." crossorigin="anonymous"'
+                ),
                 metadata={
                     "resources": cdn_resources_without_sri,
                     "count": len(cdn_resources_without_sri),
@@ -374,11 +457,15 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="JWT Uses 'none' Algorithm",
                     severity=Severity.CRITICAL,
-                    description="JWT is configured to use 'none' algorithm, meaning no signature "
-                    "verification. Attackers can forge tokens.",
+                    description=(
+                        "JWT is configured to use 'none' algorithm, meaning no "
+                        "signature verification. Attackers can forge tokens."
+                    ),
                     evidence=f"Source: {source}, Algorithm: {alg}",
-                    remediation="Always use strong signing algorithms (RS256, ES256). "
-                    "Never accept 'none' algorithm in production.",
+                    remediation=(
+                        "Always use strong signing algorithms (RS256, ES256). "
+                        "Never accept 'none' algorithm in production."
+                    ),
                     metadata={"source": source, "algorithm": alg},
                 )
 
@@ -386,11 +473,15 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="JWT Uses Symmetric Algorithm",
                     severity=Severity.LOW,
-                    description=f"JWT uses symmetric algorithm ({alg}). If the secret is weak "
-                    "or leaked, tokens can be forged.",
+                    description=(
+                        f"JWT uses symmetric algorithm ({alg}). If the secret is weak "
+                        "or leaked, tokens can be forged."
+                    ),
                     evidence=f"Source: {source}, Algorithm: {alg}",
-                    remediation="Consider using asymmetric algorithms (RS256, ES256) for "
-                    "better security. Ensure HMAC secrets are strong (256+ bits).",
+                    remediation=(
+                        "Consider using asymmetric algorithms (RS256, ES256) for "
+                        "better security. Ensure HMAC secrets are strong (256+ bits)."
+                    ),
                     metadata={"source": source, "algorithm": alg},
                 )
 
@@ -401,10 +492,14 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     yield Finding(
                         title="JWT Contains Potentially Sensitive Data",
                         severity=Severity.MEDIUM,
-                        description=f"JWT payload contains field '{key}' which may be sensitive",
+                        description=(
+                            f"JWT payload contains field '{key}' which may be sensitive"
+                        ),
                         evidence=f"Source: {source}, Sensitive field: {key}",
-                        remediation="Avoid storing sensitive data in JWTs. JWTs are encoded, "
-                        "not encrypted, and can be easily decoded.",
+                        remediation=(
+                            "Avoid storing sensitive data in JWTs. JWTs are encoded, "
+                            "not encrypted, and can be easily decoded."
+                        ),
                         metadata={"source": source, "field": key},
                     )
 
@@ -415,13 +510,163 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     severity=Severity.MEDIUM,
                     description="JWT does not have an expiration time (exp claim)",
                     evidence=f"Source: {source}",
-                    remediation="Always include an 'exp' claim in JWTs to limit token lifetime.",
+                    remediation=(
+                        "Always include an 'exp' claim in JWTs to limit token lifetime."
+                    ),
                     metadata={"source": source},
                 )
 
         except Exception:
             # Invalid JWT format, skip
             pass
+
+    def _test_ci_cd_exposure(self, target: str) -> Generator[Finding, None, None]:
+        """
+        Test for exposed CI/CD configuration files.
+
+        A08:2021 warns against insecure CI/CD pipelines. Exposing configuration
+        files can reveal sensitive build steps, dependencies, or internal paths.
+        """
+        if not self._config.get("test_ci_cd", True):
+            return
+
+        base_url = self._normalize_url(target)
+        base_url_rstrip = base_url.rstrip("/")
+
+        for config_file in self.CI_CD_FILES:
+            file_url = f"{base_url_rstrip}/{config_file}"
+            # We don't want to follow redirects for config files usually,
+            # as they might go to a login page.
+            # But the base _make_request might follow them.
+            response = self._make_request(file_url)
+
+            if response and response.status_code == 200:
+                # Heuristic: Check size and content to avoid false positives
+                # (like soft 404s)
+                content = response.text
+                if len(content) < 10 or len(content) > 50000:
+                    continue
+
+                # Check for common CI/CD keywords
+                keywords = [
+                    "script",
+                    "stage",
+                    "job",
+                    "pipeline",
+                    "build",
+                    "image",
+                    "steps",
+                    "workflow",
+                ]
+                lower_content = content.lower()
+
+                if any(k in lower_content for k in keywords):
+                    yield Finding(
+                        title="Exposed CI/CD Configuration",
+                        severity=Severity.HIGH,
+                        description=(
+                            f"Found publicly accessible CI/CD configuration file: "
+                            f"{config_file}. This may expose build processes, "
+                            "internal endpoints, or credentials."
+                        ),
+                        evidence=(
+                            f"URL: {file_url}\n"
+                            f"Content Snippet: {content[:100]}..."
+                        ),
+                        remediation=(
+                            "Ensure CI/CD configuration files are not accessible from "
+                            "the public web root. Restrict access via web server "
+                            "configuration (e.g., .htaccess, nginx.conf)."
+                        ),
+                        metadata={"file": config_file, "url": file_url},
+                    )
+
+    def _test_unsigned_artifacts(self, target: str) -> Generator[Finding, None, None]:
+        """
+        Test for potentially unsigned or unverified downloadable artifacts.
+
+        Software updates and sensitive executables should be signed and verified.
+        This check looks for links to sensitive extensions (exe, apk, etc.) that
+        don't appear to have associated signature/checksum files (asc, sig, sha256)
+        linked nearby or are served over plain HTTP.
+        """
+        if not self._config.get("test_artifacts", True):
+            return
+
+        base_url = self._normalize_url(target)
+        response = self._make_request(base_url)
+
+        if not response:
+            return
+
+        content = response.text
+        # Naive regex to find hrefs to sensitive extensions
+        # Group 1: Quote char, Group 2: URL, Group 3: Extension
+        ext_pattern = (
+            r'href=["\']([^"\']+(\.(?:'
+            + "|".join(e.lstrip(".") for e in self.SENSITIVE_EXTENSIONS)
+            + r')))["\']'
+        )
+
+        matches = re.finditer(ext_pattern, content, re.IGNORECASE)
+
+        found_artifacts = []
+        for match in matches:
+            url = match.group(1)
+            ext = match.group(2)
+            found_artifacts.append((url, ext))
+
+        if not found_artifacts:
+            return
+
+        # Check for signature files in the whole content.
+        # If we see link to setup.exe, we look for setup.exe.sig,
+        # setup.exe.asc, or just .sig/.asc links nearby.
+        # For simplicity, we just check if signature extensions appear in
+        # the page content.
+        has_signatures = re.search(
+            r'\.(sig|asc|sha256|md5|gpg)["\']', content, re.IGNORECASE
+        )
+
+        for artifact_url, ext in found_artifacts:
+            # Check 1: Insecure Transport
+            is_absolute_http = artifact_url.lower().startswith("http://")
+            is_relative_and_target_http = not artifact_url.lower().startswith(
+                "http"
+            ) and base_url.lower().startswith("http://")
+
+            if is_absolute_http or is_relative_and_target_http:
+                yield Finding(
+                    title="Artifact Served over Insecure Transport",
+                    severity=Severity.MEDIUM,
+                    description=(
+                        f"Sensitive artifact '{artifact_url}' is served over HTTP. "
+                        "This allows for Machine-in-the-Middle (MitM) attacks "
+                        "to replace the file with malicious code."
+                    ),
+                    evidence=f"Artifact: {artifact_url}",
+                    remediation="Serve all software updates and artifacts over HTTPS.",
+                    metadata={"artifact": artifact_url},
+                )
+
+            # Check 2: Missing Integrity verification (Heuristic)
+            # If we didn't find any signature-like links in the page, warn about it
+            if not has_signatures:
+                yield Finding(
+                    title="Missing Integrity Verification for Artifact",
+                    severity=Severity.LOW,  # Low because it's a heuristic
+                    description=(
+                        f"Found downloadable artifact '{artifact_url}' but no visible "
+                        "integrity verification mechanisms (signatures, checksums) "
+                        "were detected on the page."
+                    ),
+                    evidence=f"Artifact: {artifact_url}",
+                    remediation=(
+                        "Provide cryptographic signatures (PGP/GPG) or checksums "
+                        "for downloadable artifacts to allow users to verify integrity."
+                    ),
+                    metadata={"artifact": artifact_url},
+                )
 
     def run(self, target: str) -> Generator[Finding, None, None]:
         """
@@ -454,6 +699,12 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
             # Test 3: JWT Vulnerabilities (66-100%)
             yield from self._test_jwt_vulnerabilities(target)
+
+            # Test 4: CI/CD Exposure
+            yield from self._test_ci_cd_exposure(target)
+
+            # Test 5: Unsigned Artifacts
+            yield from self._test_unsigned_artifacts(target)
 
         finally:
             self._is_running = False
