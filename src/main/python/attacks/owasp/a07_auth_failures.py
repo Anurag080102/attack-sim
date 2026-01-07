@@ -717,6 +717,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
         the route is specified after a # symbol (e.g., #/login, #!/login).
         These routes are handled client-side by JavaScript.
 
+        This method uses multiple strategies:
+        1. Search for href="#/..." patterns in HTML
+        2. Search for JavaScript route definitions in bundled JS files
+        3. Detect SPA framework indicators and probe common routes
+
         Args:
             html: HTML content to search for route references
             base_url: Base URL of the application
@@ -801,19 +806,161 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     if "register" not in discovered:
                         discovered["register"] = f"{base_url}#/{route.lstrip('/')}"
 
-        # If still not found, try common hash routes directly
-        if not discovered:
-            for endpoint_type, routes in hash_route_patterns.items():
-                for route in routes[:3]:  # Check first 3 patterns
-                    # For SPAs, the route exists if the main page loads an app
-                    # We mark it as discovered and will verify during testing
-                    if endpoint_type not in discovered:
-                        # Check if this pattern appears in the HTML
-                        if route in html or route.replace("#/", "#!/") in html:
-                            discovered[endpoint_type] = base_url + route
-                            break
+        # Check if this is a SPA by looking for framework indicators
+        spa_indicators = [
+            "ng-app",  # Angular 1.x
+            "ng-version",  # Angular 2+
+            "<app-root",  # Angular
+            "data-reactroot",  # React
+            "__NEXT_DATA__",  # Next.js
+            "data-v-",  # Vue.js
+            "nuxt",  # Nuxt.js
+            "__NUXT__",  # Nuxt.js
+            'id="app"',  # Common Vue/React pattern
+            'id="root"',  # Common React pattern
+        ]
+
+        is_spa = any(indicator in html for indicator in spa_indicators)
+
+        # If this appears to be a SPA and we haven't found routes,
+        # check the JavaScript bundles for route definitions
+        if is_spa and not discovered:
+            discovered = self._discover_routes_from_js_bundles(
+                html, base_url, hash_route_patterns
+            )
 
         return discovered
+
+    def _discover_routes_from_js_bundles(
+        self, html: str, base_url: str, route_patterns: Dict[str, List[str]]
+    ) -> Dict[str, str]:
+        """
+        Discover SPA routes by analyzing JavaScript bundle files.
+
+        SPAs typically load their routing configuration from bundled JavaScript
+        files. This method extracts script URLs from the HTML and searches
+        for route definitions in the main application bundle.
+
+        Args:
+            html: HTML content containing script references
+            base_url: Base URL of the application
+            route_patterns: Dictionary of endpoint types to route patterns
+
+        Returns:
+            Dictionary of discovered endpoints with their URLs
+        """
+        discovered = {}
+
+        # Find script sources in HTML
+        script_pattern = r'src=["\']([^"\']+\.js)["\']'
+        scripts = re.findall(script_pattern, html)
+
+        # Priority order for script files (main bundle usually contains routes)
+        priority_keywords = ["main", "app", "bundle", "chunk", "vendor"]
+
+        # Sort scripts by priority
+        def script_priority(script: str) -> int:
+            script_lower = script.lower()
+            for i, kw in enumerate(priority_keywords):
+                if kw in script_lower:
+                    return i
+            return len(priority_keywords)
+
+        scripts_sorted = sorted(scripts, key=script_priority)
+
+        # Check up to 3 scripts for route definitions
+        for script_src in scripts_sorted[:3]:
+            if self.is_cancelled():
+                break
+
+            # Skip CDN scripts
+            if "cdnjs" in script_src or "cdn" in script_src:
+                continue
+
+            # Build full URL for the script
+            if script_src.startswith("//"):
+                script_url = "https:" + script_src
+            elif script_src.startswith("http"):
+                script_url = script_src
+            elif script_src.startswith("/"):
+                script_url = urljoin(base_url, script_src)
+            else:
+                script_url = urljoin(base_url + "/", script_src)
+
+            try:
+                response = self._make_request(script_url)
+                if response and response.status_code == 200:
+                    js_content = response.text
+
+                    # Search for route definitions in the JS bundle
+                    routes_found = self._extract_routes_from_js(js_content)
+
+                    for endpoint_type, route in routes_found.items():
+                        if endpoint_type not in discovered:
+                            discovered[endpoint_type] = f"{base_url}#/{route}"
+
+                    if discovered:
+                        break  # Found routes, no need to check more scripts
+
+            except Exception:
+                continue
+
+            time.sleep(self._delay_between_requests)
+
+        return discovered
+
+    def _extract_routes_from_js(self, js_content: str) -> Dict[str, str]:
+        """
+        Extract authentication route paths from JavaScript content.
+
+        Searches for common route definition patterns used by Angular,
+        React Router, Vue Router, and other SPA frameworks.
+
+        Args:
+            js_content: JavaScript source code content
+
+        Returns:
+            Dictionary mapping endpoint types to route paths
+        """
+        routes = {}
+
+        js_lower = js_content.lower()
+
+        # Check for login routes - look for simple route paths
+        # Pattern matches "/login" or "login" with optional leading slash
+        login_match = re.search(r'["\']/?login["\']', js_lower)
+        if login_match:
+            routes["login"] = "login"
+        else:
+            # Try signin variants
+            signin_match = re.search(r'["\']/?(sign-?in)["\']', js_lower)
+            if signin_match:
+                routes["login"] = signin_match.group(1)
+
+        # Check for register routes
+        register_match = re.search(r'["\']/?register["\']', js_lower)
+        if register_match:
+            routes["register"] = "register"
+        else:
+            # Try signup variants
+            signup_match = re.search(r'["\']/?(sign-?up)["\']', js_lower)
+            if signup_match:
+                routes["register"] = signup_match.group(1)
+
+        # Check for forgot password routes
+        forgot_match = re.search(r'["\']/?forgot-password["\']', js_lower)
+        if forgot_match:
+            routes["forgot_password"] = "forgot-password"
+        else:
+            # Try other variants
+            forgot_alt = re.search(
+                r'["\']/?(password[/-]?reset|reset[/-]?password|forgot)["\']',
+                js_lower,
+            )
+            if forgot_alt:
+                routes["forgot_password"] = forgot_alt.group(1)
+
+        return routes
 
     def _is_auth_page(self, html: str, endpoint_type: str) -> bool:
         """Check if HTML content appears to be an authentication page."""
