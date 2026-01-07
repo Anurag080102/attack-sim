@@ -42,7 +42,7 @@ class Config:
     APP_VERSION = "0.1.0"
 
     # Reports directory (Maven-style: target/reports)
-    REPORTS_DIR = BASE_DIR / "target" / "reports"
+    REPORTS_DIR = BASE_DIR / ".." / "target" / "reports"
 
     # Wordlists directory (Maven-style: src/main/resources/wordlists)
     WORDLISTS_DIR = BASE_DIR / "src" / "main" / "resources" / "wordlists"
