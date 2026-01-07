@@ -27,7 +27,7 @@ Use these **intentionally vulnerable applications** and platforms to safely test
 |----------|-----|-------------|
 | **OWASP WebGoat** | https://owasp.org/www-project-webgoat/ | Official OWASP training app, covers all Top 10 |
 | **DVWA** | https://github.com/digininja/DVWA | Damn Vulnerable Web Application |
-| **OWASP Juice Shop** | https://owasp.org/www-project-juice-shop/ | Modern vulnerable app with 100+ challenges |
+| **OWASP Juice Shop** | https://demo.owasp-juice.shop/ | Modern vulnerable app with 100+ challenges |
 | **HackTheBox** | https://www.hackthebox.com | Legal CTF platform with vulnerable machines |
 | **TryHackMe** | https://tryhackme.com | Guided hacking labs and rooms |
 | **PortSwigger Web Security Academy** | https://portswigger.net/web-security | Free labs for all OWASP categories |
