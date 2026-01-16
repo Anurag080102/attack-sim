@@ -89,27 +89,12 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         "TLSv1": "TLS 1.0 - Deprecated by PCI-DSS, vulnerable to BEAST",
     }
 
-    # Comprehensive security headers to check (aggressive mode)
+    # Cryptographic security headers (only HSTS - others belong in A05)
     SECURITY_HEADERS = {
         "strict-transport-security": {
             "name": "HTTP Strict Transport Security (HSTS)",
             "severity": Severity.MEDIUM,
             "description": "HSTS header is missing, site vulnerable to SSL stripping attacks",
-        },
-        "content-security-policy": {
-            "name": "Content Security Policy (CSP)",
-            "severity": Severity.LOW,
-            "description": "CSP header missing, vulnerable to XSS and data injection",
-        },
-        "x-content-type-options": {
-            "name": "X-Content-Type-Options",
-            "severity": Severity.LOW,
-            "description": "X-Content-Type-Options missing, vulnerable to MIME sniffing",
-        },
-        "x-frame-options": {
-            "name": "X-Frame-Options",
-            "severity": Severity.LOW,
-            "description": "X-Frame-Options missing, vulnerable to clickjacking",
         },
     }
 
