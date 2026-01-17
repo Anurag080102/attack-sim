@@ -1054,17 +1054,37 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             for method in self.HTTP_METHODS:
                 response = self._make_request(url, method=method)
 
-                if response and response.status_code == 200 and method != "GET":
-                    vulnerable_methods.append(method)
-                    if method not in vulnerable_paths:
-                        vulnerable_paths[method] = []
-                    vulnerable_paths[method].append(url)
+                # Only flag as vulnerable if:
+                # 1. Status code is 200
+                # 2. Method is not GET (GET is expected)
+                # 3. Method is not OPTIONS (OPTIONS is normal for CORS)
+                # 4. Response contains actual protected content (not just login page)
+                if (
+                    response
+                    and response.status_code == 200
+                    and method not in ["GET", "OPTIONS"]
+                ):
+                    # Verify this isn't just a redirect to login or empty response
+                    finding = self._analyze_response_content(url, response)
+                    if finding:  # Only flag if content analysis confirms protected access
+                        vulnerable_methods.append(method)
+                        if method not in vulnerable_paths:
+                            vulnerable_paths[method] = []
+                        vulnerable_paths[method].append(url)
 
                 time.sleep(self._delay_between_requests)
 
         # Yield single consolidated finding if vulnerabilities found
         if vulnerable_methods:
             unique_methods = sorted(set(vulnerable_methods))
+            
+            # Determine severity based on methods found
+            # DELETE, PUT, PATCH on admin endpoints = HIGH
+            # POST on admin endpoints = MEDIUM (common but still concerning)
+            dangerous_methods = {"DELETE", "PUT", "PATCH"}
+            has_dangerous = any(m in dangerous_methods for m in unique_methods)
+            severity = Severity.HIGH if has_dangerous else Severity.MEDIUM
+            
             method_details = "\n".join(
                 [
                     f"- {method}: {len(vulnerable_paths[method])} path(s) ({', '.join(vulnerable_paths[method][:2])}{'...' if len(vulnerable_paths[method]) > 2 else ''})"
@@ -1074,7 +1094,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
             yield Finding(
                 title="HTTP Method Bypass Vulnerabilities",
-                severity=Severity.HIGH,
+                severity=severity,
                 description=f"Protected resources accessible via {len(unique_methods)} different HTTP methods that should be blocked",
                 evidence=f"Vulnerable methods:\n{method_details}",
                 remediation="Implement proper method-based access controls. Configure web server to only allow necessary HTTP methods (typically GET and POST). Block PUT, DELETE, PATCH, HEAD, OPTIONS on protected resources unless explicitly required.",
