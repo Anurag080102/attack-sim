@@ -100,18 +100,8 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         "/libs/",
         "/scripts/",
         "/js/",
-        OWASP A05 Security Misconfiguration Attack Module
-        A05:2021 - Security Misconfiguration Attack Module.
+    ]
 
-        This module implements detection of security misconfiguration including:
-        - Missing security headers
-        - Default credentials
-        - Directory listing enabled
-        - Error messages exposing sensitive information
-        - Unnecessary features enabled
-
-        Verified by: Anurag (Jan 18, 2026)
-        Testing: Passed - 11 findings on live target, all features working
     SERVER_HEADERS = [
         "server",
         "x-powered-by",
@@ -135,12 +125,10 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
             custom_credentials: Additional credentials to test
         """
         super().configure(**kwargs)
-    def __init__(self) -> None:
-        """Initialize SecurityMisconfigAttack class."""
-        super().__init__()
+        self._config["test_headers"] = kwargs.get("test_headers", True)
+        self._config["test_defaults"] = kwargs.get("test_defaults", True)
         self._config["test_directory_listing"] = kwargs.get(
             "test_directory_listing", True
-        """Configure attack parameters for security misconfiguration."""
         )
         self._config["test_methods"] = kwargs.get("test_methods", True)
         self._config["custom_credentials"] = kwargs.get("custom_credentials", [])
@@ -151,7 +139,6 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         options.update(
             {
                 "test_headers": {
-        """Return configuration options for the attack."""
                     "type": "boolean",
                     "default": True,
                     "description": "Test for missing security headers",
@@ -185,7 +172,6 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         return [
             OWASPTestCase(
                 name="Missing Security Headers",
-        """Return test cases for security misconfiguration."""
                 description="Check for missing security-related HTTP headers",
                 category=OWASPCategory.A05_SECURITY_MISCONFIGURATION,
                 payloads=[],
