@@ -136,6 +136,9 @@ class SSRFAttack(BaseOWASPAttack):
         "resource",
         "webhook",
         "avatar",
+        "resource",
+        "webhook",
+        "avatar",
     ]
 
     # Patterns indicating SSRF success
@@ -330,12 +333,20 @@ class SSRFAttack(BaseOWASPAttack):
         base_url = self._normalize_url(target)
         payloads = self.LOCALHOST_PAYLOADS.copy()
         internal_ssrf_found = False
+        internal_ssrf_found = False
 
         if self._config.get("test_bypass", True):
             payloads.extend(self.BYPASS_PAYLOADS)
 
         total = len(params) * len(payloads)
         current = 0
+
+        for param in params[:5]:
+            if internal_ssrf_found:
+                break
+
+            if param in self._confirmed_params:
+                continue
 
         for param in params[:5]:
             if internal_ssrf_found:
@@ -425,15 +436,22 @@ class SSRFAttack(BaseOWASPAttack):
                 if result["vulnerable"] and "cloud_metadata" not in self._confirmed_types:
                     self._confirmed_types.add("cloud_metadata")
 
+                if result["vulnerable"] and "cloud_metadata" not in self._confirmed_types:
+                    self._confirmed_types.add("cloud_metadata")
+
                     yield Finding(
                         title="SSRF: Cloud Metadata Access",
                         severity=Severity.CRITICAL,
                         description=(
                             "Critical SSRF vulnerability allows access to cloud metadata endpoints, "
                             "which may expose credentials and sensitive instance data."
+                            "Critical SSRF vulnerability allows access to cloud metadata endpoints, "
+                            "which may expose credentials and sensitive instance data."
                         ),
                         evidence=f"Representative payload: {payload}",
                         remediation=(
+                            "Block access to metadata IPs such as 169.254.169.254. "
+                            "Use IMDSv2 and strict URL validation."
                             "Block access to metadata IPs such as 169.254.169.254. "
                             "Use IMDSv2 and strict URL validation."
                         ),
@@ -442,8 +460,6 @@ class SSRFAttack(BaseOWASPAttack):
                             "cloud_provider": self._detect_cloud_provider(payload),
                         },
                     )
-
-                    break
 
                 current += 1
                 self.set_progress(25 + current / total * 25)
@@ -489,6 +505,10 @@ class SSRFAttack(BaseOWASPAttack):
                     self._confirmed_types.add("protocol_smuggling")
 
                     protocol = payload.split("://")[0]
+                if result["vulnerable"] and "protocol_smuggling" not in self._confirmed_types:
+                    self._confirmed_types.add("protocol_smuggling")
+
+                    protocol = payload.split("://")[0]
 
                     yield Finding(
                         title=f"SSRF: Protocol Smuggling ({protocol}://)",
@@ -504,8 +524,6 @@ class SSRFAttack(BaseOWASPAttack):
                             "protocol": protocol,
                         },
                     )
-
-                    break  # 🔴 STOP protocol smuggling tests
 
                 current += 1
                 self.set_progress(50 + current / total * 25)
@@ -564,8 +582,36 @@ class SSRFAttack(BaseOWASPAttack):
                     "load",
                     "link",
                 ]
+                url_indicators = [
+                    "url",
+                    "uri",
+                    "redirect",
+                    "dest",
+                    "target",
+                    "callback",
+                    "webhook",
+                    "fetch",
+                    "resource",
+                    "image",
+                    "file",
+                    "load",
+                    "link",
+                ]
                 found_indicators = [i for i in url_indicators if i in content]
 
+                indicator_count = len(found_indicators)
+                if indicator_count >= 2:
+                    severity = Severity.MEDIUM
+                    confidence = "high"
+                elif found_indicators:
+                    severity = Severity.LOW
+                    confidence = "medium"
+                else:
+                    severity = Severity.INFO
+                    confidence = "low"
+
+                if found_indicators and blind_found < max_blind_findings:
+                    blind_found += 1
                 indicator_count = len(found_indicators)
                 if indicator_count >= 2:
                     severity = Severity.MEDIUM

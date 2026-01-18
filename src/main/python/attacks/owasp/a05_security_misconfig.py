@@ -102,6 +102,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         "/js/",
     ]
 
+    # HTTP headers that may leak server information
     SERVER_HEADERS = [
         "server",
         "x-powered-by",
@@ -110,20 +111,15 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         "x-generator",
     ]
 
-    def __init__(self):
+    # Dangerous HTTP methods to test
+    DANGEROUS_METHODS = ["PUT", "DELETE", "TRACE", "CONNECT", "OPTIONS"]
+
+    def __init__(self) -> None:
+        """Initialize SecurityMisconfigAttack class."""
         super().__init__()
 
     def configure(self, **kwargs) -> None:
-        """
-        Configure security misconfiguration attack parameters.
-
-        Args:
-            test_headers: Test for missing security headers (default: True)
-            test_defaults: Test for default credentials (default: True)
-            test_directory_listing: Test for directory listing (default: True)
-            test_methods: Test for dangerous HTTP methods (default: True)
-            custom_credentials: Additional credentials to test
-        """
+        """Configure attack parameters for security misconfiguration."""
         super().configure(**kwargs)
         self._config["test_headers"] = kwargs.get("test_headers", True)
         self._config["test_defaults"] = kwargs.get("test_defaults", True)
@@ -132,7 +128,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         self._config["custom_credentials"] = kwargs.get("custom_credentials", [])
 
     def get_config_options(self) -> Dict[str, Any]:
-        """Get configuration options."""
+        """Return configuration options for the attack."""
         options = super().get_config_options()
         options.update(
             {
@@ -166,7 +162,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
-        """Get test cases for security misconfiguration."""
+        """Return test cases for security misconfiguration."""
         return [
             OWASPTestCase(
                 name="Missing Security Headers",
