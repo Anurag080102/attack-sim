@@ -1,3 +1,4 @@
+# OWASP A06 Vulnerable and Outdated Components Attack Module
 """
 A06:2021 - Vulnerable and Outdated Components Attack Module.
 
@@ -138,11 +139,13 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
         ],
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize OutdatedComponentsAttack class."""
         super().__init__()
         self._detected_components: List[Dict[str, str]] = []
 
     def configure(self, **kwargs) -> None:
+        """Configure attack parameters for outdated components."""
         """
         Configure outdated components attack parameters.
 
@@ -159,6 +162,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
         self._config["check_cves"] = kwargs.get("check_cves", True)
 
     def get_config_options(self) -> Dict[str, Any]:
+        """Return configuration options for the attack."""
         """Get configuration options."""
         options = super().get_config_options()
         options.update(
@@ -188,6 +192,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
+        """Return test cases for outdated components."""
         """Get test cases for vulnerable components."""
         return [
             OWASPTestCase(
