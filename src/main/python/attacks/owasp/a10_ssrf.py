@@ -133,6 +133,9 @@ class SSRFAttack(BaseOWASPAttack):
         "goto",
         "view",
         "open",
+        "resource",
+        "webhook",
+        "avatar",
     ]
 
     # Patterns indicating SSRF success
@@ -168,6 +171,8 @@ class SSRFAttack(BaseOWASPAttack):
 
     def __init__(self):
         super().__init__()
+        self._confirmed_params = set()  # params where SSRF is already confirmed
+        self._confirmed_types = set()  # SSRF types already reported
 
     def configure(self, **kwargs) -> None:
         """
@@ -328,6 +333,7 @@ class SSRFAttack(BaseOWASPAttack):
 
         base_url = self._normalize_url(target)
         payloads = self.LOCALHOST_PAYLOADS.copy()
+        internal_ssrf_found = False
 
         if self._config.get("test_bypass", True):
             payloads.extend(self.BYPASS_PAYLOADS)
@@ -335,10 +341,44 @@ class SSRFAttack(BaseOWASPAttack):
         total = len(params) * len(payloads)
         current = 0
 
-        for param in params[:5]:  # Limit parameters tested
+        for param in params[:5]:
+            if internal_ssrf_found:
+                break
+
+            if param in self._confirmed_params:
+                continue
+
             for payload in payloads:
                 if self.is_cancelled():
                     return
+
+                test_url = f"{base_url}?{param}={quote(payload)}"
+                response = self._make_request(test_url)
+                result = self._check_ssrf_response(response, payload)
+
+                if result["vulnerable"]:
+                    internal_ssrf_found = True
+                    self._confirmed_params.add(param)
+
+                    yield Finding(
+                        title="SSRF Vulnerability: Internal Resource Access",
+                        severity=Severity.HIGH,
+                        description=(
+                            f"Server-Side Request Forgery detected via parameter '{param}'. "
+                            "The application allows access to internal resources."
+                        ),
+                        evidence=f"Representative payload: {payload}",
+                        remediation=(
+                            "Validate and sanitize URL inputs. Use allowlists for "
+                            "permitted domains and block internal IP ranges."
+                        ),
+                        metadata={
+                            "parameter": param,
+                            "ssrf_type": "internal_access",
+                        },
+                    )
+
+                    break  # 🔴 STOP testing more payloads for this param
 
                 # Test GET parameter
                 test_url = f"{base_url}?{param}={quote(payload)}"
@@ -389,28 +429,31 @@ class SSRFAttack(BaseOWASPAttack):
 
                 result = self._check_ssrf_response(response, payload)
 
-                if result["vulnerable"]:
-                    # Cloud metadata SSRF is critical
+                if (
+                    result["vulnerable"]
+                    and "cloud_metadata" not in self._confirmed_types
+                ):
+                    self._confirmed_types.add("cloud_metadata")
+
                     yield Finding(
                         title="SSRF: Cloud Metadata Access",
                         severity=Severity.CRITICAL,
                         description=(
-                            "Critical SSRF vulnerability allows access to cloud "
-                            "metadata endpoint. This can expose credentials and "
-                            "sensitive instance information."
+                            "Critical SSRF vulnerability allows access to cloud metadata endpoints, "
+                            "which may expose credentials and sensitive instance data."
                         ),
-                        evidence=f"URL: {test_url}, Payload: {payload}",
+                        evidence=f"Representative payload: {payload}",
                         remediation=(
-                            "Block access to 169.254.169.254 and other metadata IPs. "
-                            "Use IMDSv2 (token-based) on AWS. Implement strict URL validation."
+                            "Block access to metadata IPs such as 169.254.169.254. "
+                            "Use IMDSv2 and strict URL validation."
                         ),
                         metadata={
-                            "parameter": param,
-                            "payload": payload,
+                            "ssrf_type": "cloud_metadata",
                             "cloud_provider": self._detect_cloud_provider(payload),
-                            "evidence": result["evidence"],
                         },
                     )
+
+                    break
 
                 current += 1
                 self.set_progress(25 + current / total * 25)
@@ -454,31 +497,35 @@ class SSRFAttack(BaseOWASPAttack):
 
                 result = self._check_ssrf_response(response, payload)
 
-                if result["vulnerable"]:
-                    # Determine severity based on protocol
-                    severity = Severity.HIGH
-                    if payload.startswith("file://"):
-                        severity = Severity.CRITICAL
+                if (
+                    result["vulnerable"]
+                    and "protocol_smuggling" not in self._confirmed_types
+                ):
+                    self._confirmed_types.add("protocol_smuggling")
 
-                    protocol = (
-                        payload.split("://")[0] if "://" in payload else "unknown"
-                    )
+                    protocol = payload.split("://")[0]
 
                     yield Finding(
                         title=f"SSRF: Protocol Smuggling ({protocol}://)",
-                        severity=severity,
-                        description=f"SSRF vulnerability allows {protocol}:// protocol access. "
-                        "This can be used to read local files or access internal services.",
-                        evidence=f"URL: {test_url}, Payload: {payload}",
-                        remediation="Restrict allowed protocols to http/https only. "
-                        "Validate and sanitize all URL inputs.",
+                        severity=Severity.CRITICAL
+                        if payload.startswith("file://")
+                        else Severity.HIGH,
+                        description=(
+                            f"SSRF vulnerability allows use of the {protocol}:// protocol, "
+                            "which can expose local files or internal services."
+                        ),
+                        evidence=f"Representative payload: {payload}",
+                        remediation=(
+                            "Restrict allowed protocols to http/https only. "
+                            "Perform strict URL validation."
+                        ),
                         metadata={
-                            "parameter": param,
-                            "payload": payload,
+                            "ssrf_type": "protocol_smuggling",
                             "protocol": protocol,
-                            "evidence": result["evidence"],
                         },
                     )
+
+                    break  # 🔴 STOP protocol smuggling tests
 
                 current += 1
                 self.set_progress(50 + current / total * 25)
@@ -489,6 +536,9 @@ class SSRFAttack(BaseOWASPAttack):
     ) -> Generator[Finding, None, None]:
         """Check for blind SSRF indicators and potential attack surfaces."""
         base_url = self._normalize_url(target)
+
+        max_blind_findings = 2
+        blind_found = 0
 
         # Check for common SSRF-prone functionality
         ssrf_prone_endpoints = [
@@ -521,24 +571,58 @@ class SSRFAttack(BaseOWASPAttack):
                 # Endpoint exists, check for URL parameters
                 content = response.text.lower()
 
-                url_indicators = ["url", "uri", "link", "fetch", "load"]
+                url_indicators = [
+                    "url",
+                    "uri",
+                    "redirect",
+                    "dest",
+                    "target",
+                    "callback",
+                    "webhook",
+                    "fetch",
+                    "resource",
+                    "image",
+                    "file",
+                    "load",
+                    "link",
+                ]
                 found_indicators = [i for i in url_indicators if i in content]
 
-                if found_indicators or response.status_code == 200:
+                indicator_count = len(found_indicators)
+                if indicator_count >= 2:
+                    severity = Severity.MEDIUM
+                    confidence = "high"
+                elif found_indicators:
+                    severity = Severity.LOW
+                    confidence = "medium"
+                else:
+                    severity = Severity.INFO
+                    confidence = "low"
+
+                if found_indicators and blind_found < max_blind_findings:
+                    blind_found += 1
                     yield Finding(
                         title=f"Potential SSRF Surface: {endpoint}",
-                        severity=Severity.LOW,
-                        description=f"Endpoint may be vulnerable to SSRF. "
-                        f"URL-related indicators found: {found_indicators}",
+                        severity=severity,
+                        description=(
+                            "Endpoint may be vulnerable to SSRF. "
+                            f"URL-related indicators found: {found_indicators}"
+                        ),
                         evidence=f"URL: {test_url}, Status: {response.status_code}",
-                        remediation="Review this endpoint for SSRF vulnerabilities. "
-                        "Implement strict URL validation if it accepts URL parameters.",
+                        remediation=(
+                            "Review this endpoint for SSRF vulnerabilities. "
+                            "Implement strict URL validation if it accepts URL parameters."
+                        ),
                         metadata={
                             "endpoint": endpoint,
                             "indicators": found_indicators,
+                            "confidence": confidence,
                             "status_code": response.status_code,
                         },
                     )
+
+                    if blind_found >= max_blind_findings:
+                        break
 
             self.set_progress(75 + (idx + 1) / total * 25)
             time.sleep(self._delay_between_requests)

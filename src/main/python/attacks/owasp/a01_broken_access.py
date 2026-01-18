@@ -1066,7 +1066,9 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                 ):
                     # Verify this isn't just a redirect to login or empty response
                     finding = self._analyze_response_content(url, response)
-                    if finding:  # Only flag if content analysis confirms protected access
+                    if (
+                        finding
+                    ):  # Only flag if content analysis confirms protected access
                         vulnerable_methods.append(method)
                         if method not in vulnerable_paths:
                             vulnerable_paths[method] = []
@@ -1077,14 +1079,14 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
         # Yield single consolidated finding if vulnerabilities found
         if vulnerable_methods:
             unique_methods = sorted(set(vulnerable_methods))
-            
+
             # Determine severity based on methods found
             # DELETE, PUT, PATCH on admin endpoints = HIGH
             # POST on admin endpoints = MEDIUM (common but still concerning)
             dangerous_methods = {"DELETE", "PUT", "PATCH"}
             has_dangerous = any(m in dangerous_methods for m in unique_methods)
             severity = Severity.HIGH if has_dangerous else Severity.MEDIUM
-            
+
             method_details = "\n".join(
                 [
                     f"- {method}: {len(vulnerable_paths[method])} path(s) ({', '.join(vulnerable_paths[method][:2])}{'...' if len(vulnerable_paths[method]) > 2 else ''})"

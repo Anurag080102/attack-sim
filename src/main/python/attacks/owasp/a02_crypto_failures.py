@@ -335,7 +335,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             ) as sock:
                 with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                     # Get certificate in both binary and parsed forms
-                    cert_binary = ssock.getpeercert(binary_form=True)
+                    ssock.getpeercert(binary_form=True)
                     cert = ssock.getpeercert(binary_form=False)
                     cipher = ssock.cipher()
                     version = ssock.version()

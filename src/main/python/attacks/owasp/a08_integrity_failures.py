@@ -570,8 +570,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                             "internal endpoints, or credentials."
                         ),
                         evidence=(
-                            f"URL: {file_url}\n"
-                            f"Content Snippet: {content[:100]}..."
+                            f"URL: {file_url}\nContent Snippet: {content[:100]}..."
                         ),
                         remediation=(
                             "Ensure CI/CD configuration files are not accessible from "
