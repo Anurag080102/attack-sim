@@ -61,8 +61,9 @@ def _configure_logging(app: Flask) -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # Set Flask's logger level
+    # Set Flask's logger level and disable propagation to avoid duplicate logs
     app.logger.setLevel(log_level)
+    app.logger.propagate = False
 
     # Reduce noise from some libraries
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
