@@ -7,7 +7,7 @@ This module implements detection of vulnerable and outdated components including
 - Framework version identification
 - Known CVE matching for detected versions
 
-Verified by: Anurag (Dec 17, 2025)
+Verified by: Anurag (Jan 18, 2026)
 Testing: Passed - 5 findings on live target, detected Nginx & PHP vulnerabilities
 """
 
