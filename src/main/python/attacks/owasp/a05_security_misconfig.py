@@ -100,18 +100,9 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         "/libs/",
         "/scripts/",
         "/js/",
-        OWASP A05 Security Misconfiguration Attack Module
-        A05:2021 - Security Misconfiguration Attack Module.
+    ]
 
-        This module implements detection of security misconfiguration including:
-        - Missing security headers
-        - Default credentials
-        - Directory listing enabled
-        - Error messages exposing sensitive information
-        - Unnecessary features enabled
-
-        Verified by: Anurag (Jan 18, 2026)
-        Testing: Passed - 11 findings on live target, all features working
+    # HTTP headers that may leak server information
     SERVER_HEADERS = [
         "server",
         "x-powered-by",
@@ -120,38 +111,30 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         "x-generator",
     ]
 
-    def __init__(self):
-        super().__init__()
+    # Dangerous HTTP methods to test
+    DANGEROUS_METHODS = ["PUT", "DELETE", "TRACE", "CONNECT", "OPTIONS"]
 
-    def configure(self, **kwargs) -> None:
-        """
-        Configure security misconfiguration attack parameters.
-
-        Args:
-            test_headers: Test for missing security headers (default: True)
-            test_defaults: Test for default credentials (default: True)
-            test_directory_listing: Test for directory listing (default: True)
-            test_methods: Test for dangerous HTTP methods (default: True)
-            custom_credentials: Additional credentials to test
-        """
-        super().configure(**kwargs)
     def __init__(self) -> None:
         """Initialize SecurityMisconfigAttack class."""
         super().__init__()
+
+    def configure(self, **kwargs) -> None:
+        """Configure attack parameters for security misconfiguration."""
+        super().configure(**kwargs)
+        self._config["test_headers"] = kwargs.get("test_headers", True)
+        self._config["test_defaults"] = kwargs.get("test_defaults", True)
         self._config["test_directory_listing"] = kwargs.get(
             "test_directory_listing", True
-        """Configure attack parameters for security misconfiguration."""
         )
         self._config["test_methods"] = kwargs.get("test_methods", True)
         self._config["custom_credentials"] = kwargs.get("custom_credentials", [])
 
     def get_config_options(self) -> Dict[str, Any]:
-        """Get configuration options."""
+        """Return configuration options for the attack."""
         options = super().get_config_options()
         options.update(
             {
                 "test_headers": {
-        """Return configuration options for the attack."""
                     "type": "boolean",
                     "default": True,
                     "description": "Test for missing security headers",
@@ -181,11 +164,10 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         return options
 
     def get_test_cases(self) -> List[OWASPTestCase]:
-        """Get test cases for security misconfiguration."""
+        """Return test cases for security misconfiguration."""
         return [
             OWASPTestCase(
                 name="Missing Security Headers",
-        """Return test cases for security misconfiguration."""
                 description="Check for missing security-related HTTP headers",
                 category=OWASPCategory.A05_SECURITY_MISCONFIGURATION,
                 payloads=[],
