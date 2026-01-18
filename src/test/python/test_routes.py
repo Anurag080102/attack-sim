@@ -184,9 +184,7 @@ class TestAttackExecutionEndpoints:
 
     def test_run_attack_missing_attack_id(self, client):
         """Test running attack without attack_id returns 400."""
-        response = client.post(
-            "/api/attacks/run", json={"target": "http://example.com"}
-        )
+        response = client.post("/api/attacks/run", json={"target": "http://example.com"})
 
         assert response.status_code == 400
         data = response.get_json()
@@ -333,9 +331,7 @@ class TestReportEndpoints:
 
     def test_generate_report_invalid_job(self, client):
         """Test generating report for invalid job returns 404."""
-        response = client.post(
-            "/api/reports/generate", json={"job_id": "invalid-job-id"}
-        )
+        response = client.post("/api/reports/generate", json={"job_id": "invalid-job-id"})
 
         assert response.status_code == 404
 
@@ -352,9 +348,7 @@ class TestReportEndpoints:
         time.sleep(0.5)
 
         # Generate report
-        response = client.post(
-            "/api/reports/generate", json={"job_id": job_id, "title": "Test Report"}
-        )
+        response = client.post("/api/reports/generate", json={"job_id": job_id, "title": "Test Report"})
 
         assert response.status_code == 201
         data = response.get_json()
@@ -378,9 +372,7 @@ class TestReportEndpoints:
         time.sleep(0.5)
 
         # Generate report
-        gen_response = client.post(
-            "/api/reports/generate", json={"job_id": job_id, "title": "Delete Test"}
-        )
+        gen_response = client.post("/api/reports/generate", json={"job_id": job_id, "title": "Delete Test"})
         assert gen_response.status_code == 201
         report_id = gen_response.get_json()["report_id"]
 
@@ -403,9 +395,7 @@ class TestReportEndpoints:
         time.sleep(0.5)
 
         # Generate report
-        gen_response = client.post(
-            "/api/reports/generate", json={"job_id": job_id, "title": "Lifecycle Test"}
-        )
+        gen_response = client.post("/api/reports/generate", json={"job_id": job_id, "title": "Lifecycle Test"})
         assert gen_response.status_code == 201
         report_id = gen_response.get_json()["report_id"]
 
@@ -442,9 +432,7 @@ class TestAttackManager:
     def test_create_job(self, app):
         """Test creating a job via attack manager."""
         with app.app_context():
-            job = attack_manager.create_job(
-                attack_id="a03", target="http://example.com", config={"timeout": 5}
-            )
+            job = attack_manager.create_job(attack_id="a03", target="http://example.com", config={"timeout": 5})
 
             assert job is not None
             assert job.attack_id == "a03"
@@ -454,18 +442,14 @@ class TestAttackManager:
     def test_create_job_invalid_attack(self, app):
         """Test creating job with invalid attack returns None."""
         with app.app_context():
-            job = attack_manager.create_job(
-                attack_id="nonexistent", target="http://example.com", config={}
-            )
+            job = attack_manager.create_job(attack_id="nonexistent", target="http://example.com", config={})
 
             assert job is None
 
     def test_start_job(self, app):
         """Test starting a job."""
         with app.app_context():
-            job = attack_manager.create_job(
-                attack_id="a05", target="http://example.com", config={}
-            )
+            job = attack_manager.create_job(attack_id="a05", target="http://example.com", config={})
 
             result = attack_manager.start_job(job.id)
             assert result is True
@@ -477,9 +461,7 @@ class TestAttackManager:
     def test_get_job(self, app):
         """Test getting a job by ID."""
         with app.app_context():
-            job = attack_manager.create_job(
-                attack_id="a03", target="http://example.com", config={}
-            )
+            job = attack_manager.create_job(attack_id="a03", target="http://example.com", config={})
 
             retrieved = attack_manager.get_job(job.id)
             assert retrieved is not None
@@ -504,9 +486,7 @@ class TestAttackManager:
     def test_job_to_dict(self, app):
         """Test job serialization."""
         with app.app_context():
-            job = attack_manager.create_job(
-                attack_id="a03", target="http://example.com", config={"key": "value"}
-            )
+            job = attack_manager.create_job(attack_id="a03", target="http://example.com", config={"key": "value"})
 
             job_dict = job.to_dict()
 
@@ -523,17 +503,13 @@ class TestInputValidation:
 
     def test_attack_run_empty_target(self, client):
         """Test running attack with empty target."""
-        response = client.post(
-            "/api/attacks/run", json={"attack_id": "a03", "target": ""}
-        )
+        response = client.post("/api/attacks/run", json={"attack_id": "a03", "target": ""})
 
         assert response.status_code == 400
 
     def test_attack_run_empty_attack_id(self, client):
         """Test running attack with empty attack_id."""
-        response = client.post(
-            "/api/attacks/run", json={"attack_id": "", "target": "http://example.com"}
-        )
+        response = client.post("/api/attacks/run", json={"attack_id": "", "target": "http://example.com"})
 
         assert response.status_code == 400
 

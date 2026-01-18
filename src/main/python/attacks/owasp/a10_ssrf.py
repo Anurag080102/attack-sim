@@ -315,18 +315,14 @@ class SSRFAttack(BaseOWASPAttack):
             # Check for internal service responses
             if response.status_code == 200 and len(content) > 0:
                 # Check if content differs from normal error pages
-                if not any(
-                    x in content.lower() for x in ["not found", "error", "forbidden"]
-                ):
+                if not any(x in content.lower() for x in ["not found", "error", "forbidden"]):
                     findings["vulnerable"] = True
                     findings["type"] = "internal_access"
                     findings["evidence"].append("Internal resource accessible")
 
         return findings
 
-    def _test_localhost_ssrf(
-        self, target: str, params: List[str]
-    ) -> Generator[Finding, None, None]:
+    def _test_localhost_ssrf(self, target: str, params: List[str]) -> Generator[Finding, None, None]:
         """Test for localhost/internal IP SSRF."""
         if not self._config.get("test_localhost", True):
             return
@@ -392,8 +388,7 @@ class SSRFAttack(BaseOWASPAttack):
                         severity=Severity.HIGH,
                         description=f"Server-Side Request Forgery detected. "
                         f"Parameter '{param}' allows access to internal resources.",
-                        evidence=f"URL: {test_url}, Type: {result['type']}, "
-                        f"Evidence: {result['evidence']}",
+                        evidence=f"URL: {test_url}, Type: {result['type']}, Evidence: {result['evidence']}",
                         remediation="Validate and sanitize URL inputs. Use allowlists for "
                         "permitted domains. Block requests to internal IPs and localhost.",
                         metadata={
@@ -408,9 +403,7 @@ class SSRFAttack(BaseOWASPAttack):
                 self.set_progress(current / total * 25)
                 time.sleep(self._delay_between_requests)
 
-    def _test_cloud_metadata(
-        self, target: str, params: List[str]
-    ) -> Generator[Finding, None, None]:
+    def _test_cloud_metadata(self, target: str, params: List[str]) -> Generator[Finding, None, None]:
         """Test for cloud metadata endpoint access."""
         if not self._config.get("test_cloud", True):
             return
@@ -429,10 +422,7 @@ class SSRFAttack(BaseOWASPAttack):
 
                 result = self._check_ssrf_response(response, payload)
 
-                if (
-                    result["vulnerable"]
-                    and "cloud_metadata" not in self._confirmed_types
-                ):
+                if result["vulnerable"] and "cloud_metadata" not in self._confirmed_types:
                     self._confirmed_types.add("cloud_metadata")
 
                     yield Finding(
@@ -476,9 +466,7 @@ class SSRFAttack(BaseOWASPAttack):
             return "Alibaba Cloud"
         return "Unknown"
 
-    def _test_protocol_smuggling(
-        self, target: str, params: List[str]
-    ) -> Generator[Finding, None, None]:
+    def _test_protocol_smuggling(self, target: str, params: List[str]) -> Generator[Finding, None, None]:
         """Test for protocol smuggling attacks."""
         if not self._config.get("test_protocols", True):
             return
@@ -497,28 +485,20 @@ class SSRFAttack(BaseOWASPAttack):
 
                 result = self._check_ssrf_response(response, payload)
 
-                if (
-                    result["vulnerable"]
-                    and "protocol_smuggling" not in self._confirmed_types
-                ):
+                if result["vulnerable"] and "protocol_smuggling" not in self._confirmed_types:
                     self._confirmed_types.add("protocol_smuggling")
 
                     protocol = payload.split("://")[0]
 
                     yield Finding(
                         title=f"SSRF: Protocol Smuggling ({protocol}://)",
-                        severity=Severity.CRITICAL
-                        if payload.startswith("file://")
-                        else Severity.HIGH,
+                        severity=Severity.CRITICAL if payload.startswith("file://") else Severity.HIGH,
                         description=(
                             f"SSRF vulnerability allows use of the {protocol}:// protocol, "
                             "which can expose local files or internal services."
                         ),
                         evidence=f"Representative payload: {payload}",
-                        remediation=(
-                            "Restrict allowed protocols to http/https only. "
-                            "Perform strict URL validation."
-                        ),
+                        remediation=("Restrict allowed protocols to http/https only. Perform strict URL validation."),
                         metadata={
                             "ssrf_type": "protocol_smuggling",
                             "protocol": protocol,
@@ -531,9 +511,7 @@ class SSRFAttack(BaseOWASPAttack):
                 self.set_progress(50 + current / total * 25)
                 time.sleep(self._delay_between_requests)
 
-    def _test_blind_ssrf_indicators(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _test_blind_ssrf_indicators(self, target: str) -> Generator[Finding, None, None]:
         """Check for blind SSRF indicators and potential attack surfaces."""
         base_url = self._normalize_url(target)
 
@@ -605,8 +583,7 @@ class SSRFAttack(BaseOWASPAttack):
                         title=f"Potential SSRF Surface: {endpoint}",
                         severity=severity,
                         description=(
-                            "Endpoint may be vulnerable to SSRF. "
-                            f"URL-related indicators found: {found_indicators}"
+                            f"Endpoint may be vulnerable to SSRF. URL-related indicators found: {found_indicators}"
                         ),
                         evidence=f"URL: {test_url}, Status: {response.status_code}",
                         remediation=(

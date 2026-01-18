@@ -179,9 +179,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                 "test_artifacts": {
                     "type": "boolean",
                     "default": True,
-                    "description": (
-                        "Check for potentially unverified downloadable artifacts"
-                    ),
+                    "description": ("Check for potentially unverified downloadable artifacts"),
                 },
             }
         )
@@ -239,9 +237,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
         return findings
 
-    def _test_serialization_in_cookies(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _test_serialization_in_cookies(self, target: str) -> Generator[Finding, None, None]:
         """Test for serialized objects in cookies."""
         if not self._config.get("test_serialization", True):
             return
@@ -258,9 +254,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
             # Try to decode base64
             try:
-                decoded: str = base64.b64decode(cookie_value).decode(
-                    "utf-8", errors="ignore"
-                )
+                decoded: str = base64.b64decode(cookie_value).decode("utf-8", errors="ignore")
             except Exception:
                 decoded = cookie_value
 
@@ -269,14 +263,9 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
             if serialization_found:
                 for finding in serialization_found:
-                    value_preview = (
-                        cookie_value[:100] if len(cookie_value) > 100 else cookie_value
-                    )
+                    value_preview = cookie_value[:100] if len(cookie_value) > 100 else cookie_value
                     yield Finding(
-                        title=(
-                            f"Potential Serialized Object in "
-                            f"Cookie ({finding['language']})"
-                        ),
+                        title=(f"Potential Serialized Object in Cookie ({finding['language']})"),
                         severity=Severity.HIGH,
                         description=(
                             f"Cookie '{cookie.name}' appears to contain a serialized "
@@ -284,8 +273,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                             "insecure deserialization attacks."
                         ),
                         evidence=(
-                            f"Cookie: {cookie.name}, Pattern: {finding['pattern']}, "
-                            f"Value preview: {value_preview}..."
+                            f"Cookie: {cookie.name}, Pattern: {finding['pattern']}, Value preview: {value_preview}..."
                         ),
                         remediation=(
                             "Avoid deserializing untrusted data. Use safer data "
@@ -310,10 +298,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     yield Finding(
                         title=f"Serialized Data Detected ({lang})",
                         severity=Severity.MEDIUM,
-                        description=(
-                            f"Response contains patterns indicating {lang} "
-                            "serialization"
-                        ),
+                        description=(f"Response contains patterns indicating {lang} serialization"),
                         evidence=f"Pattern: {pattern}, Matches: {len(matches)}",
                         remediation=(
                             "Review the use of serialization. Ensure proper integrity "
@@ -328,9 +313,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
         self.set_progress(33)
 
-    def _test_subresource_integrity(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _test_subresource_integrity(self, target: str) -> Generator[Finding, None, None]:
         """Test for missing Subresource Integrity on CDN resources."""
         if not self._config.get("test_sri", True):
             return
@@ -356,9 +339,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
 
         for resource in all_resources:
             # Check if resource is from a CDN
-            is_cdn = any(
-                re.search(cdn, resource, re.IGNORECASE) for cdn in self.CDN_PATTERNS
-            )
+            is_cdn = any(re.search(cdn, resource, re.IGNORECASE) for cdn in self.CDN_PATTERNS)
 
             if is_cdn:
                 # Check if the tag has integrity attribute
@@ -474,8 +455,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     title="JWT Uses Symmetric Algorithm",
                     severity=Severity.LOW,
                     description=(
-                        f"JWT uses symmetric algorithm ({alg}). If the secret is weak "
-                        "or leaked, tokens can be forged."
+                        f"JWT uses symmetric algorithm ({alg}). If the secret is weak or leaked, tokens can be forged."
                     ),
                     evidence=f"Source: {source}, Algorithm: {alg}",
                     remediation=(
@@ -492,9 +472,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     yield Finding(
                         title="JWT Contains Potentially Sensitive Data",
                         severity=Severity.MEDIUM,
-                        description=(
-                            f"JWT payload contains field '{key}' which may be sensitive"
-                        ),
+                        description=(f"JWT payload contains field '{key}' which may be sensitive"),
                         evidence=f"Source: {source}, Sensitive field: {key}",
                         remediation=(
                             "Avoid storing sensitive data in JWTs. JWTs are encoded, "
@@ -510,9 +488,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                     severity=Severity.MEDIUM,
                     description="JWT does not have an expiration time (exp claim)",
                     evidence=f"Source: {source}",
-                    remediation=(
-                        "Always include an 'exp' claim in JWTs to limit token lifetime."
-                    ),
+                    remediation=("Always include an 'exp' claim in JWTs to limit token lifetime."),
                     metadata={"source": source},
                 )
 
@@ -569,9 +545,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
                             f"{config_file}. This may expose build processes, "
                             "internal endpoints, or credentials."
                         ),
-                        evidence=(
-                            f"URL: {file_url}\nContent Snippet: {content[:100]}..."
-                        ),
+                        evidence=(f"URL: {file_url}\nContent Snippet: {content[:100]}..."),
                         remediation=(
                             "Ensure CI/CD configuration files are not accessible from "
                             "the public web root. Restrict access via web server "
@@ -602,9 +576,7 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
         # Naive regex to find hrefs to sensitive extensions
         # Group 1: Quote char, Group 2: URL, Group 3: Extension
         ext_pattern = (
-            r'href=["\']([^"\']+(\.(?:'
-            + "|".join(e.lstrip(".") for e in self.SENSITIVE_EXTENSIONS)
-            + r')))["\']'
+            r'href=["\']([^"\']+(\.(?:' + "|".join(e.lstrip(".") for e in self.SENSITIVE_EXTENSIONS) + r')))["\']'
         )
 
         matches = re.finditer(ext_pattern, content, re.IGNORECASE)
@@ -623,16 +595,14 @@ class IntegrityFailuresAttack(BaseOWASPAttack):
         # setup.exe.asc, or just .sig/.asc links nearby.
         # For simplicity, we just check if signature extensions appear in
         # the page content.
-        has_signatures = re.search(
-            r'\.(sig|asc|sha256|md5|gpg)["\']', content, re.IGNORECASE
-        )
+        has_signatures = re.search(r'\.(sig|asc|sha256|md5|gpg)["\']', content, re.IGNORECASE)
 
         for artifact_url, ext in found_artifacts:
             # Check 1: Insecure Transport
             is_absolute_http = artifact_url.lower().startswith("http://")
-            is_relative_and_target_http = not artifact_url.lower().startswith(
-                "http"
-            ) and base_url.lower().startswith("http://")
+            is_relative_and_target_http = not artifact_url.lower().startswith("http") and base_url.lower().startswith(
+                "http://"
+            )
 
             if is_absolute_http or is_relative_and_target_http:
                 yield Finding(

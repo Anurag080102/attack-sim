@@ -320,10 +320,7 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                     severity = Severity.HIGH
 
                     # Extra high severity for certain endpoints
-                    if any(
-                        x in endpoint
-                        for x in [".env", "phpinfo", "actuator/env", "config"]
-                    ):
+                    if any(x in endpoint for x in [".env", "phpinfo", "actuator/env", "config"]):
                         severity = Severity.CRITICAL
 
                     yield Finding(
@@ -391,8 +388,7 @@ class LoggingMonitoringAttack(BaseOWASPAttack):
                     severity=severity,
                     description=f"{description} found in response headers",
                     evidence=f"Header: {header}: {headers[header]}",
-                    remediation="Remove debug headers in production. "
-                    "Configure web server to strip sensitive headers.",
+                    remediation="Remove debug headers in production. Configure web server to strip sensitive headers.",
                     metadata={"header": header, "value": headers[header]},
                 )
 

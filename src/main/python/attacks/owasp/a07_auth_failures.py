@@ -481,13 +481,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
         self._config["test_enumeration"] = kwargs.get("test_enumeration", True)
         self._config["test_session"] = kwargs.get("test_session", True)
         self._config["test_lockout"] = kwargs.get("test_lockout", True)
-        self._config["test_default_credentials"] = kwargs.get(
-            "test_default_credentials", True
-        )
+        self._config["test_default_credentials"] = kwargs.get("test_default_credentials", True)
         self._config["test_jwt"] = kwargs.get("test_jwt", True)
-        self._config["test_session_fixation"] = kwargs.get(
-            "test_session_fixation", True
-        )
+        self._config["test_session_fixation"] = kwargs.get("test_session_fixation", True)
         self._config["test_mfa"] = kwargs.get("test_mfa", True)
         self._config["test_password_reset"] = kwargs.get("test_password_reset", True)
         self._config["timing_samples"] = kwargs.get("timing_samples", 5)
@@ -693,15 +689,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     endpoints[endpoint_type] = url
 
             # Strategy 3: Extract forms with password fields
-            self._discovered_forms = self._extract_auth_forms(
-                homepage_response.text, base_url
-            )
+            self._discovered_forms = self._extract_auth_forms(homepage_response.text, base_url)
 
             # Strategy 4: Check for SPA hash-based routes if not found yet
             if not endpoints.get("login"):
-                spa_endpoints = self._discover_spa_routes(
-                    homepage_response.text, base_url
-                )
+                spa_endpoints = self._discover_spa_routes(homepage_response.text, base_url)
                 for endpoint_type, url in spa_endpoints.items():
                     if not endpoints.get(endpoint_type):
                         endpoints[endpoint_type] = url
@@ -825,9 +817,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         # If this appears to be a SPA and we haven't found routes,
         # check the JavaScript bundles for route definitions
         if is_spa and not discovered:
-            discovered = self._discover_routes_from_js_bundles(
-                html, base_url, hash_route_patterns
-            )
+            discovered = self._discover_routes_from_js_bundles(html, base_url, hash_route_patterns)
 
         return discovered
 
@@ -998,23 +988,17 @@ class AuthFailuresAttack(BaseOWASPAttack):
             href_lower = href.lower()
 
             # Check for login links
-            if any(
-                kw in href_lower for kw in ["login", "signin", "sign-in", "auth/login"]
-            ):
+            if any(kw in href_lower for kw in ["login", "signin", "sign-in", "auth/login"]):
                 if "login" not in discovered:
                     discovered["login"] = urljoin(base_url, href)
 
             # Check for register links
-            elif any(
-                kw in href_lower for kw in ["register", "signup", "sign-up", "join"]
-            ):
+            elif any(kw in href_lower for kw in ["register", "signup", "sign-up", "join"]):
                 if "register" not in discovered:
                     discovered["register"] = urljoin(base_url, href)
 
             # Check for forgot password links
-            elif any(
-                kw in href_lower for kw in ["forgot", "reset", "recover", "password"]
-            ):
+            elif any(kw in href_lower for kw in ["forgot", "reset", "recover", "password"]):
                 if "forgot_password" not in discovered:
                     discovered["forgot_password"] = urljoin(base_url, href)
 
@@ -1028,8 +1012,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         for form in forms:
             # Check if form has password field
             has_password = any(
-                field.get("type") == "password"
-                or "password" in field.get("name", "").lower()
+                field.get("type") == "password" or "password" in field.get("name", "").lower()
                 for field in form.get("fields", [])
             )
 
@@ -1056,15 +1039,11 @@ class AuthFailuresAttack(BaseOWASPAttack):
             form_content = form_match.group(2)
 
             # Extract action
-            action_match = re.search(
-                r'action=["\']([^"\']*)["\']', form_attrs, re.IGNORECASE
-            )
+            action_match = re.search(r'action=["\']([^"\']*)["\']', form_attrs, re.IGNORECASE)
             action = action_match.group(1) if action_match else ""
 
             # Extract method
-            method_match = re.search(
-                r'method=["\']([^"\']*)["\']', form_attrs, re.IGNORECASE
-            )
+            method_match = re.search(r'method=["\']([^"\']*)["\']', form_attrs, re.IGNORECASE)
             method = method_match.group(1).upper() if method_match else "GET"
 
             # Extract all input fields with details
@@ -1074,18 +1053,10 @@ class AuthFailuresAttack(BaseOWASPAttack):
             for input_match in re.finditer(input_pattern, form_content, re.IGNORECASE):
                 input_attrs = input_match.group(1)
 
-                name_match = re.search(
-                    r'name=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE
-                )
-                type_match = re.search(
-                    r'type=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE
-                )
-                value_match = re.search(
-                    r'value=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE
-                )
-                id_match = re.search(
-                    r'id=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE
-                )
+                name_match = re.search(r'name=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE)
+                type_match = re.search(r'type=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE)
+                value_match = re.search(r'value=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE)
+                id_match = re.search(r'id=["\']([^"\']*)["\']', input_attrs, re.IGNORECASE)
 
                 field = {
                     "name": name_match.group(1) if name_match else "",
@@ -1108,9 +1079,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
         return forms
 
-    def _identify_form_fields(
-        self, form: Dict
-    ) -> Tuple[Optional[str], Optional[str], Dict[str, str]]:
+    def _identify_form_fields(self, form: Dict) -> Tuple[Optional[str], Optional[str], Dict[str, str]]:
         """
         Identify username, password, and hidden fields in a form.
 
@@ -1131,14 +1100,10 @@ class AuthFailuresAttack(BaseOWASPAttack):
             if field_type == "hidden":
                 hidden_fields[field["name"]] = field.get("value", "")
 
-            elif field_type == "password" or any(
-                p in field_name for p in password_indicators
-            ):
+            elif field_type == "password" or any(p in field_name for p in password_indicators):
                 password_field = field["name"]
 
-            elif field_type in ["text", "email"] or any(
-                u in field_name for u in username_indicators
-            ):
+            elif field_type in ["text", "email"] or any(u in field_name for u in username_indicators):
                 if not username_field:
                     username_field = field["name"]
 
@@ -1148,9 +1113,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
     # Phase 2: Username Enumeration Detection
     # =========================================================================
 
-    def _test_username_enumeration(
-        self, target: str, endpoints: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_username_enumeration(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
         """Test for username enumeration via response analysis and timing."""
         if not self._config.get("test_enumeration", True):
             return
@@ -1173,9 +1136,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         if not login_form:
             return
 
-        username_field, password_field, hidden_fields = self._identify_form_fields(
-            login_form
-        )
+        username_field, password_field, hidden_fields = self._identify_form_fields(login_form)
 
         if not username_field or not password_field:
             return
@@ -1184,29 +1145,20 @@ class AuthFailuresAttack(BaseOWASPAttack):
         form_url = urljoin(login_url, form_action) if form_action else login_url
 
         # Test 1: Response-based enumeration
-        yield from self._test_response_enumeration(
-            form_url, username_field, password_field, hidden_fields
-        )
+        yield from self._test_response_enumeration(form_url, username_field, password_field, hidden_fields)
 
         # Test 2: Timing-based enumeration
-        yield from self._test_timing_enumeration(
-            form_url, username_field, password_field, hidden_fields
-        )
+        yield from self._test_timing_enumeration(form_url, username_field, password_field, hidden_fields)
 
         self.set_progress(20)
 
     def _find_login_form(self, forms: List[Dict]) -> Optional[Dict]:
         """Find the most likely login form from a list of forms."""
         for form in forms:
-            has_password = any(
-                f.get("type") == "password" for f in form.get("fields", [])
-            )
+            has_password = any(f.get("type") == "password" for f in form.get("fields", []))
             has_username = any(
                 f.get("type") in ["text", "email"]
-                or any(
-                    u in f.get("name", "").lower()
-                    for u in ["user", "email", "login", "name"]
-                )
+                or any(u in f.get("name", "").lower() for u in ["user", "email", "login", "name"])
                 for f in form.get("fields", [])
             )
 
@@ -1259,18 +1211,14 @@ class AuthFailuresAttack(BaseOWASPAttack):
         # Analyze responses
         yield from self._analyze_enumeration_responses(responses)
 
-    def _analyze_enumeration_responses(
-        self, responses: Dict
-    ) -> Generator[Finding, None, None]:
+    def _analyze_enumeration_responses(self, responses: Dict) -> Generator[Finding, None, None]:
         """Analyze responses for enumeration indicators."""
         if len(responses) < 2:
             return
 
         # Group by user type
         invalid_responses = [r for u, r in responses.items() if r["type"] == "invalid"]
-        valid_responses = [
-            r for u, r in responses.items() if r["type"] == "likely_valid"
-        ]
+        valid_responses = [r for u, r in responses.items() if r["type"] == "likely_valid"]
 
         if not invalid_responses or not valid_responses:
             return
@@ -1283,10 +1231,8 @@ class AuthFailuresAttack(BaseOWASPAttack):
             yield Finding(
                 title="Username Enumeration via Status Code",
                 severity=Severity.MEDIUM,
-                description="The application returns different HTTP status codes for "
-                "valid vs invalid usernames.",
-                evidence=f"Invalid user status: {invalid_statuses}, "
-                f"Valid user status: {valid_statuses}",
+                description="The application returns different HTTP status codes for valid vs invalid usernames.",
+                evidence=f"Invalid user status: {invalid_statuses}, Valid user status: {valid_statuses}",
                 remediation="Return identical status codes for all login failures.",
                 metadata={
                     "invalid_statuses": list(invalid_statuses),
@@ -1306,11 +1252,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
             yield Finding(
                 title="Username Enumeration via Response Length",
                 severity=Severity.MEDIUM,
-                description="Login responses have significantly different lengths for "
-                "valid vs invalid usernames.",
+                description="Login responses have significantly different lengths for valid vs invalid usernames.",
                 evidence=f"Average length difference: {length_diff:.0f} bytes",
-                remediation="Ensure login failure responses are identical regardless "
-                "of username validity.",
+                remediation="Ensure login failure responses are identical regardless of username validity.",
                 metadata={"length_difference": length_diff},
             )
 
@@ -1332,11 +1276,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     yield Finding(
                         title="Username Enumeration via Error Message",
                         severity=Severity.MEDIUM,
-                        description="The application reveals username validity through "
-                        "distinct error messages.",
+                        description="The application reveals username validity through distinct error messages.",
                         evidence=f"Pattern found: '{description}'",
-                        remediation="Use generic messages like 'Invalid credentials' "
-                        "for all login failures.",
+                        remediation="Use generic messages like 'Invalid credentials' for all login failures.",
                         metadata={"pattern": pattern, "message_type": description},
                     )
                     return
@@ -1412,28 +1354,20 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 },
             )
 
-    def _test_enumeration_via_forms(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _test_enumeration_via_forms(self, target: str) -> Generator[Finding, None, None]:
         """Test enumeration using discovered forms when login endpoint unknown."""
         for form in self._discovered_forms:
-            username_field, password_field, hidden_fields = self._identify_form_fields(
-                form
-            )
+            username_field, password_field, hidden_fields = self._identify_form_fields(form)
             if username_field and password_field:
                 form_url = form.get("action", target)
-                yield from self._test_response_enumeration(
-                    form_url, username_field, password_field, hidden_fields
-                )
+                yield from self._test_response_enumeration(form_url, username_field, password_field, hidden_fields)
                 break
 
     # =========================================================================
     # Phase 3: Credential Testing
     # =========================================================================
 
-    def _test_default_credentials(
-        self, target: str, endpoints: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_default_credentials(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
         """Test for default credentials on login forms."""
         if not self._config.get("test_default_credentials", True):
             return
@@ -1452,9 +1386,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         if not login_form:
             return
 
-        username_field, password_field, hidden_fields = self._identify_form_fields(
-            login_form
-        )
+        username_field, password_field, hidden_fields = self._identify_form_fields(login_form)
 
         if not username_field or not password_field:
             return
@@ -1468,9 +1400,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             password_field: "definitely_wrong_password_xyz",
             **hidden_fields,
         }
-        baseline_response = self._make_request(
-            form_url, method="POST", data=baseline_data
-        )
+        baseline_response = self._make_request(form_url, method="POST", data=baseline_data)
 
         if not baseline_response:
             return
@@ -1499,22 +1429,15 @@ class AuthFailuresAttack(BaseOWASPAttack):
             time.sleep(self._delay_between_requests)
 
         if successful_creds:
-            creds_display = ", ".join(
-                f"{u}:{p}" if p else f"{u}:(empty)" for u, p in successful_creds
-            )
+            creds_display = ", ".join(f"{u}:{p}" if p else f"{u}:(empty)" for u, p in successful_creds)
             yield Finding(
                 title="Default Credentials Accepted",
                 severity=Severity.CRITICAL,
-                description="The application accepts default credentials, allowing "
-                "unauthorized access.",
+                description="The application accepts default credentials, allowing unauthorized access.",
                 evidence=f"Working credentials: {creds_display}",
                 remediation="Remove or change all default credentials immediately. "
                 "Implement a mandatory password change on first login.",
-                metadata={
-                    "credentials": [
-                        {"username": u, "password": p} for u, p in successful_creds
-                    ]
-                },
+                metadata={"credentials": [{"username": u, "password": p} for u, p in successful_creds]},
             )
 
         self.set_progress(35)
@@ -1577,16 +1500,12 @@ class AuthFailuresAttack(BaseOWASPAttack):
             return True
 
         # Check if error messages disappeared
-        if baseline_indicators.get("has_error") and not self._has_login_error(
-            response.text
-        ):
+        if baseline_indicators.get("has_error") and not self._has_login_error(response.text):
             return True
 
         return False
 
-    def _test_password_policy(
-        self, target: str, endpoints: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_password_policy(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
         """Test for weak password policy on registration."""
         if not self._config.get("test_password_policy", True):
             return
@@ -1605,13 +1524,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
         # Find registration form
         reg_form = None
         for form in forms:
-            has_password = any(
-                f.get("type") == "password" for f in form.get("fields", [])
-            )
+            has_password = any(f.get("type") == "password" for f in form.get("fields", []))
             has_email = any(
-                f.get("type") == "email"
-                or "email" in f.get("name", "").lower()
-                or "user" in f.get("name", "").lower()
+                f.get("type") == "email" or "email" in f.get("name", "").lower() or "user" in f.get("name", "").lower()
                 for f in form.get("fields", [])
             )
             if has_password and has_email:
@@ -1621,19 +1536,13 @@ class AuthFailuresAttack(BaseOWASPAttack):
         if not reg_form:
             return
 
-        username_field, password_field, hidden_fields = self._identify_form_fields(
-            reg_form
-        )
+        username_field, password_field, hidden_fields = self._identify_form_fields(reg_form)
 
         # Check for confirm password field
         confirm_field = None
         for field in reg_form.get("fields", []):
             name_lower = field.get("name", "").lower()
-            if (
-                "confirm" in name_lower
-                or "repeat" in name_lower
-                or "verify" in name_lower
-            ):
+            if "confirm" in name_lower or "repeat" in name_lower or "verify" in name_lower:
                 confirm_field = field["name"]
                 break
 
@@ -1651,9 +1560,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             if self.is_cancelled():
                 return
 
-            test_email = (
-                f"test_{hashlib.md5(pwd.encode()).hexdigest()[:8]}@test.invalid"
-            )
+            test_email = f"test_{hashlib.md5(pwd.encode()).hexdigest()[:8]}@test.invalid"
             data = {
                 username_field: test_email,
                 password_field: pwd,
@@ -1674,9 +1581,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             if self.is_cancelled():
                 return
 
-            test_email = (
-                f"test_{hashlib.md5(pwd.encode()).hexdigest()[:8]}@test.invalid"
-            )
+            test_email = f"test_{hashlib.md5(pwd.encode()).hexdigest()[:8]}@test.invalid"
             data = {
                 username_field: test_email,
                 password_field: pwd,
@@ -1697,9 +1602,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             if self.is_cancelled():
                 return
 
-            test_email = (
-                f"test_{hashlib.md5(pwd.encode()).hexdigest()[:8]}@test.invalid"
-            )
+            test_email = f"test_{hashlib.md5(pwd.encode()).hexdigest()[:8]}@test.invalid"
             data = {
                 username_field: test_email,
                 password_field: pwd,
@@ -1719,8 +1622,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             yield Finding(
                 title="Weak Password Policy",
                 severity=Severity.HIGH,
-                description="The application accepts weak passwords that don't meet "
-                "security standards.",
+                description="The application accepts weak passwords that don't meet security standards.",
                 evidence="\n".join(policy_issues),
                 remediation="Implement password requirements: minimum 8 characters, "
                 "mix of character types. Check passwords against breached "
@@ -1808,11 +1710,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
             # Check if this is a session-like cookie
             is_session_cookie = (
-                any(
-                    pattern in cookie_name_lower
-                    for pattern in self.SESSION_COOKIE_PATTERNS
-                )
-                or len(cookie_value) > 20
+                any(pattern in cookie_name_lower for pattern in self.SESSION_COOKIE_PATTERNS) or len(cookie_value) > 20
             )
 
             if not is_session_cookie:
@@ -1869,11 +1767,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="Session Cookie with SameSite=None",
                     severity=Severity.LOW,
-                    description=f"Cookie '{cookie_name}' has SameSite=None, allowing "
-                    "cross-site requests.",
+                    description=f"Cookie '{cookie_name}' has SameSite=None, allowing cross-site requests.",
                     evidence=f"Cookie: {cookie_name}",
-                    remediation="Use SameSite=Lax or SameSite=Strict unless cross-site "
-                    "functionality is required.",
+                    remediation="Use SameSite=Lax or SameSite=Strict unless cross-site functionality is required.",
                     metadata={"cookie_name": cookie_name},
                 )
 
@@ -1909,9 +1805,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             if response:
                 for cookie in response.cookies:
                     cookie_name_lower = cookie.name.lower()
-                    if any(
-                        p in cookie_name_lower for p in self.SESSION_COOKIE_PATTERNS
-                    ):
+                    if any(p in cookie_name_lower for p in self.SESSION_COOKIE_PATTERNS):
                         tokens.append((cookie.name, cookie.value))
                         break
 
@@ -1933,8 +1827,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     description=f"Session token '{cookie_name}' is too short "
                     f"({len(token)} chars), indicating low entropy.",
                     evidence=f"Token length: {len(token)} characters",
-                    remediation="Use session tokens with at least 128 bits of entropy "
-                    "(typically 32+ characters).",
+                    remediation="Use session tokens with at least 128 bits of entropy (typically 32+ characters).",
                     metadata={"cookie_name": cookie_name, "token_length": len(token)},
                 )
 
@@ -1947,8 +1840,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     description=f"Session token '{cookie_name}' has low entropy "
                     f"({entropy:.2f} bits/char), making it predictable.",
                     evidence=f"Entropy: {entropy:.2f} bits per character",
-                    remediation="Use cryptographically secure random generation "
-                    "for session tokens.",
+                    remediation="Use cryptographically secure random generation for session tokens.",
                     metadata={"cookie_name": cookie_name, "entropy": entropy},
                 )
 
@@ -1959,11 +1851,9 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="Sequential Session Tokens",
                     severity=Severity.CRITICAL,
-                    description="Session tokens are sequential/predictable, "
-                    "allowing hijacking.",
+                    description="Session tokens are sequential/predictable, allowing hijacking.",
                     evidence=f"Tokens analyzed: {len(token_values)}",
-                    remediation="Use cryptographically secure random number generators "
-                    "for session token generation.",
+                    remediation="Use cryptographically secure random number generators for session token generation.",
                     metadata={"sample_count": len(token_values)},
                 )
 
@@ -1997,10 +1887,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
 
         if len(numeric_parts) >= 2:
             # Check if numbers are sequential
-            diffs = [
-                numeric_parts[i + 1] - numeric_parts[i]
-                for i in range(len(numeric_parts) - 1)
-            ]
+            diffs = [numeric_parts[i + 1] - numeric_parts[i] for i in range(len(numeric_parts) - 1)]
             if len(set(diffs)) == 1 and diffs[0] in [1, -1]:
                 return True
 
@@ -2037,9 +1924,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         if not login_form:
             return
 
-        username_field, password_field, hidden_fields = self._identify_form_fields(
-            login_form
-        )
+        username_field, password_field, hidden_fields = self._identify_form_fields(login_form)
 
         if not username_field or not password_field:
             return
@@ -2075,8 +1960,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                         description=f"Session ID '{cookie_name}' unchanged after "
                         "login, indicating potential session fixation.",
                         evidence=f"Cookie '{cookie_name}' unchanged after auth",
-                        remediation="Regenerate session ID after authentication. "
-                        "Invalidate old session.",
+                        remediation="Regenerate session ID after authentication. Invalidate old session.",
                         metadata={"cookie_name": cookie_name},
                     )
 
@@ -2127,9 +2011,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                     jwts.append((f"Cookie: {cookie.name}", cookie.value))
 
             # Check Authorization header in any inline scripts
-            auth_pattern = (
-                r'["\']?Authorization["\']?\s*:\s*["\']Bearer\s+(eyJ[^"\']+)["\']'
-            )
+            auth_pattern = r'["\']?Authorization["\']?\s*:\s*["\']Bearer\s+(eyJ[^"\']+)["\']'
             auth_matches = re.findall(auth_pattern, response.text)
             for match in auth_matches:
                 jwts.append((f"Script: {url}", match))
@@ -2236,9 +2118,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
     # Phase 6: Rate Limiting and Brute Force Protection
     # =========================================================================
 
-    def _test_rate_limiting(
-        self, target: str, endpoints: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_rate_limiting(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
         """Test for rate limiting and brute force protection."""
         if not self._config.get("test_lockout", True):
             return
@@ -2257,9 +2137,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         if not login_form:
             return
 
-        username_field, password_field, hidden_fields = self._identify_form_fields(
-            login_form
-        )
+        username_field, password_field, hidden_fields = self._identify_form_fields(login_form)
 
         if not username_field or not password_field:
             return
@@ -2372,8 +2250,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
             yield Finding(
                 title="No Brute Force Protection Detected",
                 severity=Severity.HIGH,
-                description=f"No account lockout, rate limiting, or CAPTCHA after "
-                f"{attempts} failed login attempts.",
+                description=f"No account lockout, rate limiting, or CAPTCHA after {attempts} failed login attempts.",
                 evidence=f"Attempted {attempts} failed logins without protection",
                 remediation="Implement brute force protection: account lockout after "
                 "3-5 failed attempts, progressive delays, CAPTCHA challenges, "
@@ -2387,9 +2264,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
     # Phase 7: MFA Detection
     # =========================================================================
 
-    def _test_mfa_presence(
-        self, target: str, endpoints: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_mfa_presence(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
         """Detect presence and configuration of multi-factor authentication."""
         if not self._config.get("test_mfa", True):
             return
@@ -2462,9 +2337,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
     # Phase 8: Password Reset Security
     # =========================================================================
 
-    def _test_password_reset(
-        self, target: str, endpoints: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_password_reset(self, target: str, endpoints: Dict) -> Generator[Finding, None, None]:
         """Test password reset flow security."""
         if not self._config.get("test_password_reset", True):
             return
@@ -2483,8 +2356,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         reset_form = None
         for form in forms:
             has_email = any(
-                f.get("type") == "email" or "email" in f.get("name", "").lower()
-                for f in form.get("fields", [])
+                f.get("type") == "email" or "email" in f.get("name", "").lower() for f in form.get("fields", [])
             )
             if has_email:
                 reset_form = form
@@ -2545,8 +2417,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="User Enumeration via Password Reset",
                     severity=Severity.MEDIUM,
-                    description="Password reset returns different status codes "
-                    "for valid vs invalid emails.",
+                    description="Password reset returns different status codes for valid vs invalid emails.",
                     evidence=f"Status: {values[0]['status']} vs {values[1]['status']}",
                     remediation="Return identical responses for all reset requests.",
                     metadata={"statuses": [v["status"] for v in values]},
@@ -2557,8 +2428,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="User Enumeration via Password Reset Response",
                     severity=Severity.MEDIUM,
-                    description="Password reset returns different response lengths "
-                    "for valid vs invalid emails.",
+                    description="Password reset returns different response lengths for valid vs invalid emails.",
                     evidence=f"Length difference: {length_diff} bytes",
                     remediation="Return identical responses for all reset requests.",
                     metadata={"length_difference": length_diff},
@@ -2593,9 +2463,7 @@ class AuthFailuresAttack(BaseOWASPAttack):
         headers = {"Host": injected_host}
         data = {email_field: "test@test.invalid", **hidden_fields}
 
-        response = self._make_request(
-            form_url, method="POST", data=data, headers=headers
-        )
+        response = self._make_request(form_url, method="POST", data=data, headers=headers)
 
         if response and injected_host in response.text:
             yield Finding(

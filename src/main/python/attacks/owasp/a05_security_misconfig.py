@@ -127,9 +127,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         super().configure(**kwargs)
         self._config["test_headers"] = kwargs.get("test_headers", True)
         self._config["test_defaults"] = kwargs.get("test_defaults", True)
-        self._config["test_directory_listing"] = kwargs.get(
-            "test_directory_listing", True
-        )
+        self._config["test_directory_listing"] = kwargs.get("test_directory_listing", True)
         self._config["test_methods"] = kwargs.get("test_methods", True)
         self._config["custom_credentials"] = kwargs.get("custom_credentials", [])
 
@@ -273,8 +271,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                         severity=Severity.LOW,
                         description=f"Server is exposing version information through {header} header",
                         evidence=f"Header: {header}, Value: {value}",
-                        remediation="Configure your web server to suppress version information "
-                        "in HTTP headers.",
+                        remediation="Configure your web server to suppress version information in HTTP headers.",
                         metadata={"header": header, "value": value},
                     )
 
@@ -340,16 +337,10 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
         # Find username and password field names
         form_inputs = login_form.get("inputs", [])
         username_field = next(
-            (
-                i
-                for i in form_inputs
-                if i.lower() in ["username", "user", "email", "login"]
-            ),
+            (i for i in form_inputs if i.lower() in ["username", "user", "email", "login"]),
             None,
         )
-        password_field = next(
-            (i for i in form_inputs if i.lower() in ["password", "pass", "pwd"]), None
-        )
+        password_field = next((i for i in form_inputs if i.lower() in ["password", "pass", "pwd"]), None)
 
         if not username_field or not password_field:
             self.set_progress(50)
@@ -404,12 +395,8 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                 # Check for redirect to dashboard
                 is_redirect = response.status_code in [301, 302, 303, 307, 308]
 
-                if (has_success and not has_failure) or (
-                    is_redirect and not has_failure
-                ):
-                    cred_display = (
-                        f"{username}:{password}" if password else f"{username}:(empty)"
-                    )
+                if (has_success and not has_failure) or (is_redirect and not has_failure):
+                    cred_display = f"{username}:{password}" if password else f"{username}:(empty)"
                     yield Finding(
                         title="Default/Weak Credentials Found",
                         severity=Severity.CRITICAL,
@@ -420,9 +407,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
                         metadata={
                             "login_url": form_url,
                             "username": username,
-                            "password_hint": password[:2] + "***"
-                            if password
-                            else "(empty)",
+                            "password_hint": password[:2] + "***" if password else "(empty)",
                         },
                     )
                     break  # Stop after finding valid credentials
@@ -495,11 +480,7 @@ class SecurityMisconfigAttack(BaseOWASPAttack):
 
             for method in self.DANGEROUS_METHODS:
                 if method in allow_header.upper():
-                    severity = (
-                        Severity.HIGH
-                        if method in ["PUT", "DELETE"]
-                        else Severity.MEDIUM
-                    )
+                    severity = Severity.HIGH if method in ["PUT", "DELETE"] else Severity.MEDIUM
 
                     yield Finding(
                         title=f"Dangerous HTTP Method Enabled: {method}",

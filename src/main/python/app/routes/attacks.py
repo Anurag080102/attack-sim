@@ -84,9 +84,7 @@ class AttackJob:
             "findings_count": len(self.findings),
             "error": self.error,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat()
-            if self.completed_at
-            else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
 
 
@@ -103,9 +101,7 @@ class AttackManager:
         self._threads: Dict[str, threading.Thread] = {}
         self._lock = threading.Lock()
 
-    def create_job(
-        self, attack_id: str, target: str, config: Dict[str, Any]
-    ) -> Optional[AttackJob]:
+    def create_job(self, attack_id: str, target: str, config: Dict[str, Any]) -> Optional[AttackJob]:
         """
         Create a new attack job.
 
@@ -495,9 +491,7 @@ def list_jobs():
         JSON with list of jobs
     """
     try:
-        limit = validate_integer(
-            request.args.get("limit", 50), "limit", min_value=1, max_value=500
-        )
+        limit = validate_integer(request.args.get("limit", 50), "limit", min_value=1, max_value=500)
     except ValidationError as e:
         return jsonify({"error": e.message}), 400
 

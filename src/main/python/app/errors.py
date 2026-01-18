@@ -149,9 +149,7 @@ class ConflictError(AppError):
         details = details or {}
         if resource_type:
             details["resource_type"] = resource_type
-        super().__init__(
-            message=message, status_code=409, error_code="CONFLICT", details=details
-        )
+        super().__init__(message=message, status_code=409, error_code="CONFLICT", details=details)
 
 
 class RateLimitError(AppError):
@@ -209,9 +207,7 @@ class AttackError(AppError):
             details["attack_id"] = attack_id
         if job_id:
             details["job_id"] = job_id
-        super().__init__(
-            message=message, status_code=500, error_code="ATTACK_ERROR", details=details
-        )
+        super().__init__(message=message, status_code=500, error_code="ATTACK_ERROR", details=details)
 
 
 class ReportError(AppError):
@@ -226,9 +222,7 @@ class ReportError(AppError):
         details = details or {}
         if report_id:
             details["report_id"] = report_id
-        super().__init__(
-            message=message, status_code=500, error_code="REPORT_ERROR", details=details
-        )
+        super().__init__(message=message, status_code=500, error_code="REPORT_ERROR", details=details)
 
 
 class ConfigurationError(AppError):
@@ -303,9 +297,7 @@ def register_error_handlers(app: Flask) -> None:
             "success": False,
             "error": {
                 "code": "METHOD_NOT_ALLOWED",
-                "message": f"Method '{request.method}' is not allowed for URL '{
-                    request.path
-                }'",
+                "message": f"Method '{request.method}' is not allowed for URL '{request.path}'",
             },
         }
         return jsonify(response), 405

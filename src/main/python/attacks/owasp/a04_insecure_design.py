@@ -371,8 +371,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
                     severity=Severity.LOW,
                     description=f"Sensitive form ({form_type}) does not have CAPTCHA protection. "
                     "This could allow automated attacks.",
-                    evidence=f"Page: {form_page}, Form action: {form_action}, "
-                    f"No CAPTCHA patterns found",
+                    evidence=f"Page: {form_page}, Form action: {form_action}, No CAPTCHA patterns found",
                     remediation="Implement CAPTCHA (reCAPTCHA, hCaptcha, or similar) on "
                     "sensitive forms to prevent automated submissions.",
                     metadata={
@@ -384,9 +383,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
 
         self.set_progress(50)
 
-    def _test_predictable_resources(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _test_predictable_resources(self, target: str) -> Generator[Finding, None, None]:
         """Test for predictable resource locations and sequential IDs."""
         if not self._config.get("test_predictable", True):
             return
@@ -459,9 +456,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
                 is_actual_file = False
 
                 if ".git" in file_path:
-                    is_actual_file = (
-                        "[core]" in response.text or "[remote" in response.text
-                    )
+                    is_actual_file = "[core]" in response.text or "[remote" in response.text
                 elif file_path.endswith(".env"):
                     is_actual_file = "=" in response.text and (
                         "KEY" in response.text.upper()
@@ -477,9 +472,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
                         or "SELECT" in response.text.upper()
                     )
                 elif file_path.endswith(".php"):
-                    is_actual_file = (
-                        "<?php" in response.text or "phpinfo" in response.text.lower()
-                    )
+                    is_actual_file = "<?php" in response.text or "phpinfo" in response.text.lower()
                 else:
                     # Generic check - if it has some content, consider it found
                     is_actual_file = content_length > 100
@@ -507,8 +500,7 @@ class InsecureDesignAttack(BaseOWASPAttack):
                         severity=severity,
                         description=f"Sensitive file '{file_path}' is publicly accessible. "
                         "This may expose configuration, credentials, or source code.",
-                        evidence=f"URL: {test_url}, Size: {content_length} bytes, "
-                        f"Content-Type: {content_type}",
+                        evidence=f"URL: {test_url}, Size: {content_length} bytes, Content-Type: {content_type}",
                         remediation="Remove sensitive files from web root. "
                         "Configure web server to deny access to sensitive files. "
                         "Use .htaccess or nginx configuration to block access.",

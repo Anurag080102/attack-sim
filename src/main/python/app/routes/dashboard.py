@@ -109,9 +109,7 @@ def attack_config_page(attack_id: str):
                 "placeholder": option.get("placeholder", ""),
             }
 
-    return render_template(
-        "attack_config.html", attack=attack_info, active_page="dashboard"
-    )
+    return render_template("attack_config.html", attack=attack_info, active_page="dashboard")
 
 
 @dashboard_bp.route("/api/info")

@@ -435,9 +435,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
         return None
 
-    def _check_host_availability(
-        self, hostname: str, port: int = 80, timeout: int = 5
-    ) -> bool:
+    def _check_host_availability(self, hostname: str, port: int = 80, timeout: int = 5) -> bool:
         """
         Check if host is reachable on specified port.
 
@@ -615,11 +613,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
                 # Extract all links
                 for link_tag in soup.find_all(["a", "link", "script", "img", "form"]):
-                    href = (
-                        link_tag.get("href")
-                        or link_tag.get("src")
-                        or link_tag.get("action")
-                    )
+                    href = link_tag.get("href") or link_tag.get("src") or link_tag.get("action")
 
                     if not href:
                         continue
@@ -644,10 +638,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                         )
                     )
 
-                    if (
-                        clean_url not in discovered_urls
-                        and clean_url not in crawled_urls
-                    ):
+                    if clean_url not in discovered_urls and clean_url not in crawled_urls:
                         discovered_urls.add(clean_url)
                         if not self._is_static_resource(clean_url):
                             queue.append((clean_url, depth + 1))
@@ -788,9 +779,8 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             return Finding(
                 title="Broken Access Control Detected",
                 severity=severity,
-                description="Sensitive administrative content accessible without proper authorization",
-                evidence=f"URL: {url}\nIssues found:\n"
-                + "\n".join(f"- {issue}" for issue in issues),
+                description=("Sensitive administrative content accessible without proper authorization"),
+                evidence=f"URL: {url}\nIssues found:\n" + "\n".join(f"- {issue}" for issue in issues),
                 remediation=(
                     "1. Implement proper authentication and authorization checks\n"
                     "2. Use role-based access control (RBAC)\n"
@@ -815,9 +805,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
         base_url = self._normalize_url(target)
 
         # Start with predefined paths
-        all_paths = list(
-            self.PROTECTED_PATHS + self._config.get("additional_paths", [])
-        )
+        all_paths = list(self.PROTECTED_PATHS + self._config.get("additional_paths", []))
 
         # Crawl website to discover additional URLs
         if self._config.get("enable_crawling", True):
@@ -911,16 +899,18 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
                         if response and response.status_code == 200:
                             # Check for signs of file content disclosure
-                            if self._check_path_traversal_success(
-                                response.text, sensitive_file
-                            ):
+                            if self._check_path_traversal_success(response.text, sensitive_file):
                                 yield Finding(
                                     title="Path Traversal Vulnerability",
                                     severity=Severity.CRITICAL,
-                                    description="Path traversal vulnerability allows reading sensitive files",
-                                    evidence=f"URL: {test_url}, Response contains sensitive file content",
-                                    remediation="Sanitize file path inputs. Use allowlists for permitted files. "
-                                    "Avoid using user input directly in file operations.",
+                                    description=("Path traversal vulnerability allows reading sensitive files"),
+                                    evidence=(f"URL: {test_url}, Response contains sensitive file content"),
+                                    remediation=(
+                                        "Sanitize file path inputs. "
+                                        "Use allowlists for permitted files. "
+                                        "Avoid using user input directly "
+                                        "in file operations."
+                                    ),
                                     metadata={
                                         "endpoint": endpoint,
                                         "payload": payload,
@@ -992,9 +982,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                     if self.is_cancelled():
                         return
 
-                    test_url = self._build_url(
-                        base_url, endpoint.replace("{id}", str(test_id))
-                    )
+                    test_url = self._build_url(base_url, endpoint.replace("{id}", str(test_id)))
                     response = self._make_request(test_url)
 
                     if response and response.status_code == 200:
@@ -1017,9 +1005,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                                     "endpoint": endpoint,
                                     "baseline_id": 1,
                                     "test_id": test_id,
-                                    "baseline_length": baseline_responses[endpoint][
-                                        "length"
-                                    ],
+                                    "baseline_length": baseline_responses[endpoint]["length"],
                                     "test_length": len(response.text),
                                 },
                             )
@@ -1059,16 +1045,10 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                 # 2. Method is not GET (GET is expected)
                 # 3. Method is not OPTIONS (OPTIONS is normal for CORS)
                 # 4. Response contains actual protected content (not just login page)
-                if (
-                    response
-                    and response.status_code == 200
-                    and method not in ["GET", "OPTIONS"]
-                ):
+                if response and response.status_code == 200 and method not in ["GET", "OPTIONS"]:
                     # Verify this isn't just a redirect to login or empty response
                     finding = self._analyze_response_content(url, response)
-                    if (
-                        finding
-                    ):  # Only flag if content analysis confirms protected access
+                    if finding:  # Only flag if content analysis confirms protected access
                         vulnerable_methods.append(method)
                         if method not in vulnerable_paths:
                             vulnerable_paths[method] = []
@@ -1089,7 +1069,9 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
             method_details = "\n".join(
                 [
-                    f"- {method}: {len(vulnerable_paths[method])} path(s) ({', '.join(vulnerable_paths[method][:2])}{'...' if len(vulnerable_paths[method]) > 2 else ''})"
+                    f"- {method}: {len(vulnerable_paths[method])} path(s) "
+                    f"({', '.join(vulnerable_paths[method][:2])}"
+                    f"{'...' if len(vulnerable_paths[method]) > 2 else ''})"
                     for method in unique_methods
                 ]
             )
@@ -1097,9 +1079,19 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             yield Finding(
                 title="HTTP Method Bypass Vulnerabilities",
                 severity=severity,
-                description=f"Protected resources accessible via {len(unique_methods)} different HTTP methods that should be blocked",
+                description=(
+                    f"Protected resources accessible via "
+                    f"{len(unique_methods)} different HTTP methods "
+                    "that should be blocked"
+                ),
                 evidence=f"Vulnerable methods:\n{method_details}",
-                remediation="Implement proper method-based access controls. Configure web server to only allow necessary HTTP methods (typically GET and POST). Block PUT, DELETE, PATCH, HEAD, OPTIONS on protected resources unless explicitly required.",
+                remediation=(
+                    "Implement proper method-based access controls. "
+                    "Configure web server to only allow necessary "
+                    "HTTP methods (typically GET and POST). "
+                    "Block PUT, DELETE, PATCH, HEAD, OPTIONS on "
+                    "protected resources unless explicitly required."
+                ),
                 metadata={
                     "vulnerable_methods": unique_methods,
                     "vulnerable_paths": vulnerable_paths,
@@ -1143,9 +1135,23 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             yield Finding(
                 title="Header Manipulation Bypass Vulnerabilities",
                 severity=Severity.MEDIUM,
-                description=f"Access control can be bypassed using {len(unique_headers)} different header manipulation techniques",
-                evidence=f"Vulnerable headers: {', '.join(unique_headers)}\nAffected paths: {len(vulnerable_paths)} ({', '.join(list(vulnerable_paths)[:3])}{'...' if len(vulnerable_paths) > 3 else ''})",
-                remediation="Implement proper access control that cannot be bypassed by request headers. Validate authentication on the server side, not based on client-supplied headers.",
+                description=(
+                    f"Access control can be bypassed using "
+                    f"{len(unique_headers)} different header "
+                    "manipulation techniques"
+                ),
+                evidence=(
+                    f"Vulnerable headers: {', '.join(unique_headers)}\n"
+                    f"Affected paths: {len(vulnerable_paths)} "
+                    f"({', '.join(list(vulnerable_paths)[:3])}"
+                    f"{'...' if len(vulnerable_paths) > 3 else ''})"
+                ),
+                remediation=(
+                    "Implement proper access control that cannot be "
+                    "bypassed by request headers. Validate authentication "
+                    "on the server side, not based on client-supplied "
+                    "headers."
+                ),
                 metadata={
                     "vulnerable_headers": unique_headers,
                     "vulnerable_paths": list(vulnerable_paths),
@@ -1188,10 +1194,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
                 if response and response.status_code == 200:
                     # Check if it's not just a 404 page
-                    if (
-                        len(response.text) > 100
-                        and "not found" not in response.text.lower()
-                    ):
+                    if len(response.text) > 100 and "not found" not in response.text.lower():
                         exposed_files.append(
                             {
                                 "url": test_url,
@@ -1205,12 +1208,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
         # Yield single consolidated finding if backup files found
         if exposed_files:
-            file_details = "\n".join(
-                [
-                    f"- {f['file']}{f['pattern']} ({f['size']} bytes)"
-                    for f in exposed_files
-                ]
-            )
+            file_details = "\n".join([f"- {f['file']}{f['pattern']} ({f['size']} bytes)" for f in exposed_files])
             urls_list = "\n".join([f"  {f['url']}" for f in exposed_files[:5]])
             if len(exposed_files) > 5:
                 urls_list += f"\n  ... and {len(exposed_files) - 5} more"
@@ -1218,9 +1216,20 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             yield Finding(
                 title="Exposed Backup and Temporary Files",
                 severity=Severity.HIGH,
-                description=f"Found {len(exposed_files)} exposed backup/temporary files that may contain sensitive information",
+                description=(
+                    f"Found {len(exposed_files)} exposed backup/temporary files that may contain sensitive information"
+                ),
                 evidence=f"Exposed files:\n{file_details}\n\nURLs:\n{urls_list}",
-                remediation="1. Remove all backup and temporary files from web-accessible directories\n2. Configure web server to deny access to backup file extensions (.bak, .old, .tmp, ~, etc.)\n3. Add file patterns to .htaccess or web.config to block access\n4. Use proper backup procedures that store files outside the web root",
+                remediation=(
+                    "1. Remove all backup and temporary files from "
+                    "web-accessible directories\n"
+                    "2. Configure web server to deny access to backup "
+                    "file extensions (.bak, .old, .tmp, ~, etc.)\n"
+                    "3. Add file patterns to .htaccess or web.config "
+                    "to block access\n"
+                    "4. Use proper backup procedures that store files "
+                    "outside the web root"
+                ),
                 metadata={
                     "exposed_files": exposed_files,
                     "total_files": len(exposed_files),
@@ -1251,10 +1260,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                 if response and response.status_code == 200:
                     # Look for elevated access indicators
                     content_lower = response.text.lower()
-                    if any(
-                        keyword in content_lower
-                        for keyword in ["admin", "privilege", "elevated", "role"]
-                    ):
+                    if any(keyword in content_lower for keyword in ["admin", "privilege", "elevated", "role"]):
                         vulnerable_params.append(
                             {
                                 "url": test_url,
@@ -1270,10 +1276,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
         if vulnerable_params:
             unique_params = list(set([p["parameter"] for p in vulnerable_params]))
             param_details = "\n".join(
-                [
-                    f"- {p['parameter']}={p['value']} on {p['endpoint']}"
-                    for p in vulnerable_params
-                ]
+                [f"- {p['parameter']}={p['value']} on {p['endpoint']}" for p in vulnerable_params]
             )
             urls_list = "\n".join([f"  {p['url']}" for p in vulnerable_params[:5]])
             if len(vulnerable_params) > 5:
@@ -1282,9 +1285,20 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             yield Finding(
                 title="Parameter-Based Privilege Escalation Vulnerabilities",
                 severity=Severity.CRITICAL,
-                description=f"Found {len(vulnerable_params)} parameter manipulation vectors that may grant elevated privileges",
-                evidence=f"Vulnerable parameters:\n{param_details}\n\nTest URLs:\n{urls_list}",
-                remediation="1. Never trust client-side parameters for access control decisions\n2. Implement server-side authorization checks for all sensitive operations\n3. Use session-based role management instead of parameter-based\n4. Validate and sanitize all user input\n5. Apply principle of least privilege",
+                description=(
+                    f"Found {len(vulnerable_params)} parameter manipulation vectors that may grant elevated privileges"
+                ),
+                evidence=(f"Vulnerable parameters:\n{param_details}\n\nTest URLs:\n{urls_list}"),
+                remediation=(
+                    "1. Never trust client-side parameters for access "
+                    "control decisions\n"
+                    "2. Implement server-side authorization checks for all "
+                    "sensitive operations\n"
+                    "3. Use session-based role management instead of "
+                    "parameter-based\n"
+                    "4. Validate and sanitize all user input\n"
+                    "5. Apply principle of least privilege"
+                ),
                 metadata={
                     "vulnerable_parameters": vulnerable_params,
                     "unique_params": unique_params,
@@ -1322,9 +1336,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
                 if response and response.status_code == 200:
                     finding = self._analyze_response_content(url, response)
                     if finding:
-                        vulnerable_cookies.append(
-                            {"url": url, "path": path, "cookies": cookie_dict}
-                        )
+                        vulnerable_cookies.append({"url": url, "path": path, "cookies": cookie_dict})
 
                 # Clear cookies for next test
                 session.cookies.clear()
@@ -1345,9 +1357,18 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             yield Finding(
                 title="Cookie-Based Privilege Escalation Vulnerabilities",
                 severity=Severity.CRITICAL,
-                description=f"Found {len(vulnerable_cookies)} cookie manipulation vectors that grant elevated access",
-                evidence=f"Vulnerable cookies:\n{cookie_details}\n\nAffected URLs:\n{urls_list}",
-                remediation="1. Never trust client-side cookies for authorization decisions\n2. Use secure, server-side session management\n3. Implement proper authentication tokens (JWT with signing)\n4. Set HttpOnly and Secure flags on all cookies\n5. Validate user permissions on every request server-side",
+                description=(f"Found {len(vulnerable_cookies)} cookie manipulation vectors that grant elevated access"),
+                evidence=(f"Vulnerable cookies:\n{cookie_details}\n\nAffected URLs:\n{urls_list}"),
+                remediation=(
+                    "1. Never trust client-side cookies for authorization "
+                    "decisions\n"
+                    "2. Use secure, server-side session management\n"
+                    "3. Implement proper authentication tokens "
+                    "(JWT with signing)\n"
+                    "4. Set HttpOnly and Secure flags on all cookies\n"
+                    "5. Validate user permissions on every request "
+                    "server-side"
+                ),
                 metadata={
                     "vulnerable_cookies": vulnerable_cookies,
                     "total_vectors": len(vulnerable_cookies),
@@ -1378,7 +1399,9 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
         yield Finding(
             title="Broken Access Control Scan Started",
             severity=Severity.INFO,
-            description="Starting enhanced scan for broken access control vulnerabilities with crawling and ML-like URL scoring",
+            description=(
+                "Starting enhanced scan for broken access control vulnerabilities with crawling and ML-like URL scoring"
+            ),
             evidence=f"Target: {target}",
             remediation="N/A - Informational",
             metadata={"target": target},
@@ -1386,9 +1409,7 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
         try:
             # Pre-flight checks: DNS and host availability
-            parsed = urlparse(
-                target if target.startswith("http") else f"http://{target}"
-            )
+            parsed = urlparse(target if target.startswith("http") else f"http://{target}")
             hostname = parsed.hostname or parsed.path.split("/")[0]
             port = parsed.port or (443 if parsed.scheme == "https" else 80)
 
@@ -1475,15 +1496,11 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
 
             # Add top scored URLs
             if self._scored_urls:
-                evidence_parts.append(
-                    "\n=== Top Scored URLs (Most Likely Sensitive) ==="
-                )
+                evidence_parts.append("\n=== Top Scored URLs (Most Likely Sensitive) ===")
                 for url, score in self._scored_urls[:10]:
                     evidence_parts.append(f"- [{score:.1f}] {url}")
                 if len(self._scored_urls) > 10:
-                    evidence_parts.append(
-                        f"  ... and {len(self._scored_urls) - 10} more high-scoring URLs"
-                    )
+                    evidence_parts.append(f"  ... and {len(self._scored_urls) - 10} more high-scoring URLs")
 
             # Add all crawled URLs
             evidence_parts.append("\n=== All Crawled URLs ===")
@@ -1491,23 +1508,17 @@ class BrokenAccessControlAttack(BaseOWASPAttack):
             for url in sorted_crawled[:50]:
                 evidence_parts.append(f"- {url}")
             if len(sorted_crawled) > 50:
-                evidence_parts.append(
-                    f"  ... and {len(sorted_crawled) - 50} more crawled URLs"
-                )
+                evidence_parts.append(f"  ... and {len(sorted_crawled) - 50} more crawled URLs")
 
             # Add all discovered URLs (that weren't necessarily crawled)
             non_crawled = self._discovered_urls - self._crawled_urls
             if non_crawled:
-                evidence_parts.append(
-                    "\n=== Additional Discovered URLs (Not Crawled) ==="
-                )
+                evidence_parts.append("\n=== Additional Discovered URLs (Not Crawled) ===")
                 sorted_discovered = sorted(non_crawled)
                 for url in sorted_discovered[:30]:
                     evidence_parts.append(f"- {url}")
                 if len(sorted_discovered) > 30:
-                    evidence_parts.append(
-                        f"  ... and {len(sorted_discovered) - 30} more discovered URLs"
-                    )
+                    evidence_parts.append(f"  ... and {len(sorted_discovered) - 30} more discovered URLs")
 
             yield Finding(
                 title="URL Discovery Summary",

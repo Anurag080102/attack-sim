@@ -34,9 +34,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
     """
 
     name = "Cryptographic Failures Scanner"
-    description = (
-        "Detects cryptographic vulnerabilities including weak SSL/TLS and cipher suites"
-    )
+    description = "Detects cryptographic vulnerabilities including weak SSL/TLS and cipher suites"
     category = OWASPCategory.A02_CRYPTOGRAPHIC_FAILURES
 
     # AGGRESSIVE: All weak cipher suites and vulnerable patterns
@@ -269,9 +267,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         self._config["check_sensitive_data"] = True
         self._config["check_certificate_chain"] = True
         self._config["check_common_ssl_endpoints"] = True
-        self._config["ssl_timeout"] = kwargs.get(
-            "ssl_timeout", 8
-        )  # Longer timeout for aggressive
+        self._config["ssl_timeout"] = kwargs.get("ssl_timeout", 8)  # Longer timeout for aggressive
 
     def get_config_options(self) -> Dict[str, Any]:
         """Get configuration options - simplified for aggressive mode."""
@@ -330,9 +326,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
 
-            with socket.create_connection(
-                (hostname, port), timeout=self._config.get("ssl_timeout", 5)
-            ) as sock:
+            with socket.create_connection((hostname, port), timeout=self._config.get("ssl_timeout", 5)) as sock:
                 with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                     # Get certificate in both binary and parsed forms
                     ssock.getpeercert(binary_form=True)
@@ -348,18 +342,14 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                         for item in cert.get("issuer", []):
                             for key, value in item:
                                 issuer_parts.append(f"{key}={value}")
-                        cert_info["issuer"] = (
-                            ", ".join(issuer_parts) if issuer_parts else "Unknown"
-                        )
+                        cert_info["issuer"] = ", ".join(issuer_parts) if issuer_parts else "Unknown"
 
                         # Extract subject
                         subject_parts = []
                         for item in cert.get("subject", []):
                             for key, value in item:
                                 subject_parts.append(f"{key}={value}")
-                        cert_info["subject"] = (
-                            ", ".join(subject_parts) if subject_parts else "Unknown"
-                        )
+                        cert_info["subject"] = ", ".join(subject_parts) if subject_parts else "Unknown"
 
                         # Parse expiration date safely
                         if "notAfter" in cert:
@@ -373,22 +363,14 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                                 ]:
                                     try:
                                         expiry_date = datetime.strptime(expiry_str, fmt)
-                                        cert_info["expiry_date"] = (
-                                            expiry_date.isoformat()
-                                        )
-                                        cert_info["days_until_expiry"] = (
-                                            expiry_date - datetime.now()
-                                        ).days
-                                        cert_info["is_expired"] = (
-                                            expiry_date < datetime.now()
-                                        )
+                                        cert_info["expiry_date"] = expiry_date.isoformat()
+                                        cert_info["days_until_expiry"] = (expiry_date - datetime.now()).days
+                                        cert_info["is_expired"] = expiry_date < datetime.now()
                                         break
                                     except ValueError:
                                         continue
                             except Exception as e:
-                                cert_info["expiry_date"] = cert.get(
-                                    "notAfter", "Unknown"
-                                )
+                                cert_info["expiry_date"] = cert.get("notAfter", "Unknown")
                                 cert_info["expiry_parse_error"] = str(e)
 
                         # Parse start date
@@ -406,14 +388,10 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                                     except ValueError:
                                         continue
                             except Exception:
-                                cert_info["start_date"] = cert.get(
-                                    "notBefore", "Unknown"
-                                )
+                                cert_info["start_date"] = cert.get("notBefore", "Unknown")
 
                         # Check if self-signed
-                        cert_info["is_self_signed"] = cert_info.get(
-                            "issuer"
-                        ) == cert_info.get("subject")
+                        cert_info["is_self_signed"] = cert_info.get("issuer") == cert_info.get("subject")
 
                         # Extract serial number
                         cert_info["serial_number"] = cert.get("serialNumber", "Unknown")
@@ -427,12 +405,8 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                         "cipher": cipher,
                         "version": version,
                         "cipher_name": cipher[0] if cipher else None,
-                        "cipher_protocol": cipher[1]
-                        if cipher and len(cipher) > 1
-                        else None,
-                        "cipher_bits": cipher[2]
-                        if cipher and len(cipher) > 2
-                        else None,
+                        "cipher_protocol": cipher[1] if cipher and len(cipher) > 1 else None,
+                        "cipher_bits": cipher[2] if cipher and len(cipher) > 2 else None,
                     }
         except socket.timeout:
             return {"error": "timeout", "message": "SSL connection timed out"}
@@ -443,9 +417,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
         except Exception as e:
             return {"error": "unknown", "message": str(e)}
 
-    def _check_deprecated_protocols(
-        self, hostname: str, port: int = 443
-    ) -> List[Tuple[str, bool, Optional[str]]]:
+    def _check_deprecated_protocols(self, hostname: str, port: int = 443) -> List[Tuple[str, bool, Optional[str]]]:
         """
         Check which deprecated protocols are supported with detailed error reporting.
 
@@ -464,9 +436,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                 context.check_hostname = False
                 context.verify_mode = ssl.CERT_NONE
 
-                with socket.create_connection(
-                    (hostname, port), timeout=self._config.get("ssl_timeout", 5)
-                ) as sock:
+                with socket.create_connection((hostname, port), timeout=self._config.get("ssl_timeout", 5)) as sock:
                     with context.wrap_socket(sock, server_hostname=hostname):
                         results.append((proto_name, True, None))
             except ssl.SSLError as e:
@@ -535,8 +505,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="No HTTPS Available",
                     severity=Severity.HIGH,
-                    description="The target does not appear to support HTTPS. "
-                    "All data is transmitted in plain text.",
+                    description="The target does not appear to support HTTPS. All data is transmitted in plain text.",
                     evidence=f"Host: {hostname}, Port 443 not responding to SSL/TLS",
                     remediation="Enable HTTPS with a valid SSL/TLS certificate. "
                     "Use TLS 1.2 or higher with strong cipher suites. "
@@ -636,9 +605,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                     title="Weak Cipher Key Length",
                     severity=Severity.MEDIUM,
                     description=f"The cipher key length is too short: {cipher_bits} bits",
-                    evidence=f"Cipher: {cipher_name}\n"
-                    f"Key Bits: {cipher_bits}\n"
-                    f"Protocol: {cipher_protocol}",
+                    evidence=f"Cipher: {cipher_name}\nKey Bits: {cipher_bits}\nProtocol: {cipher_protocol}",
                     remediation="Use ciphers with at least 128-bit key length. "
                     "256-bit AES-GCM is recommended for maximum security.",
                     metadata={"cipher": cipher_name, "bits": cipher_bits},
@@ -661,9 +628,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                 )
 
         # Check for deprecated protocol support
-        deprecated = self._check_deprecated_protocols(
-            hostname, 443 if port == 80 else port
-        )
+        deprecated = self._check_deprecated_protocols(hostname, 443 if port == 80 else port)
 
         supported_deprecated = []
         for proto_name, is_supported, error_msg in deprecated:
@@ -741,9 +706,11 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                 yield Finding(
                     title="HSTS Missing includeSubDomains",
                     severity=Severity.LOW,
-                    description="HSTS header does not include includeSubDomains directive",
+                    description=("HSTS header does not include includeSubDomains directive"),
                     evidence=f"Header: {hsts_value}",
-                    remediation="Add includeSubDomains to HSTS: Strict-Transport-Security: max-age=31536000; includeSubDomains",
+                    remediation=(
+                        "Add includeSubDomains to HSTS: Strict-Transport-Security: max-age=31536000; includeSubDomains"
+                    ),
                     metadata={"hsts_value": hsts_value},
                 )
 
@@ -770,9 +737,7 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
 
         self.set_progress(66)
 
-    def _test_sensitive_data_exposure(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _test_sensitive_data_exposure(self, target: str) -> Generator[Finding, None, None]:
         """Scan for sensitive data exposure in responses - SUPER AGGRESSIVE mode."""
         base_url = self._normalize_url(target)
 
@@ -989,13 +954,9 @@ class CryptographicFailuresAttack(BaseOWASPAttack):
                         else:
                             redacted = "***REDACTED***"
 
-                        found_issues[description].append(
-                            {"url": url, "match": redacted, "endpoint": endpoint}
-                        )
+                        found_issues[description].append({"url": url, "match": redacted, "endpoint": endpoint})
 
-            time.sleep(
-                self._delay_between_requests * 0.3
-            )  # Faster for super aggressive
+            time.sleep(self._delay_between_requests * 0.3)  # Faster for super aggressive
 
         # Consolidate findings by type
         for description, occurrences in found_issues.items():

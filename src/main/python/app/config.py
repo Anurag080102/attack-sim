@@ -98,9 +98,7 @@ class ProductionConfig(Config):
     def __init__(self):
         """Initialize production config with validation."""
         if not self.SECRET_KEY:
-            raise ValueError(
-                "SECRET_KEY environment variable must be set in production"
-            )
+            raise ValueError("SECRET_KEY environment variable must be set in production")
 
 
 # Configuration dictionary for easy access

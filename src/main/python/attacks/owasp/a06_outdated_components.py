@@ -286,9 +286,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             if match:
                 version = match.group(1) if match.groups() else "unknown"
 
-                self._detected_components.append(
-                    {"name": name, "version": version, "source": "header"}
-                )
+                self._detected_components.append({"name": name, "version": version, "source": "header"})
 
                 # Check if version is outdated/vulnerable
                 is_vulnerable = False
@@ -311,8 +309,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     severity=severity,
                     description=f"Detected {name} version {version}. {status_msg}",
                     evidence=f"Header: {server_header or x_powered_by}",
-                    remediation="Keep server software up to date. "
-                    "Consider hiding version information in production.",
+                    remediation="Keep server software up to date. Consider hiding version information in production.",
                     metadata={
                         "software": name,
                         "version": version,
@@ -322,9 +319,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
         self.set_progress(25)
 
-    def _detect_javascript_libraries(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _detect_javascript_libraries(self, target: str) -> Generator[Finding, None, None]:
         """Detect JavaScript libraries from page source and script files."""
         if not self._config.get("detect_js_libs", True):
             return
@@ -365,9 +360,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
             if match:
                 version = match.group(1) if match.groups() else "unknown"
 
-                self._detected_components.append(
-                    {"name": lib_name, "version": version, "source": "javascript"}
-                )
+                self._detected_components.append({"name": lib_name, "version": version, "source": "javascript"})
 
                 # Cross-reference against known vulnerability database
                 vulns_found = []
@@ -384,8 +377,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                             severity=Severity.HIGH,
                             description=f"{lib_name} version {version} has known vulnerabilities",
                             evidence=f"CVE: {cve}, Description: {description}",
-                            remediation=f"Update {lib_name} to the latest version. "
-                            f"Check for security advisories.",
+                            remediation=f"Update {lib_name} to the latest version. Check for security advisories.",
                             metadata={
                                 "library": lib_name,
                                 "version": version,
@@ -453,9 +445,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                 if version_match:
                     version = version_match.group(1)
 
-                self._detected_components.append(
-                    {"name": cms_name, "version": version, "source": "cms_detection"}
-                )
+                self._detected_components.append({"name": cms_name, "version": version, "source": "cms_detection"})
 
                 # Check if potentially vulnerable
                 is_vulnerable = False
@@ -472,11 +462,7 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
                     severity=severity,
                     description=f"Detected {cms_name}"
                     + (f" version {version}" if version != "unknown" else "")
-                    + (
-                        ". This version may have known vulnerabilities."
-                        if is_vulnerable
-                        else ""
-                    ),
+                    + (". This version may have known vulnerabilities." if is_vulnerable else ""),
                     evidence="Detection pattern matched in page source",
                     remediation=f"Keep {cms_name} and all plugins/modules up to date. "
                     "Subscribe to security advisories.",
@@ -506,18 +492,14 @@ class OutdatedComponentsAttack(BaseOWASPAttack):
 
         self.set_progress(75)
 
-    def _check_known_vulnerabilities(
-        self, target: str
-    ) -> Generator[Finding, None, None]:
+    def _check_known_vulnerabilities(self, target: str) -> Generator[Finding, None, None]:
         """Cross-reference detected components with known CVEs."""
         if not self._config.get("check_cves", True):
             return
 
         # Summary of all detected components
         if self._detected_components:
-            components_summary = ", ".join(
-                f"{c['name']}  {c['version']} " for c in self._detected_components
-            )
+            components_summary = ", ".join(f"{c['name']}  {c['version']} " for c in self._detected_components)
 
             yield Finding(
                 title="Component Detection Summary",

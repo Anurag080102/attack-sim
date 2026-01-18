@@ -29,9 +29,7 @@ class InjectionAttack(BaseOWASPAttack):
     """
 
     name = "Injection Scanner"
-    description = (
-        "Detects injection vulnerabilities including SQL, XSS, and command injection"
-    )
+    description = "Detects injection vulnerabilities including SQL, XSS, and command injection"
     category = OWASPCategory.A03_INJECTION
 
     # SQL Injection payloads
@@ -292,9 +290,7 @@ class InjectionAttack(BaseOWASPAttack):
 
         return inputs
 
-    def _test_sql_injection(
-        self, target: str, inputs: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_sql_injection(self, target: str, inputs: Dict) -> Generator[Finding, None, None]:
         """Test for SQL injection vulnerabilities."""
         if not self._config.get("test_sql", True):
             return
@@ -327,8 +323,7 @@ class InjectionAttack(BaseOWASPAttack):
                                 title="SQL Injection Vulnerability",
                                 severity=Severity.CRITICAL,
                                 description=f"SQL injection vulnerability found in parameter '{param}'",
-                                evidence=f"URL: {test_url[:100]}..., "
-                                f"Error pattern matched: {pattern[:50]}",
+                                evidence=f"URL: {test_url[:100]}..., Error pattern matched: {pattern[:50]}",
                                 remediation="Use parameterized queries or prepared statements. "
                                 "Never concatenate user input directly into SQL queries. "
                                 "Implement input validation and use ORM frameworks.",
@@ -361,9 +356,7 @@ class InjectionAttack(BaseOWASPAttack):
                     data[input_name] = payload
 
                     if method == "POST":
-                        response = self._make_request(
-                            form_url, method="POST", data=data
-                        )
+                        response = self._make_request(form_url, method="POST", data=data)
                     else:
                         response = self._make_request(form_url, params=data)
 
@@ -374,8 +367,7 @@ class InjectionAttack(BaseOWASPAttack):
                                     title="SQL Injection in Form",
                                     severity=Severity.CRITICAL,
                                     description=f"SQL injection found in form field '{input_name}'",
-                                    evidence=f"Form: {form_url}, Field: {input_name}, "
-                                    f"Method: {method}",
+                                    evidence=f"Form: {form_url}, Field: {input_name}, Method: {method}",
                                     remediation="Use parameterized queries. Validate and sanitize "
                                     "all form inputs before using in database queries.",
                                     metadata={
@@ -457,9 +449,7 @@ class InjectionAttack(BaseOWASPAttack):
                     data[input_name] = payload
 
                     if method == "POST":
-                        response = self._make_request(
-                            form_url, method="POST", data=data
-                        )
+                        response = self._make_request(form_url, method="POST", data=data)
                     else:
                         response = self._make_request(form_url, params=data)
 
@@ -483,9 +473,7 @@ class InjectionAttack(BaseOWASPAttack):
 
                     time.sleep(self._delay_between_requests)
 
-    def _test_command_injection(
-        self, target: str, inputs: Dict
-    ) -> Generator[Finding, None, None]:
+    def _test_command_injection(self, target: str, inputs: Dict) -> Generator[Finding, None, None]:
         """Test for command injection vulnerabilities."""
         if not self._config.get("test_cmd", True):
             return
@@ -542,8 +530,7 @@ class InjectionAttack(BaseOWASPAttack):
                                 title="Command Injection Vulnerability",
                                 severity=Severity.CRITICAL,
                                 description=f"OS command injection in parameter '{param}'",
-                                evidence=f"URL: {test_url[:100]}..., "
-                                f"Command output pattern found: {pattern[:30]}",
+                                evidence=f"URL: {test_url[:100]}..., Command output pattern found: {pattern[:30]}",
                                 remediation="Never pass user input directly to system commands. "
                                 "Use allowlists for permitted operations. "
                                 "Implement proper input validation and sandboxing.",
@@ -590,8 +577,7 @@ class InjectionAttack(BaseOWASPAttack):
                 severity=Severity.INFO,
                 description=f"Found {len(inputs.get('forms', []))} forms and "
                 f"{len(inputs.get('url_params', []))} URL parameters",
-                evidence=f"Forms: {len(inputs.get('forms', []))}, "
-                f"Params: {inputs.get('url_params', [])}",
+                evidence=f"Forms: {len(inputs.get('forms', []))}, Params: {inputs.get('url_params', [])}",
                 remediation="N/A - Informational",
                 metadata={"inputs": inputs},
             )

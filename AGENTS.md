@@ -6,6 +6,22 @@ This document outlines the standard workflow for making changes to the codebase.
 
 After making changes to the codebase, follow these steps to ensure code quality and proper version control:
 
+### Step -1: Test Application
+
+Before running any checks, ensure the application runs without errors:
+
+```bash
+uv run src/main/python/main.py
+```
+
+Verify that:
+- The application starts successfully
+- No syntax errors or import errors occur
+- The server runs on http://127.0.0.1:5000
+- No runtime exceptions are thrown during startup
+
+If the application runs successfully, press Ctrl+C to stop it and proceed to the next step.
+
 ### Step 0: Code Quality Checks
 
 Run ruff format and lint commands to ensure code quality:
@@ -78,7 +94,7 @@ Follow this commit message format:
 .
 .
 
-Refs: #<local branch name>
+Branch: <local branch name>
 ```
 
 #### Commit Message Components:

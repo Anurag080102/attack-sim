@@ -157,7 +157,8 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
             </div>
             <div class="finding-body">
                 <p><strong>Description:</strong> {finding.get("description", "N/A")}</p>
-                <p><strong>Evidence:</strong> <code>{finding.get("evidence", "N/A")}</code></p>
+                <p><strong>Evidence:</strong> <code>
+                {finding.get("evidence", "N/A")}</code></p>
                 <p><strong>Remediation:</strong> {finding.get("remediation", "N/A")}</p>
             </div>
         </div>
@@ -172,7 +173,8 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont,
+                'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: #333;
             background: #f5f5f5;
@@ -193,7 +195,11 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
             gap: 15px;
             margin-top: 20px;
         }}
-        .meta-item {{ background: rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; }}
+        .meta-item {{
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 4px;
+        }}
         .meta-label {{ font-size: 0.85em; opacity: 0.8; }}
         .summary {{
             background: white;
@@ -217,7 +223,11 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
         .summary-item.info {{ background: #4488ff; color: white; }}
         .summary-count {{ font-size: 2em; font-weight: bold; }}
         .findings {{ background: white; padding: 20px; border-radius: 8px; }}
-        .findings h2 {{ margin-bottom: 20px; border-bottom: 2px solid #e94560; padding-bottom: 10px; }}
+        .findings h2 {{
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e94560;
+            padding-bottom: 10px;
+        }}
         .finding {{
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -251,7 +261,12 @@ def generate_html_report(report_data: Dict[str, Any]) -> str:
         .severity-info .finding-severity {{ background: #4488ff; color: white; }}
         .finding-body {{ padding: 15px; }}
         .finding-body p {{ margin-bottom: 10px; }}
-        .finding-body code {{ background: #f0f0f0; padding: 2px 6px; border-radius: 3px; word-break: break-all; }}
+        .finding-body code {{
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            word-break: break-all;
+        }}
         footer {{
             text-align: center;
             padding: 20px;
@@ -480,9 +495,7 @@ def generate_report():
     # Count by severity
     for finding in findings:
         severity = finding.get("severity", "info")
-        report_data["summary"]["by_severity"][severity] = (
-            report_data["summary"]["by_severity"].get(severity, 0) + 1
-        )
+        report_data["summary"]["by_severity"][severity] = report_data["summary"]["by_severity"].get(severity, 0) + 1
 
     # Save report
     file_path = save_report(report_data, report_id)

@@ -64,9 +64,7 @@ def validate_url(url: str, field_name: str = "url") -> str:
         # Basic hostname validation
         hostname = parsed.netloc.split(":")[0]
         if not hostname:
-            raise ValidationError(
-                f"'{field_name}' must have a valid hostname", field_name
-            )
+            raise ValidationError(f"'{field_name}' must have a valid hostname", field_name)
 
         # Check for localhost or IP addresses (valid for security testing)
         ip_pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
@@ -81,9 +79,7 @@ def validate_url(url: str, field_name: str = "url") -> str:
             # Validate IP octets
             octets = [int(x) for x in hostname.split(".")]
             if not all(0 <= o <= 255 for o in octets):
-                raise ValidationError(
-                    f"'{field_name}' has invalid IP address", field_name
-                )
+                raise ValidationError(f"'{field_name}' has invalid IP address", field_name)
         elif not re.match(hostname_pattern, hostname):
             raise ValidationError(f"'{field_name}' has invalid hostname", field_name)
 
@@ -127,14 +123,10 @@ def validate_string(
     value = value.strip()
 
     if len(value) < min_length:
-        raise ValidationError(
-            f"'{field_name}' must be at least {min_length} characters", field_name
-        )
+        raise ValidationError(f"'{field_name}' must be at least {min_length} characters", field_name)
 
     if max_length is not None and len(value) > max_length:
-        raise ValidationError(
-            f"'{field_name}' must be at most {max_length} characters", field_name
-        )
+        raise ValidationError(f"'{field_name}' must be at most {max_length} characters", field_name)
 
     if pattern and not re.match(pattern, value):
         raise ValidationError(f"'{field_name}' has invalid format", field_name)
@@ -142,9 +134,7 @@ def validate_string(
     return value
 
 
-def validate_integer(
-    value: Any, field_name: str, min_value: int = None, max_value: int = None
-) -> int:
+def validate_integer(value: Any, field_name: str, min_value: int = None, max_value: int = None) -> int:
     """
     Validate an integer value.
 
@@ -166,9 +156,7 @@ def validate_integer(
         raise ValidationError(f"'{field_name}' must be an integer", field_name)
 
     if min_value is not None and int_value < min_value:
-        raise ValidationError(
-            f"'{field_name}' must be at least {min_value}", field_name
-        )
+        raise ValidationError(f"'{field_name}' must be at least {min_value}", field_name)
 
     if max_value is not None and int_value > max_value:
         raise ValidationError(f"'{field_name}' must be at most {max_value}", field_name)
@@ -176,9 +164,7 @@ def validate_integer(
     return int_value
 
 
-def validate_attack_config(
-    config: Dict[str, Any], config_options: Dict[str, Any]
-) -> Dict[str, Any]:
+def validate_attack_config(config: Dict[str, Any], config_options: Dict[str, Any]) -> Dict[str, Any]:
     """
     Validate attack configuration against its schema.
 
@@ -213,9 +199,7 @@ def validate_attack_config(
             if option_type == "string":
                 validated[key] = validate_string(value, key)
             elif option_type == "integer":
-                validated[key] = validate_integer(
-                    value, key, min_value=option.get("min"), max_value=option.get("max")
-                )
+                validated[key] = validate_integer(value, key, min_value=option.get("min"), max_value=option.get("max"))
             elif option_type == "boolean":
                 if isinstance(value, bool):
                     validated[key] = value
@@ -231,9 +215,7 @@ def validate_attack_config(
             elif option_type == "select":
                 options_list = option.get("options", [])
                 if value not in options_list:
-                    raise ValidationError(
-                        f"'{key}' must be one of: {', '.join(options_list)}", key
-                    )
+                    raise ValidationError(f"'{key}' must be one of: {', '.join(options_list)}", key)
                 validated[key] = value
             elif option_type == "array":
                 if not isinstance(value, list):

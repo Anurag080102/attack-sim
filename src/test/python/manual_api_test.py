@@ -72,9 +72,7 @@ def main():
 
     # Test missing parameters
     test_endpoint("POST", "/api/attacks/run", data={}, expected_status=400)
-    test_endpoint(
-        "POST", "/api/attacks/run", data={"attack_id": "a03"}, expected_status=400
-    )
+    test_endpoint("POST", "/api/attacks/run", data={"attack_id": "a03"}, expected_status=400)
 
     # Test running an attack (will fail since no real target, but tests the
     # flow)

@@ -287,9 +287,7 @@ class TestSecurityValidation:
     def test_content_type_enforcement(self, client):
         """Test that content type is properly enforced."""
         # POST without JSON content type
-        response = client.post(
-            "/api/attacks/run", data="attack_id=a03&target=http://example.com"
-        )
+        response = client.post("/api/attacks/run", data="attack_id=a03&target=http://example.com")
         assert response.status_code in [400, 415]
 
 
@@ -368,9 +366,7 @@ class TestAttackModules:
 
             if response.status_code in [200, 201, 202]:
                 job_id = self._get_job_id(response.json)
-                assert job_id is not None, (
-                    f"Attack {attack_id} missing job_id in response"
-                )
+                assert job_id is not None, f"Attack {attack_id} missing job_id in response"
 
     def test_attack_config_options_are_valid(self, client):
         """Test that attack configuration options are properly defined."""
@@ -391,8 +387,6 @@ class TestAttackModules:
 
                 for key, option in config_options.items():
                     # Each option should have at least a type
-                    assert (
-                        "type" in option
-                        or "default" in option
-                        or "description" in option
-                    ), f"Attack {attack_id} option {key} missing required fields"
+                    assert "type" in option or "default" in option or "description" in option, (
+                        f"Attack {attack_id} option {key} missing required fields"
+                    )
